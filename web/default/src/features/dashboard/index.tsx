@@ -18,6 +18,7 @@ import { ApiInfoPanel } from './components/overview/api-info-panel'
 import { FAQPanel } from './components/overview/faq-panel'
 import { SummaryCards } from './components/overview/summary-cards'
 import { UptimePanel } from './components/overview/uptime-panel'
+import { ModelComparePanel } from '@/features/model-compare'
 import { DEFAULT_TIME_GRANULARITY } from './constants'
 import {
   buildDefaultDashboardFilters,
@@ -106,6 +107,10 @@ const SECTION_META: Record<
   users: {
     titleKey: 'User Analytics',
     descriptionKey: 'View user consumption statistics and charts',
+  },
+  'model-compare': {
+    titleKey: 'Model Compare',
+    descriptionKey: 'Compare outputs and costs across selected AI models',
   },
 }
 
@@ -277,6 +282,11 @@ export function Dashboard() {
               <Suspense fallback={<ModelChartsFallback />}>
                 <LazyUserCharts />
               </Suspense>
+            </FadeIn>
+          )}
+          {activeSection === 'model-compare' && (
+            <FadeIn>
+              <ModelComparePanel />
             </FadeIn>
           )}
         </div>
