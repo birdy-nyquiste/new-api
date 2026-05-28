@@ -19,6 +19,12 @@ For commercial licensing, please contact support@quantumnous.com
 import {
   Activity,
   Box,
+  Users,
+  Ticket,
+  User,
+  Command,
+  Radio,
+  FlaskConical,
   CreditCard,
   FileText,
   FlaskConical,
@@ -28,10 +34,7 @@ import {
   MessageSquare,
   Radio,
   Settings,
-  Ticket,
-  User,
-  Users,
-  Wallet,
+  Columns3,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { type SidebarData } from '@/components/layout/types'
@@ -57,9 +60,9 @@ export function useSidebarData(): SidebarData {
             icon: FlaskConical,
           },
           {
-            title: t('Chat'),
-            icon: MessageSquare,
-            type: 'chat-presets',
+            title: t('Model Compare'),
+            url: '/dashboard/model-compare',
+            icon: Columns3,
           },
         ],
       },
