@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -142,33 +141,11 @@ func OidcAuth(c *gin.Context) {
 			return
 		}
 	} else {
-		if common.RegisterEnabled {
-			user.Email = oidcUser.Email
-			if oidcUser.PreferredUsername != "" {
-				user.Username = oidcUser.PreferredUsername
-			} else {
-				user.Username = "oidc_" + strconv.Itoa(model.GetMaxUserId()+1)
-			}
-			if oidcUser.Name != "" {
-				user.DisplayName = oidcUser.Name
-			} else {
-				user.DisplayName = "OIDC User"
-			}
-			err := user.Insert(0)
-			if err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"success": false,
-					"message": err.Error(),
-				})
-				return
-			}
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": "管理员关闭了新用户注册",
-			})
-			return
-		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "This OIDC account is not bound. Sign in first, then bind OIDC from your profile.",
+		})
+		return
 	}
 
 	if user.Status != common.UserStatusEnabled {

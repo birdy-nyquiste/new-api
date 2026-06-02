@@ -25,6 +25,17 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useSystemConfigStore } from '@/stores/system-config-store'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   PromptInput,
   PromptInputFooter,
@@ -37,18 +48,11 @@ import {
   PromptInputTools,
   type PromptInputMessage,
 } from '@/components/ai-elements/prompt-input'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { useSystemConfigStore } from '@/stores/system-config-store'
-import { callModelWithSession, fetchAvailableModels, fetchAvailableGroups } from './api'
+  callModelWithSession,
+  fetchAvailableModels,
+  fetchAvailableGroups,
+} from './api'
 import type { GroupOption } from './api'
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -77,6 +81,8 @@ interface CompareResult {
   responseTimeMs: number
   /** Backend model processing time in ms — from usage log (preferred) */
   useTimeMs: number | null
+  promptTokens: number
+  completionTokens: number
   totalTokens: number
   /** Raw quota in internal units — divide by quotaPerUnit for display */
   quotaRaw: number | null
@@ -109,8 +115,12 @@ function loadRoundsFromStorage(): CompareRound[] {
       ...round,
       results: round.results.map((r) =>
         r.status === 'loading'
-          ? { ...r, status: 'error' as ResultStatus, errorMessage: '__interrupted__' }
-          : r,
+          ? {
+              ...r,
+              status: 'error' as ResultStatus,
+              errorMessage: '__interrupted__',
+            }
+          : r
       ),
     }))
   } catch {
@@ -122,7 +132,7 @@ function saveRoundsToStorage(rounds: CompareRound[]): void {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify(rounds.slice(-MAX_STORED_ROUNDS)),
+      JSON.stringify(rounds.slice(-MAX_STORED_ROUNDS))
     )
   } catch {
     // Ignore quota errors silently
@@ -153,31 +163,135 @@ function storeSet(updater: (prev: CompareRound[]) => CompareRound[]): void {
 
 function storeSubscribe(listener: StoreListener): () => void {
   _store.listeners.add(listener)
-  return () => { _store.listeners.delete(listener) }
+  return () => {
+    _store.listeners.delete(listener)
+  }
 }
 
 // ─── static metadata registry ─────────────────────────────────────────────────
 
 const MODEL_REGISTRY: Record<
   string,
-  { name: string; company: string; region: ModelRegion; tier: ModelTier; pricePerKToken: number }
+  {
+    name: string
+    company: string
+    region: ModelRegion
+    tier: ModelTier
+    pricePerKToken: number
+  }
 > = {
-  'gpt-4o':            { name: 'GPT-4o',            company: 'OpenAI',      region: 'us', tier: 'high',   pricePerKToken: 0.020  },
-  'gpt-4o-mini':       { name: 'GPT-4o mini',        company: 'OpenAI',      region: 'us', tier: 'low',    pricePerKToken: 0.0038 },
-  'gpt-4.1':           { name: 'GPT-4.1',            company: 'OpenAI',      region: 'us', tier: 'high',   pricePerKToken: 0.018  },
-  'claude-opus-4-5':   { name: 'Claude Opus 4.5',   company: 'Anthropic',   region: 'us', tier: 'high',   pricePerKToken: 0.024  },
-  'claude-sonnet-4-5': { name: 'Claude Sonnet 4.5', company: 'Anthropic',   region: 'us', tier: 'medium', pricePerKToken: 0.011  },
-  'claude-haiku-3-5':  { name: 'Claude Haiku 3.5',  company: 'Anthropic',   region: 'us', tier: 'low',    pricePerKToken: 0.004  },
-  'gemini-2.5-pro':    { name: 'Gemini 2.5 Pro',    company: 'Google',      region: 'us', tier: 'high',   pricePerKToken: 0.019  },
-  'gemini-2.5-flash':  { name: 'Gemini 2.5 Flash',  company: 'Google',      region: 'us', tier: 'medium', pricePerKToken: 0.009  },
-  'deepseek-v3':       { name: 'DeepSeek V3',        company: 'DeepSeek',    region: 'cn', tier: 'medium', pricePerKToken: 0.008  },
-  'deepseek-r1':       { name: 'DeepSeek R1',        company: 'DeepSeek',    region: 'cn', tier: 'high',   pricePerKToken: 0.014  },
-  'qwen-max':          { name: 'Qwen Max',           company: 'Alibaba',     region: 'cn', tier: 'medium', pricePerKToken: 0.0075 },
-  'qwen-turbo':        { name: 'Qwen Turbo',         company: 'Alibaba',     region: 'cn', tier: 'low',    pricePerKToken: 0.003  },
-  'glm-4-air':         { name: 'GLM-4 Air',          company: 'Zhipu',       region: 'cn', tier: 'low',    pricePerKToken: 0.0035 },
-  'moonshot-v1-8k':              { name: 'Kimi v1 8k',             company: 'Moonshot AI', region: 'cn', tier: 'low',    pricePerKToken: 0.003  },
-  'doubao-seed-2-0-lite-260428': { name: 'Doubao Seed 2.0 Lite',   company: 'ByteDance',   region: 'cn', tier: 'low',    pricePerKToken: 0.002  },
-  'gpt-5.4-mini':                { name: 'GPT-5.4 mini',           company: 'OpenAI',      region: 'us', tier: 'low',    pricePerKToken: 0.003  },
+  'gpt-4o': {
+    name: 'GPT-4o',
+    company: 'OpenAI',
+    region: 'us',
+    tier: 'high',
+    pricePerKToken: 0.02,
+  },
+  'gpt-4o-mini': {
+    name: 'GPT-4o mini',
+    company: 'OpenAI',
+    region: 'us',
+    tier: 'low',
+    pricePerKToken: 0.0038,
+  },
+  'gpt-4.1': {
+    name: 'GPT-4.1',
+    company: 'OpenAI',
+    region: 'us',
+    tier: 'high',
+    pricePerKToken: 0.018,
+  },
+  'claude-opus-4-5': {
+    name: 'Claude Opus 4.5',
+    company: 'Anthropic',
+    region: 'us',
+    tier: 'high',
+    pricePerKToken: 0.024,
+  },
+  'claude-sonnet-4-5': {
+    name: 'Claude Sonnet 4.5',
+    company: 'Anthropic',
+    region: 'us',
+    tier: 'medium',
+    pricePerKToken: 0.011,
+  },
+  'claude-haiku-3-5': {
+    name: 'Claude Haiku 3.5',
+    company: 'Anthropic',
+    region: 'us',
+    tier: 'low',
+    pricePerKToken: 0.004,
+  },
+  'gemini-2.5-pro': {
+    name: 'Gemini 2.5 Pro',
+    company: 'Google',
+    region: 'us',
+    tier: 'high',
+    pricePerKToken: 0.019,
+  },
+  'gemini-2.5-flash': {
+    name: 'Gemini 2.5 Flash',
+    company: 'Google',
+    region: 'us',
+    tier: 'medium',
+    pricePerKToken: 0.009,
+  },
+  'deepseek-v3': {
+    name: 'DeepSeek V3',
+    company: 'DeepSeek',
+    region: 'cn',
+    tier: 'medium',
+    pricePerKToken: 0.008,
+  },
+  'deepseek-r1': {
+    name: 'DeepSeek R1',
+    company: 'DeepSeek',
+    region: 'cn',
+    tier: 'high',
+    pricePerKToken: 0.014,
+  },
+  'qwen-max': {
+    name: 'Qwen Max',
+    company: 'Alibaba',
+    region: 'cn',
+    tier: 'medium',
+    pricePerKToken: 0.0075,
+  },
+  'qwen-turbo': {
+    name: 'Qwen Turbo',
+    company: 'Alibaba',
+    region: 'cn',
+    tier: 'low',
+    pricePerKToken: 0.003,
+  },
+  'glm-4-air': {
+    name: 'GLM-4 Air',
+    company: 'Zhipu',
+    region: 'cn',
+    tier: 'low',
+    pricePerKToken: 0.0035,
+  },
+  'moonshot-v1-8k': {
+    name: 'Kimi v1 8k',
+    company: 'Moonshot AI',
+    region: 'cn',
+    tier: 'low',
+    pricePerKToken: 0.003,
+  },
+  'doubao-seed-2-0-lite-260428': {
+    name: 'Doubao Seed 2.0 Lite',
+    company: 'ByteDance',
+    region: 'cn',
+    tier: 'low',
+    pricePerKToken: 0.002,
+  },
+  'gpt-5.4-mini': {
+    name: 'GPT-5.4 mini',
+    company: 'OpenAI',
+    region: 'us',
+    tier: 'low',
+    pricePerKToken: 0.003,
+  },
 }
 
 const TIER_ORDER: ModelTier[] = ['high', 'medium', 'low']
@@ -186,15 +300,22 @@ function toModelMeta(id: string): Omit<CompareModel, 'id'> {
   const reg = MODEL_REGISTRY[id]
   if (reg) return reg
   const name = id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-  return { name, company: '', region: 'other', tier: 'medium', pricePerKToken: 0 }
+  return {
+    name,
+    company: '',
+    region: 'other',
+    tier: 'medium',
+    pricePerKToken: 0,
+  }
 }
 
 // ─── prompt helpers ────────────────────────────────────────────────────────────
 
 const QUICK_PROMPTS: Record<Difficulty, string> = {
-  easy:   '我需要洗车。洗车场在100米远的地方。我应该开车去还是走着去？',
-  medium: '农夫带着狼、羊和白菜过河，小船一次只能载农夫和一样东西。狼会吃羊，羊会吃白菜。怎么安全过河？',
-  hard:   '请给出一个面向高并发 AI 网关的架构方案，包含限流、降级、可观测性与成本优化。',
+  easy: '我需要洗车。洗车场在100米远的地方。我应该开车去还是走着去？',
+  medium:
+    '农夫带着狼、羊和白菜过河，小船一次只能载农夫和一样东西。狼会吃羊，羊会吃白菜。怎么安全过河？',
+  hard: '请给出一个面向高并发 AI 网关的架构方案，包含限流、降级、可观测性与成本优化。',
 }
 
 const MIN_MODELS = 2
@@ -211,10 +332,12 @@ function detectDifficulty(prompt: string): Difficulty {
 
 export function ModelComparePanel() {
   const { t } = useTranslation()
-  const quotaPerUnit = useSystemConfigStore((s) => s.config.currency.quotaPerUnit)
+  const quotaPerUnit = useSystemConfigStore(
+    (s) => s.config.currency.quotaPerUnit
+  )
 
   // ── Group (分组) selector ─────────────────────────────────────────────────
-  const [groups, setGroups]           = useState<GroupOption[]>([])
+  const [groups, setGroups] = useState<GroupOption[]>([])
   const [groupsLoading, setGroupsLoading] = useState(true)
   const [selectedGroup, setSelectedGroup] = useState<string>('default')
 
@@ -235,7 +358,8 @@ export function ModelComparePanel() {
   // Selector state
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [regionFilter, setRegionFilter] = useState<RegionFilter>('all')
-  const [selectedModelIds, setSelectedModelIds] = useState<string[]>(DEFAULT_MODEL_IDS)
+  const [selectedModelIds, setSelectedModelIds] =
+    useState<string[]>(DEFAULT_MODEL_IDS)
 
   // Conversation — backed by module-level store (survives route changes)
   const [rounds, setLocalRounds] = useState<CompareRound[]>(() => storeGet())
@@ -276,26 +400,27 @@ export function ModelComparePanel() {
 
   const allModels: CompareModel[] = useMemo(
     () => availableModelIds.map((id) => ({ id, ...toModelMeta(id) })),
-    [availableModelIds],
+    [availableModelIds]
   )
 
   const selectedModels = useMemo(
     () => allModels.filter((m) => selectedModelIds.includes(m.id)),
-    [allModels, selectedModelIds],
+    [allModels, selectedModelIds]
   )
 
   const groupedModels = useMemo(() => {
     const visible = allModels.filter(
-      (m) => regionFilter === 'all' || m.region === regionFilter,
+      (m) => regionFilter === 'all' || m.region === regionFilter
     )
-    return TIER_ORDER
-      .map((tier) => ({ tier, models: visible.filter((m) => m.tier === tier) }))
-      .filter((g) => g.models.length > 0)
+    return TIER_ORDER.map((tier) => ({
+      tier,
+      models: visible.filter((m) => m.tier === tier),
+    })).filter((g) => g.models.length > 0)
   }, [allModels, regionFilter])
 
   const detailRound = useMemo(
     () => rounds.find((r) => r.id === detailRoundId) ?? null,
-    [detailRoundId, rounds],
+    [detailRoundId, rounds]
   )
 
   const [promptInput, setPromptInput] = useState('')
@@ -311,7 +436,7 @@ export function ModelComparePanel() {
   const toggleModel = (id: string) =>
     setSelectedModelIds((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id)
-      if (prev.length >= MAX_MODELS) return prev   // silently block when at max
+      if (prev.length >= MAX_MODELS) return prev // silently block when at max
       return [...prev, id]
     })
 
@@ -324,7 +449,13 @@ export function ModelComparePanel() {
 
   const sendPrompt = async (text?: string) => {
     const prompt = (text ?? promptInput).trim()
-    if (!prompt || selectedModels.length < MIN_MODELS || selectedModels.length > MAX_MODELS || isSending) return
+    if (
+      !prompt ||
+      selectedModels.length < MIN_MODELS ||
+      selectedModels.length > MAX_MODELS ||
+      isSending
+    )
+      return
 
     setPromptInput('')
     setIsSending(true)
@@ -334,19 +465,24 @@ export function ModelComparePanel() {
 
     // Add round with per-model loading placeholders immediately
     const loadingResults: CompareResult[] = selectedModels.map((m) => ({
-      modelId:        m.id,
-      modelName:      m.name,
-      company:        m.company,
-      status:         'loading',
+      modelId: m.id,
+      modelName: m.name,
+      company: m.company,
+      status: 'loading',
       responseTimeMs: 0,
-      useTimeMs:      null,
-      totalTokens:    0,
-      quotaRaw:       null,
-      answerPreview:  '',
-      answerFull:     '',
+      useTimeMs: null,
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+      quotaRaw: null,
+      answerPreview: '',
+      answerFull: '',
     }))
 
-    storeSet((prev) => [...prev, { id: roundId, prompt, difficulty, results: loadingResults }])
+    storeSet((prev) => [
+      ...prev,
+      { id: roundId, prompt, difficulty, results: loadingResults },
+    ])
 
     // Fire all model calls in parallel; each card updates as its call resolves.
     // storeSet writes through to localStorage and notifies all subscribers,
@@ -354,7 +490,11 @@ export function ModelComparePanel() {
     await Promise.allSettled(
       selectedModels.map(async (model) => {
         try {
-          const result = await callModelWithSession(model.id, prompt, selectedGroup)
+          const result = await callModelWithSession(
+            model.id,
+            prompt,
+            selectedGroup
+          )
 
           storeSet((prev) =>
             prev.map((round) => {
@@ -366,19 +506,19 @@ export function ModelComparePanel() {
                     ? r
                     : {
                         ...r,
-                        status:           'done' as ResultStatus,
-                        responseTimeMs:   result.responseTimeMs,
-                        useTimeMs:        result.useTimeMs,
-                        promptTokens:     result.promptTokens,
+                        status: 'done' as ResultStatus,
+                        responseTimeMs: result.responseTimeMs,
+                        useTimeMs: result.useTimeMs,
+                        promptTokens: result.promptTokens,
                         completionTokens: result.completionTokens,
-                        totalTokens:      result.totalTokens,
-                        quotaRaw:         result.quotaRaw,
-                        answerPreview:    result.content.slice(0, 300),
-                        answerFull:       result.content,
-                      },
+                        totalTokens: result.totalTokens,
+                        quotaRaw: result.quotaRaw,
+                        answerPreview: result.content.slice(0, 300),
+                        answerFull: result.content,
+                      }
                 ),
               }
-            }),
+            })
           )
         } catch (err) {
           const errorMessage =
@@ -391,13 +531,13 @@ export function ModelComparePanel() {
                 results: round.results.map((r) =>
                   r.modelId !== model.id
                     ? r
-                    : { ...r, status: 'error' as ResultStatus, errorMessage },
+                    : { ...r, status: 'error' as ResultStatus, errorMessage }
                 ),
               }
-            }),
+            })
           )
         }
-      }),
+      })
     )
 
     setIsSending(false)
@@ -406,39 +546,46 @@ export function ModelComparePanel() {
   // ─── labels ───────────────────────────────────────────────────────────────
 
   const tierLabels: Record<ModelTier, string> = {
-    high:   t('High Tier'),
+    high: t('High Tier'),
     medium: t('Medium Tier'),
-    low:    t('Low Tier'),
+    low: t('Low Tier'),
   }
 
   const tierDescriptions: Record<ModelTier, string> = {
-    high:   t('For complex coding, long-horizon agent, and architecture design'),
+    high: t('For complex coding, long-horizon agent, and architecture design'),
     medium: t('For daily coding and code review, recommended by default'),
-    low:    t('For high-frequency calls, completion, and lightweight tasks'),
+    low: t('For high-frequency calls, completion, and lightweight tasks'),
   }
 
   const difficultyLabels: Record<Difficulty, string> = {
-    easy:   t('Easy'),
+    easy: t('Easy'),
     medium: t('Medium'),
-    hard:   t('Hard'),
+    hard: t('Hard'),
   }
 
   // ─── render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className='flex h-full flex-col rounded-xl border bg-card'>
+    <div className='bg-card flex h-full flex-col rounded-xl border'>
       <div className='flex min-h-0 flex-1 flex-col'>
         <section className='flex min-h-0 flex-1 flex-col'>
-
           {/* Header */}
           <header className='border-b px-4 py-3 sm:px-5'>
             <div className='flex flex-wrap items-center justify-between gap-2'>
               <div className='min-w-0'>
-                <h3 className='text-base font-semibold'>{t('AI Model Compare Platform')}</h3>
+                <h3 className='text-base font-semibold'>
+                  {t('AI Model Compare Platform')}
+                </h3>
                 <p className='text-muted-foreground mt-1 text-xs sm:text-sm'>
-                  {t('Compare latency, token usage, price, and answer quality across selected models')}
+                  {t(
+                    'Compare latency, token usage, price, and answer quality across selected models'
+                  )}
                   {' · '}
-                  <span className='italic'>{t('Each question is sent independently with no conversation context.')}</span>
+                  <span className='italic'>
+                    {t(
+                      'Each question is sent independently with no conversation context.'
+                    )}
+                  </span>
                 </p>
               </div>
               <Button variant='outline' onClick={() => setSelectorOpen(true)}>
@@ -455,9 +602,13 @@ export function ModelComparePanel() {
             {rounds.length === 0 ? (
               <div className='flex h-full items-center justify-center rounded-xl border border-dashed p-6 text-center'>
                 <div className='max-w-xl space-y-3'>
-                  <p className='text-lg font-semibold'>{t('Welcome to model comparison')}</p>
+                  <p className='text-lg font-semibold'>
+                    {t('Welcome to model comparison')}
+                  </p>
                   <p className='text-muted-foreground text-sm'>
-                    {t('Select 2–4 models, then ask a question to start comparison.')}
+                    {t(
+                      'Select 2–4 models, then ask a question to start comparison.'
+                    )}
                   </p>
                 </div>
               </div>
@@ -474,14 +625,21 @@ export function ModelComparePanel() {
                     </div>
 
                     <div className='space-y-2'>
-                      <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                      <div className='text-muted-foreground flex items-center gap-2 text-xs'>
                         <span>{t('Difficulty')}:</span>
-                        <Badge variant='outline'>{difficultyLabels[round.difficulty]}</Badge>
+                        <Badge variant='outline'>
+                          {difficultyLabels[round.difficulty]}
+                        </Badge>
                       </div>
 
                       <div className='grid gap-3 md:grid-cols-3'>
                         {previewResults.map((result) => (
-                          <ResultCard key={result.modelId} result={result} t={t} quotaPerUnit={quotaPerUnit} />
+                          <ResultCard
+                            key={result.modelId}
+                            result={result}
+                            t={t}
+                            quotaPerUnit={quotaPerUnit}
+                          />
                         ))}
                       </div>
 
@@ -489,7 +647,9 @@ export function ModelComparePanel() {
                         <Button
                           variant='outline'
                           size='sm'
-                          disabled={round.results.some((r) => r.status === 'loading')}
+                          disabled={round.results.some(
+                            (r) => r.status === 'loading'
+                          )}
                           onClick={() => openDetail(round.id)}
                         >
                           {t('View full comparison for {{count}} models', {
@@ -506,7 +666,7 @@ export function ModelComparePanel() {
           </div>
 
           {/* Footer / input — sticky at bottom of scroll container */}
-          <footer className='sticky bottom-0 z-10 border-t bg-card px-3 py-3 sm:px-4'>
+          <footer className='bg-card sticky bottom-0 z-10 border-t px-3 py-3 sm:px-4'>
             {/* Quick-prompt chips — above the input, only when ≥3 models selected */}
             {selectedModelIds.length >= 3 && (
               <div className='mb-2 flex flex-wrap gap-1.5'>
@@ -514,7 +674,7 @@ export function ModelComparePanel() {
                   type='button'
                   disabled={isSending}
                   onClick={() => applyQuickPrompt('easy')}
-                  className='text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 rounded-full border px-3 py-1 text-xs transition-colors disabled:cursor-not-allowed'
+                  className='text-muted-foreground hover:text-foreground hover:bg-muted rounded-full border px-3 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40'
                 >
                   {t('Default Easy Question')}
                 </button>
@@ -522,7 +682,7 @@ export function ModelComparePanel() {
                   type='button'
                   disabled={isSending}
                   onClick={() => applyQuickPrompt('medium')}
-                  className='text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 rounded-full border px-3 py-1 text-xs transition-colors disabled:cursor-not-allowed'
+                  className='text-muted-foreground hover:text-foreground hover:bg-muted rounded-full border px-3 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40'
                 >
                   {t('Default Medium Question')}
                 </button>
@@ -565,7 +725,9 @@ export function ModelComparePanel() {
                   >
                     <PromptInputModelSelectTrigger className='max-w-[180px]'>
                       <span className='truncate'>
-                        {groupsLoading ? t('Loading...') : selectedGroup || t('Default Group')}
+                        {groupsLoading
+                          ? t('Loading...')
+                          : selectedGroup || t('Default Group')}
                       </span>
                     </PromptInputModelSelectTrigger>
                     <PromptInputModelSelectContent>
@@ -575,7 +737,10 @@ export function ModelComparePanel() {
                         </div>
                       )}
                       {groups.map((g) => (
-                        <PromptInputModelSelectItem key={g.value} value={g.value}>
+                        <PromptInputModelSelectItem
+                          key={g.value}
+                          value={g.value}
+                        >
                           {g.label}
                         </PromptInputModelSelectItem>
                       ))}
@@ -600,7 +765,9 @@ export function ModelComparePanel() {
           <DialogHeader>
             <DialogTitle>{t('Select Models')}</DialogTitle>
             <DialogDescription>
-              {t('Select 2–4 models to compare. Defaults are pre-selected for you.')}
+              {t(
+                'Select 2–4 models to compare. Defaults are pre-selected for you.'
+              )}
             </DialogDescription>
           </DialogHeader>
 
@@ -637,7 +804,9 @@ export function ModelComparePanel() {
                 {groupedModels.map((group) => (
                   <section key={group.tier} className='space-y-2'>
                     <div>
-                      <p className='text-sm font-semibold'>{tierLabels[group.tier]}</p>
+                      <p className='text-sm font-semibold'>
+                        {tierLabels[group.tier]}
+                      </p>
                       <p className='text-muted-foreground text-xs'>
                         {tierDescriptions[group.tier]}
                       </p>
@@ -645,7 +814,8 @@ export function ModelComparePanel() {
                     <div className='grid gap-2 sm:grid-cols-2'>
                       {group.models.map((model) => {
                         const selected = selectedModelIds.includes(model.id)
-                        const atMax = !selected && selectedModelIds.length >= MAX_MODELS
+                        const atMax =
+                          !selected && selectedModelIds.length >= MAX_MODELS
                         return (
                           <button
                             key={model.id}
@@ -656,12 +826,12 @@ export function ModelComparePanel() {
                               selected
                                 ? 'border-primary bg-primary/5'
                                 : atMax
-                                  ? 'border-border opacity-40 cursor-not-allowed'
+                                  ? 'border-border cursor-not-allowed opacity-40'
                                   : 'hover:bg-muted/60 border-border'
                             }`}
                           >
                             <p className='text-sm font-medium'>{model.name}</p>
-                            <p className='text-xs text-muted-foreground'>
+                            <p className='text-muted-foreground text-xs'>
                               {model.company || model.id}
                             </p>
                           </button>
@@ -676,14 +846,22 @@ export function ModelComparePanel() {
 
           <DialogFooter>
             <div className='flex w-full items-center justify-between'>
-              <p className='text-xs text-muted-foreground'>
-                {t('Selected {{count}} / {{max}} models', { count: selectedModelIds.length, max: MAX_MODELS })}
+              <p className='text-muted-foreground text-xs'>
+                {t('Selected {{count}} / {{max}} models', {
+                  count: selectedModelIds.length,
+                  max: MAX_MODELS,
+                })}
                 {selectedModelIds.length >= MAX_MODELS && (
-                  <span className='text-warning ml-1'>{t('(Maximum reached)')}</span>
+                  <span className='text-warning ml-1'>
+                    {t('(Maximum reached)')}
+                  </span>
                 )}
               </p>
               <Button
-                disabled={selectedModelIds.length < MIN_MODELS || selectedModelIds.length > MAX_MODELS}
+                disabled={
+                  selectedModelIds.length < MIN_MODELS ||
+                  selectedModelIds.length > MAX_MODELS
+                }
                 onClick={() => setSelectorOpen(false)}
               >
                 {t('Confirm')}
@@ -712,24 +890,38 @@ export function ModelComparePanel() {
                 >
                   <header className='shrink-0 border-b p-3'>
                     <p className='truncate font-semibold'>{result.modelName}</p>
-                    <p className='truncate text-xs text-muted-foreground'>{result.company}</p>
+                    <p className='text-muted-foreground truncate text-xs'>
+                      {result.company}
+                    </p>
                   </header>
                   <div className='shrink-0 border-b p-3 text-xs'>
                     <div className='flex items-center gap-1.5 py-0.5'>
                       <Clock3 className='size-3.5 shrink-0' />
-                      <span className='text-muted-foreground'>{t('Latency')}:</span>
-                      <span className='font-medium'>{(result.useTimeMs ?? result.responseTimeMs)}ms</span>
+                      <span className='text-muted-foreground'>
+                        {t('Latency')}:
+                      </span>
+                      <span className='font-medium'>
+                        {result.useTimeMs ?? result.responseTimeMs}ms
+                      </span>
                     </div>
                     <div className='flex items-center gap-1.5 py-0.5'>
                       <BarChart3 className='size-3.5 shrink-0' />
-                      <span className='text-muted-foreground'>{t('Tokens')}:</span>
-                      <span className='font-medium'>{result.promptTokens} / {result.completionTokens}</span>
+                      <span className='text-muted-foreground'>
+                        {t('Tokens')}:
+                      </span>
+                      <span className='font-medium'>
+                        {result.promptTokens} / {result.completionTokens}
+                      </span>
                     </div>
                     <div className='flex items-center gap-1.5 py-0.5'>
                       <DollarSign className='size-3.5 shrink-0' />
-                      <span className='text-muted-foreground'>{t('Cost')}:</span>
+                      <span className='text-muted-foreground'>
+                        {t('Cost')}:
+                      </span>
                       <span className='font-medium'>
-                        {result.quotaRaw != null && result.quotaRaw > 0 && quotaPerUnit > 0
+                        {result.quotaRaw != null &&
+                        result.quotaRaw > 0 &&
+                        quotaPerUnit > 0
                           ? `$${(result.quotaRaw / quotaPerUnit).toFixed(6)}`
                           : '—'}
                       </span>
@@ -737,7 +929,7 @@ export function ModelComparePanel() {
                   </div>
                   <div className='min-h-0 flex-1 overflow-y-auto p-3'>
                     {result.status === 'loading' ? (
-                      <div className='flex items-center gap-2 text-muted-foreground'>
+                      <div className='text-muted-foreground flex items-center gap-2'>
                         <Loader2 className='size-4 animate-spin' />
                         <span className='text-sm'>{t('Loading...')}</span>
                       </div>
@@ -748,7 +940,7 @@ export function ModelComparePanel() {
                           : result.errorMessage}
                       </p>
                     ) : (
-                      <p className='break-words text-sm leading-6 text-muted-foreground'>
+                      <p className='text-muted-foreground text-sm leading-6 break-words'>
                         {result.answerFull}
                       </p>
                     )}
@@ -758,7 +950,7 @@ export function ModelComparePanel() {
             </div>
           </div>
 
-          <p className='shrink-0 border-t px-5 py-3 text-center text-xs text-muted-foreground'>
+          <p className='text-muted-foreground shrink-0 border-t px-5 py-3 text-center text-xs'>
             {t('Slide left to view more model comparisons')}
           </p>
         </DialogContent>
@@ -792,7 +984,7 @@ function ResultCard({
       <article className='rounded-xl border p-3'>
         <div className='mb-2'>
           <p className='text-sm font-semibold'>{result.modelName}</p>
-          <p className='text-xs text-muted-foreground'>{result.company}</p>
+          <p className='text-muted-foreground text-xs'>{result.company}</p>
         </div>
         <div className='flex h-20 items-center justify-center'>
           <Loader2 className='text-muted-foreground size-5 animate-spin' />
@@ -806,7 +998,7 @@ function ResultCard({
       <article className='rounded-xl border p-3'>
         <div className='mb-2'>
           <p className='text-sm font-semibold'>{result.modelName}</p>
-          <p className='text-xs text-muted-foreground'>{result.company}</p>
+          <p className='text-muted-foreground text-xs'>{result.company}</p>
         </div>
         <div className='text-destructive flex items-start gap-1.5 text-xs'>
           <AlertCircle className='mt-0.5 size-3.5 shrink-0' />
@@ -824,15 +1016,19 @@ function ResultCard({
     <article className='flex flex-col gap-2 rounded-xl border p-3'>
       <div>
         <p className='text-sm font-semibold'>{result.modelName}</p>
-        <p className='text-xs text-muted-foreground'>{result.company}</p>
+        <p className='text-muted-foreground text-xs'>{result.company}</p>
       </div>
       {/* Answer content — primary emphasis */}
-      <p className='flex-1 whitespace-pre-wrap text-sm leading-relaxed'>{result.answerPreview}</p>
+      <p className='flex-1 text-sm leading-relaxed whitespace-pre-wrap'>
+        {result.answerPreview}
+      </p>
       {/* Metrics — from usage log (authoritative), same source as Usage Log dashboard */}
-      <div className='flex items-center gap-3 border-t pt-2 text-xs text-muted-foreground'>
+      <div className='text-muted-foreground flex items-center gap-3 border-t pt-2 text-xs'>
         <span>{displayTimeMs}ms</span>
         <span className='text-border'>·</span>
-        <span>{result.promptTokens} / {result.completionTokens}</span>
+        <span>
+          {result.promptTokens} / {result.completionTokens}
+        </span>
         <span className='text-border'>·</span>
         <span>{costDisplay}</span>
       </div>

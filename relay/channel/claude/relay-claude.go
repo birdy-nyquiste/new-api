@@ -1,10 +1,12 @@
 package claude
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/QuantumNous/new-api/common"
@@ -376,6 +378,14 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 								Text: common.GetPointer[string](mediaMessage.Text),
 							})
 						}
+					case dto.ContentTypeFile:
+						converted, err := openAIFileContentToClaude(mediaMessage)
+						if err != nil {
+							return nil, err
+						}
+						if converted != nil {
+							claudeMediaMessages = append(claudeMediaMessages, *converted)
+						}
 					default:
 						source := mediaMessage.ToFileSource()
 						if source == nil {
@@ -392,8 +402,10 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 						}
 						if strings.HasPrefix(mimeType, "application/pdf") {
 							claudeMediaMessage.Type = "document"
-						} else {
+						} else if strings.HasPrefix(mimeType, "image/") {
 							claudeMediaMessage.Type = "image"
+						} else {
+							continue
 						}
 
 						claudeMediaMessage.Source.MediaType = mimeType
@@ -432,6 +444,74 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 	claudeRequest.Prompt = ""
 	claudeRequest.Messages = claudeMessages
 	return &claudeRequest, nil
+}
+
+func openAIFileContentToClaude(mediaMessage dto.MediaContent) (*dto.ClaudeMediaMessage, error) {
+	file := mediaMessage.GetFile()
+	if file == nil || strings.TrimSpace(file.FileData) == "" {
+		return nil, nil
+	}
+	data := strings.TrimSpace(file.FileData)
+	mimeType := inferMimeTypeFromFileName(file.FileName)
+
+	if strings.HasPrefix(mimeType, "text/") || mimeType == "application/json" {
+		if idx := strings.Index(data, ","); strings.HasPrefix(data, "data:") && idx >= 0 {
+			data = data[idx+1:]
+		}
+		decoded, err := base64.StdEncoding.DecodeString(data)
+		if err != nil {
+			return nil, fmt.Errorf("decode text file content failed: %w", err)
+		}
+		return &dto.ClaudeMediaMessage{
+			Type: "text",
+			Text: common.GetPointer[string](string(decoded)),
+		}, nil
+	}
+
+	if mimeType == "application/pdf" {
+		return &dto.ClaudeMediaMessage{
+			Type: "document",
+			Source: &dto.ClaudeMessageSource{
+				Type:      "base64",
+				MediaType: mimeType,
+				Data:      data,
+			},
+		}, nil
+	}
+
+	if strings.HasPrefix(mimeType, "image/") {
+		return &dto.ClaudeMediaMessage{
+			Type: "image",
+			Source: &dto.ClaudeMessageSource{
+				Type:      "base64",
+				MediaType: mimeType,
+				Data:      data,
+			},
+		}, nil
+	}
+
+	return nil, nil
+}
+
+func inferMimeTypeFromFileName(fileName string) string {
+	switch strings.ToLower(filepath.Ext(fileName)) {
+	case ".pdf":
+		return "application/pdf"
+	case ".txt", ".md", ".markdown", ".csv", ".log":
+		return "text/plain"
+	case ".json":
+		return "application/json"
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	default:
+		return ""
+	}
 }
 
 func StreamResponseClaude2OpenAI(claudeResponse *dto.ClaudeResponse) *dto.ChatCompletionsStreamResponse {

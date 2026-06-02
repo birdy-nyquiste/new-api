@@ -47,6 +47,7 @@ func GetStatus(c *gin.Context) {
 
 	passkeySetting := system_setting.GetPasskeySettings()
 	legalSetting := system_setting.GetLegalSettings()
+	smtpReady, _ := common.SMTPReadyForAuthEmail()
 
 	data := gin.H{
 		"version":                     common.Version,
@@ -90,6 +91,13 @@ func GetStatus(c *gin.Context) {
 		"register_enabled":              common.RegisterEnabled,
 		"password_login_enabled":        common.PasswordLoginEnabled,
 		"password_register_enabled":     common.PasswordRegisterEnabled,
+		"email_otp_login_enabled":       common.EmailOTPLoginEnabled,
+		"email_otp_register_enabled":    common.EmailOTPRegisterEnabled,
+		"email_otp_validity_minutes":    common.EmailOTPValidityMinutes,
+		"email_otp_max_attempts":        common.EmailOTPMaxAttempts,
+		"email_otp_resend_cooldown":     common.EmailOTPResendCooldownSeconds,
+		"email_otp_hourly_limit":        common.EmailOTPHourlyLimit,
+		"smtp_configured":               smtpReady,
 		"default_use_auto_group":        setting.DefaultUseAutoGroup,
 
 		"usd_exchange_rate": operation_setting.USDExchangeRate,
@@ -104,6 +112,7 @@ func GetStatus(c *gin.Context) {
 
 		// 模块管理配置
 		"HeaderNavModules":    common.OptionMap["HeaderNavModules"],
+		"ProfileModulesAdmin": common.OptionMap["ProfileModulesAdmin"],
 		"SidebarModulesAdmin": common.OptionMap["SidebarModulesAdmin"],
 
 		"oidc_enabled":                system_setting.GetOIDCSettings().Enabled,
@@ -311,7 +320,7 @@ func SendPasswordResetEmail(c *gin.Context) {
 		})
 		return
 	}
-	if model.IsEmailAlreadyTaken(email) {
+	if model.IsPasswordResettableEmail(email) {
 		code := common.GenerateVerificationCode(0)
 		common.RegisterVerificationCodeWithKey(email, code, common.PasswordResetPurpose)
 		link := fmt.Sprintf("%s/user/reset?email=%s&token=%s", system_setting.ServerAddress, email, code)

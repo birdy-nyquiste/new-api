@@ -25,10 +25,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SectionPageLayout } from '@/components/layout'
 import { FadeIn } from '@/components/page-transition'
+import { ModelComparePanel } from '@/features/model-compare'
 import { ModelsChartPreferences } from './components/models/models-chart-preferences'
 import { ModelsFilter } from './components/models/models-filter-dialog'
 import { OverviewDashboard } from './components/overview/overview-dashboard'
-import { ModelComparePanel } from '@/features/model-compare'
 import { DEFAULT_TIME_GRANULARITY } from './constants'
 import {
   buildDefaultDashboardFilters,
@@ -131,7 +131,10 @@ function PerformanceOverviewFallback() {
   )
 }
 
-const SECTION_META: Record<DashboardSectionId, { titleKey: string }> = {
+const SECTION_META: Record<
+  DashboardSectionId,
+  { titleKey: string; descriptionKey?: string }
+> = {
   overview: {
     titleKey: 'Overview',
   },
@@ -229,29 +232,39 @@ export function Dashboard() {
     <SectionPageLayout>
       <SectionPageLayout.Title>{t(meta.titleKey)}</SectionPageLayout.Title>
       <SectionPageLayout.Content>
-        <div className={activeSection === 'model-compare' ? 'h-full' : 'space-y-3 sm:space-y-4'}>
-          {activeSection !== 'overview' && activeSection !== 'model-compare' && (
-            <div className='flex flex-wrap items-center justify-between gap-1.5 sm:gap-2'>
-              {showSectionTabs ? (
-                <Tabs value={activeSection} onValueChange={handleSectionChange}>
-                  <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
-                    {visibleSections.map((section) => (
-                      <TabsTrigger key={section} value={section}>
-                        {t(SECTION_META[section].titleKey)}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
-              ) : (
-                <div />
-              )}
-              {modelActions != null && (
-                <div className='flex shrink-0 flex-wrap items-center gap-1.5 sm:gap-2'>
-                  {modelActions}
-                </div>
-              )}
-            </div>
-          )}
+        <div
+          className={
+            activeSection === 'model-compare'
+              ? 'h-full'
+              : 'space-y-3 sm:space-y-4'
+          }
+        >
+          {activeSection !== 'overview' &&
+            activeSection !== 'model-compare' && (
+              <div className='flex flex-wrap items-center justify-between gap-1.5 sm:gap-2'>
+                {showSectionTabs ? (
+                  <Tabs
+                    value={activeSection}
+                    onValueChange={handleSectionChange}
+                  >
+                    <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
+                      {visibleSections.map((section) => (
+                        <TabsTrigger key={section} value={section}>
+                          {t(SECTION_META[section].titleKey)}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                ) : (
+                  <div />
+                )}
+                {modelActions != null && (
+                  <div className='flex shrink-0 flex-wrap items-center gap-1.5 sm:gap-2'>
+                    {modelActions}
+                  </div>
+                )}
+              </div>
+            )}
           {activeSection === 'overview' && <OverviewDashboard />}
           {activeSection === 'models' && (
             <>

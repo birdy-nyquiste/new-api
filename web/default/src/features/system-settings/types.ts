@@ -68,6 +68,7 @@ export type SiteSettings = {
   'legal.user_agreement': string
   'legal.privacy_policy': string
   HeaderNavModules: string
+  ProfileModulesAdmin: string
   SidebarModulesAdmin: string
 }
 
@@ -75,6 +76,12 @@ export type AuthSettings = {
   PasswordLoginEnabled: boolean
   PasswordRegisterEnabled: boolean
   EmailVerificationEnabled: boolean
+  EmailOTPLoginEnabled: boolean
+  EmailOTPRegisterEnabled: boolean
+  EmailOTPValidityMinutes: string
+  EmailOTPMaxAttempts: string
+  EmailOTPResendCooldownSeconds: string
+  EmailOTPHourlyLimit: string
   RegisterEnabled: boolean
   EmailDomainRestrictionEnabled: boolean
   EmailAliasRestrictionEnabled: boolean
