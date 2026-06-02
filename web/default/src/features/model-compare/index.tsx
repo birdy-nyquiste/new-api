@@ -19,7 +19,8 @@ For commercial licensing, please contact support@quantumnous.com
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
-  BarChart3,
+  ArrowDown,
+  ArrowUp,
   Clock3,
   DollarSign,
   Loader2,
@@ -75,6 +76,8 @@ interface CompareResult {
   responseTimeMs: number
   /** Backend model processing time in ms — from usage log (preferred) */
   useTimeMs: number | null
+  promptTokens: number
+  completionTokens: number
   totalTokens: number
   /** Raw quota in internal units — divide by quotaPerUnit for display */
   quotaRaw: number | null
@@ -322,6 +325,8 @@ export function ModelComparePanel() {
       status:         'loading',
       responseTimeMs: 0,
       useTimeMs:      null,
+      promptTokens:   0,
+      completionTokens: 0,
       totalTokens:    0,
       quotaRaw:       null,
       answerPreview:  '',
@@ -497,7 +502,7 @@ export function ModelComparePanel() {
                 onChange={(e) => setPromptInput(e.target.value)}
                 placeholder={
                   selectedModelIds.length < MIN_MODELS
-                    ? t('Please select 2–4 models to enable comparison')
+                    ? t('Please select exactly 3 models to enable comparison')
                     : t('Type your custom question...')
                 }
                 disabled={isSending}
@@ -552,7 +557,7 @@ export function ModelComparePanel() {
           <DialogHeader>
             <DialogTitle>{t('Select Models')}</DialogTitle>
             <DialogDescription>
-              {t('Select 2–4 models to compare. Defaults are pre-selected for you.')}
+              {t('Select 3 models to compare. Defaults are pre-selected for you.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -642,9 +647,14 @@ export function ModelComparePanel() {
                       <span className='font-medium'>{(result.useTimeMs ?? result.responseTimeMs)}ms</span>
                     </div>
                     <div className='flex items-center gap-1.5 py-0.5'>
-                      <BarChart3 className='size-3.5 shrink-0' />
-                      <span className='text-muted-foreground'>{t('Tokens')}:</span>
-                      <span className='font-medium'>{result.promptTokens} / {result.completionTokens}</span>
+                      <ArrowUp className='size-3.5 shrink-0' />
+                      <span className='text-muted-foreground'>{t('Input Tokens')}:</span>
+                      <span className='font-medium tabular-nums'>{result.promptTokens.toLocaleString()}</span>
+                    </div>
+                    <div className='flex items-center gap-1.5 py-0.5'>
+                      <ArrowDown className='size-3.5 shrink-0' />
+                      <span className='text-muted-foreground'>{t('Output Tokens')}:</span>
+                      <span className='font-medium tabular-nums'>{result.completionTokens.toLocaleString()}</span>
                     </div>
                     <div className='flex items-center gap-1.5 py-0.5'>
                       <DollarSign className='size-3.5 shrink-0' />
@@ -753,7 +763,11 @@ function ResultCard({
       <div className='flex items-center gap-3 border-t pt-2 text-xs text-muted-foreground'>
         <span>{displayTimeMs}ms</span>
         <span className='text-border'>·</span>
-        <span>{result.promptTokens} / {result.completionTokens}</span>
+        <span className='tabular-nums'>
+          <span title={t('Input Tokens')}>↑{result.promptTokens.toLocaleString()}</span>
+          {' '}
+          <span title={t('Output Tokens')}>↓{result.completionTokens.toLocaleString()}</span>
+        </span>
         <span className='text-border'>·</span>
         <span>{costDisplay}</span>
       </div>
