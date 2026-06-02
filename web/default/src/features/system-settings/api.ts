@@ -38,6 +38,13 @@ export async function updateSystemOption(request: UpdateOptionRequest) {
   return res.data
 }
 
+export async function sendSMTPTestEmail(email: string) {
+  const res = await api.post<UpdateOptionResponse>('/api/option/smtp/test', {
+    email,
+  })
+  return res.data
+}
+
 export async function confirmPaymentCompliance() {
   const res = await api.post<ConfirmPaymentComplianceResponse>(
     '/api/option/payment_compliance',

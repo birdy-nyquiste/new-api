@@ -63,14 +63,20 @@ export function ProfileSecurityCard({
 
   if (!profile) return null
 
+  const canChangePassword =
+    !profile.email_auth_locked && profile.has_password !== false
   const securityActions = [
-    {
-      icon: Shield,
-      title: t('Change Password'),
-      description: t('Update your password to keep your account secure'),
-      action: () => dialogs.open('password'),
-      variant: 'default' as const,
-    },
+    ...(canChangePassword
+      ? [
+          {
+            icon: Shield,
+            title: t('Change Password'),
+            description: t('Update your password to keep your account secure'),
+            action: () => dialogs.open('password'),
+            variant: 'default' as const,
+          },
+        ]
+      : []),
     {
       icon: Key,
       title: t('Access Token'),
@@ -127,13 +133,15 @@ export function ProfileSecurityCard({
       </TitledCard>
 
       {/* Dialogs */}
-      <ChangePasswordDialog
-        open={dialogs.isOpen('password')}
-        onOpenChange={(open) =>
-          open ? dialogs.open('password') : dialogs.close('password')
-        }
-        username={profile.username}
-      />
+      {canChangePassword && (
+        <ChangePasswordDialog
+          open={dialogs.isOpen('password')}
+          onOpenChange={(open) =>
+            open ? dialogs.open('password') : dialogs.close('password')
+          }
+          username={profile.username}
+        />
+      )}
 
       <AccessTokenDialog
         open={dialogs.isOpen('token')}
@@ -147,7 +155,11 @@ export function ProfileSecurityCard({
         onOpenChange={(open) =>
           open ? dialogs.open('delete') : dialogs.close('delete')
         }
-        username={profile.username}
+        username={
+          profile.email_auth_locked
+            ? profile.email || profile.display_name || profile.username
+            : profile.username
+        }
       />
     </>
   )

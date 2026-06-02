@@ -30,21 +30,10 @@ export const loginFormSchema = z.object({
     .min(8, 'Password must be at least 8 characters long'),
 })
 
-export const registerFormSchema = z
-  .object({
-    username: z.string().min(1, 'Please enter your username'),
-    email: z.string().optional(),
-    password: z
-      .string()
-      .min(1, 'Please enter your password')
-      .min(8, 'Password must be at least 8 characters long')
-      .max(20, 'Password must be at most 20 characters long'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
-    path: ['confirmPassword'],
-  })
+export const registerFormSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  code: z.string().optional(),
+})
 
 export const forgotPasswordFormSchema = z.object({
   email: z.string().email({

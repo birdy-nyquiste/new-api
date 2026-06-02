@@ -41,6 +41,22 @@ export interface RegisterPayload {
   turnstile?: string
 }
 
+export type EmailOTPPurpose = 'login' | 'register'
+
+export interface EmailOTPSendPayload {
+  email: string
+  purpose: EmailOTPPurpose
+  turnstile?: string
+}
+
+export interface EmailOTPVerifyPayload {
+  email: string
+  purpose: EmailOTPPurpose
+  challenge_id: string
+  code: string
+  aff_code?: string
+}
+
 export interface PasswordResetPayload {
   email: string
   turnstile?: string
@@ -75,10 +91,10 @@ export interface Login2FAResponse {
   data?: User
 }
 
-export interface ApiResponse {
+export interface ApiResponse<TData = unknown> {
   success: boolean
   message: string
-  data?: unknown
+  data?: TData
 }
 
 // ============================================================================
@@ -128,6 +144,14 @@ export interface SystemStatus {
     register_enabled?: boolean
     password_login_enabled?: boolean
     password_register_enabled?: boolean
+    email_otp_login_enabled?: boolean
+    email_otp_register_enabled?: boolean
+    email_otp_validity_minutes?: number
+    email_otp_max_attempts?: number
+    email_otp_resend_cooldown?: number
+    email_otp_hourly_limit?: number
+    smtp_configured?: boolean
+    ProfileModulesAdmin?: string
     custom_oauth_providers?: CustomOAuthProviderInfo[]
     [key: string]: unknown
   }
@@ -171,6 +195,14 @@ export interface SystemStatus {
   register_enabled?: boolean
   password_login_enabled?: boolean
   password_register_enabled?: boolean
+  email_otp_login_enabled?: boolean
+  email_otp_register_enabled?: boolean
+  email_otp_validity_minutes?: number
+  email_otp_max_attempts?: number
+  email_otp_resend_cooldown?: number
+  email_otp_hourly_limit?: number
+  smtp_configured?: boolean
+  ProfileModulesAdmin?: string
   custom_oauth_providers?: CustomOAuthProviderInfo[]
   [key: string]: unknown
 }

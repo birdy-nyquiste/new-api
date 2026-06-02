@@ -20,6 +20,7 @@ import { useMemo } from 'react'
 import { useAuthStore } from '@/stores/auth-store'
 import { useStatus } from '@/hooks/use-status'
 import type { NavGroup, NavItem } from '@/components/layout/types'
+import { parseProfileModulesAdmin } from '@/features/system-settings/maintenance/config'
 
 type SidebarSectionConfig = {
   enabled: boolean
@@ -143,7 +144,7 @@ function parseSidebarConfig(
  * invalid, or otherwise unusable — the caller treats null as "do not narrow",
  * so legacy users with an empty sidebar_modules field keep the full admin view.
  */
-function parseUserSidebarConfig(
+export function parseUserSidebarConfig(
   value: string | null | undefined
 ): SidebarModulesUserConfig {
   if (!value || value.trim() === '') {
@@ -262,19 +263,13 @@ function filterNavItems(
  *   1. Admin (status.SidebarModulesAdmin) — authoritative, falls back to
  *      DEFAULT_SIDEBAR_MODULES when empty/invalid. Disabling here hides the
  *      item for everyone regardless of user preference.
- *   2. User (auth.user.sidebar_modules) — narrower overlay, null sentinel
- *      means "don't narrow". A section/module is only hidden if the user
- *      explicitly set it to false; undefined fields default to visible so
- *      legacy users with empty sidebar_modules keep the full admin view.
- *      The overlay is also skipped entirely when the backend tells us the
- *      user cannot configure sidebar_settings (e.g. root accounts), so a
- *      stale historical value cannot lock them out of entries they have no
- *      UI to restore.
+ *   2. User (auth.user.sidebar_modules) — applied only when the admin enables
+ *      the Profile page's Sidebar Personal Settings module. Otherwise the
+ *      visible sidebar follows the admin configuration only.
  */
 export function useSidebarConfig(navGroups: NavGroup[]): NavGroup[] {
   const { status } = useStatus()
   const { auth } = useAuthStore()
-
   const adminConfig = useMemo(
     () =>
       parseSidebarConfig(
@@ -282,18 +277,27 @@ export function useSidebarConfig(navGroups: NavGroup[]): NavGroup[] {
       ),
     [status?.SidebarModulesAdmin]
   )
+  const profileConfig = useMemo(
+    () =>
+      parseProfileModulesAdmin(
+        status?.ProfileModulesAdmin as string | null | undefined
+      ),
+    [status?.ProfileModulesAdmin]
+  )
 
   const userConfig = useMemo(() => {
-    // If the backend marks the user as unable to configure the sidebar
-    // (e.g. root accounts), skip the user overlay entirely — a stale
-    // historical sidebar_modules value from a previous role would otherwise
-    // hide admin entries for someone who has no in-product UI to restore
-    // them.
+    if (!profileConfig.sidebarSettings) {
+      return null
+    }
     if (auth?.user?.permissions?.sidebar_settings === false) {
       return null
     }
     return parseUserSidebarConfig(auth?.user?.sidebar_modules)
-  }, [auth?.user?.permissions?.sidebar_settings, auth?.user?.sidebar_modules])
+  }, [
+    auth?.user?.permissions?.sidebar_settings,
+    auth?.user?.sidebar_modules,
+    profileConfig.sidebarSettings,
+  ])
 
   const filteredNavGroups = useMemo(
     () =>

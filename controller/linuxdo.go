@@ -220,40 +220,11 @@ func LinuxdoOAuth(c *gin.Context) {
 			return
 		}
 	} else {
-		if common.RegisterEnabled {
-			if linuxdoUser.TrustLevel >= common.LinuxDOMinimumTrustLevel {
-				user.Username = "linuxdo_" + strconv.Itoa(model.GetMaxUserId()+1)
-				user.DisplayName = linuxdoUser.Name
-				user.Role = common.RoleCommonUser
-				user.Status = common.UserStatusEnabled
-
-				affCode := session.Get("aff")
-				inviterId := 0
-				if affCode != nil {
-					inviterId, _ = model.GetUserIdByAffCode(affCode.(string))
-				}
-
-				if err := user.Insert(inviterId); err != nil {
-					c.JSON(http.StatusOK, gin.H{
-						"success": false,
-						"message": err.Error(),
-					})
-					return
-				}
-			} else {
-				c.JSON(http.StatusOK, gin.H{
-					"success": false,
-					"message": "Linux DO 信任等级未达到管理员设置的最低信任等级",
-				})
-				return
-			}
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": "管理员关闭了新用户注册",
-			})
-			return
-		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "This LinuxDO account is not bound. Sign in first, then bind LinuxDO from your profile.",
+		})
+		return
 	}
 
 	if user.Status != common.UserStatusEnabled {

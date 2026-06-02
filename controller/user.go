@@ -23,11 +23,25 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type EmailOTPSendRequest struct {
+	Email   string `json:"email"`
+	Purpose string `json:"purpose"`
+}
+
+type EmailOTPVerifyRequest struct {
+	Email       string `json:"email"`
+	Purpose     string `json:"purpose"`
+	ChallengeID string `json:"challenge_id"`
+	Code        string `json:"code"`
+	AffCode     string `json:"aff_code"`
 }
 
 func Login(c *gin.Context) {
@@ -90,6 +104,89 @@ func Login(c *gin.Context) {
 	setupLogin(&user, c)
 }
 
+func SendEmailOTP(c *gin.Context) {
+	var req EmailOTPSendRequest
+	if err := common.DecodeJson(c.Request.Body, &req); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	email := service.NormalizeEmailForAuth(req.Email)
+	if err := common.Validate.Var(email, "required,email"); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	result, err := service.SendEmailOTP(email, req.Purpose, c.ClientIP())
+	if err != nil {
+		common.ApiErrorMsg(c, "Email code is temporarily unavailable. Please try again later.")
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": result.Message,
+		"data": gin.H{
+			"challenge_id": result.ChallengeID,
+		},
+	})
+}
+
+func VerifyEmailOTP(c *gin.Context) {
+	var req EmailOTPVerifyRequest
+	if err := common.DecodeJson(c.Request.Body, &req); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	email := service.NormalizeEmailForAuth(req.Email)
+	if err := common.Validate.Var(email, "required,email"); err != nil ||
+		strings.TrimSpace(req.ChallengeID) == "" ||
+		strings.TrimSpace(req.Code) == "" {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	if err := service.VerifyEmailOTP(email, req.Purpose, strings.TrimSpace(req.ChallengeID), strings.TrimSpace(req.Code)); err != nil {
+		if errors.Is(err, service.ErrEmailOTPUnavailable) {
+			common.ApiErrorMsg(c, "Email code is temporarily unavailable. Please try again later.")
+			return
+		}
+		common.ApiErrorMsg(c, "Invalid or expired email code.")
+		return
+	}
+	switch req.Purpose {
+	case service.EmailOTPPurposeRegister:
+		user, err := service.RegisterUserByEmailOTP(email, req.AffCode)
+		if err != nil {
+			common.ApiErrorMsg(c, "Unable to create account with this email.")
+			return
+		}
+		setupLogin(user, c)
+	case service.EmailOTPPurposeLogin:
+		user, err := service.LoginUserByEmailOTP(email)
+		if err != nil {
+			common.ApiErrorMsg(c, "Invalid or expired email code.")
+			return
+		}
+		if model.IsTwoFAEnabled(user.Id) {
+			session := sessions.Default(c)
+			session.Set("pending_username", user.Username)
+			session.Set("pending_user_id", user.Id)
+			if err := session.Save(); err != nil {
+				common.ApiErrorI18n(c, i18n.MsgUserSessionSaveFailed)
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"message": i18n.T(c, i18n.MsgUserRequire2FA),
+				"success": true,
+				"data": map[string]interface{}{
+					"require_2fa": true,
+				},
+			})
+			return
+		}
+		setupLogin(user, c)
+	default:
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+	}
+}
+
 // setup session & cookies and then return user info
 func setupLogin(user *model.User, c *gin.Context) {
 	model.UpdateUserLastLoginAt(user.Id)
@@ -108,12 +205,15 @@ func setupLogin(user *model.User, c *gin.Context) {
 		"message": "",
 		"success": true,
 		"data": map[string]any{
-			"id":           user.Id,
-			"username":     user.Username,
-			"display_name": user.DisplayName,
-			"role":         user.Role,
-			"status":       user.Status,
-			"group":        user.Group,
+			"id":                user.Id,
+			"username":          user.Username,
+			"display_name":      user.DisplayName,
+			"role":              user.Role,
+			"status":            user.Status,
+			"group":             user.Group,
+			"email":             user.Email,
+			"email_auth_locked": user.EmailAuthLocked,
+			"has_password":      user.Password != "",
 		},
 	})
 }
@@ -189,6 +289,18 @@ func Register(c *gin.Context) {
 	if err := cleanUser.Insert(inviterId); err != nil {
 		common.ApiError(c, err)
 		return
+	}
+	if common.EmailVerificationEnabled && cleanUser.Email != "" {
+		identity := model.UserEmailIdentity{
+			UserId:          cleanUser.Id,
+			Email:           cleanUser.Email,
+			NormalizedEmail: model.NormalizeEmailIdentity(cleanUser.Email),
+			VerifiedAt:      common.GetTimestamp(),
+		}
+		if err := model.DB.Create(&identity).Error; err != nil {
+			common.ApiError(c, err)
+			return
+		}
 	}
 
 	// 获取插入后的用户ID
@@ -436,6 +548,8 @@ func GetSelf(c *gin.Context) {
 		"stripe_customer":   user.StripeCustomer,
 		"sidebar_modules":   userSetting.SidebarModules, // 正确提取sidebar_modules字段
 		"permissions":       permissions,                // 新增权限字段
+		"email_auth_locked": user.EmailAuthLocked,
+		"has_password":      user.Password != "",
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -710,12 +824,12 @@ func UpdateSelf(c *gin.Context) {
 
 	// 原有的用户信息更新逻辑
 	var user model.User
-	requestDataBytes, err := json.Marshal(requestData)
+	requestDataBytes, err := common.Marshal(requestData)
 	if err != nil {
 		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
 		return
 	}
-	err = json.Unmarshal(requestDataBytes, &user)
+	err = common.Unmarshal(requestDataBytes, &user)
 	if err != nil {
 		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
 		return
@@ -734,6 +848,22 @@ func UpdateSelf(c *gin.Context) {
 		Username:    user.Username,
 		Password:    user.Password,
 		DisplayName: user.DisplayName,
+	}
+	currentUser, err := model.GetUserById(cleanUser.Id, true)
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	if currentUser.EmailAuthLocked {
+		if _, hasUsername := requestData["username"]; hasUsername && strings.TrimSpace(user.Username) != "" && user.Username != currentUser.Username {
+			common.ApiErrorMsg(c, "Username cannot be changed for email OTP accounts.")
+			return
+		}
+		if strings.TrimSpace(user.Password) != "" && user.Password != "$I_LOVE_U" {
+			common.ApiErrorMsg(c, "Password cannot be set for email OTP accounts.")
+			return
+		}
+		cleanUser.Username = ""
 	}
 	if user.Password == "$I_LOVE_U" {
 		user.Password = "" // rollback to what it should be
@@ -1044,9 +1174,31 @@ func EmailBind(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	user.Email = email
-	// no need to check if this email already taken, because we have used verification code to check it
-	err = user.Update(false)
+	if user.EmailAuthLocked {
+		common.ApiErrorMsg(c, "Email cannot be changed for email OTP accounts.")
+		return
+	}
+	normalizedEmail := model.NormalizeEmailIdentity(email)
+	if !model.CanClaimEmailIdentityForUser(user.Id, normalizedEmail) {
+		common.ApiErrorMsg(c, "Email address is already in use.")
+		return
+	}
+	user.Email = normalizedEmail
+	err = model.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.User{}).Where("id = ?", user.Id).Update("email", normalizedEmail).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", user.Id).Delete(&model.UserEmailIdentity{}).Error; err != nil {
+			return err
+		}
+		identity := model.UserEmailIdentity{
+			UserId:          user.Id,
+			Email:           normalizedEmail,
+			NormalizedEmail: normalizedEmail,
+			VerifiedAt:      common.GetTimestamp(),
+		}
+		return model.CreateUserEmailIdentityWithTx(tx, &identity)
+	})
 	if err != nil {
 		common.ApiError(c, err)
 		return

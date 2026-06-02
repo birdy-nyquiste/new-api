@@ -19,12 +19,15 @@ For commercial licensing, please contact support@quantumnous.com
 import { SystemInfoSection } from '../general/system-info-section'
 import {
   parseHeaderNavModules,
+  parseProfileModulesAdmin,
   parseSidebarModulesAdmin,
   serializeHeaderNavModules,
+  serializeProfileModulesAdmin,
   serializeSidebarModulesAdmin,
 } from '../maintenance/config'
 import { HeaderNavigationSection } from '../maintenance/header-navigation-section'
 import { NoticeSection } from '../maintenance/notice-section'
+import { ProfileModulesSection } from '../maintenance/profile-modules-section'
 import { SidebarModulesSection } from '../maintenance/sidebar-modules-section'
 import type { SiteSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
@@ -70,6 +73,22 @@ const SITE_SECTIONS = [
         <HeaderNavigationSection
           config={headerNavConfig}
           initialSerialized={headerNavSerialized}
+        />
+      )
+    },
+  },
+  {
+    id: 'profile-modules',
+    titleKey: 'Profile modules',
+    build: (settings: SiteSettings) => {
+      const profileConfig = parseProfileModulesAdmin(
+        settings.ProfileModulesAdmin
+      )
+      const profileSerialized = serializeProfileModulesAdmin(profileConfig)
+      return (
+        <ProfileModulesSection
+          config={profileConfig}
+          initialSerialized={profileSerialized}
         />
       )
     },
