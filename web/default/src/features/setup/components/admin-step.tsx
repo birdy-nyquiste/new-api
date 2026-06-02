@@ -77,6 +77,29 @@ export function AdminStep({ form, rootInitialized }: AdminStepProps) {
 
       <FormField
         control={form.control}
+        name='email'
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('Administrator email')}</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                type='email'
+                placeholder={t('Optional email for recovery and notifications')}
+                autoComplete='email'
+                onChange={(event) => {
+                  form.clearErrors('email')
+                  field.onChange(event)
+                }}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
         name='password'
         render={({ field }) => (
           <FormItem>

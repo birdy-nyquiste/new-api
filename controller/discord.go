@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -140,32 +139,11 @@ func DiscordOAuth(c *gin.Context) {
 			return
 		}
 	} else {
-		if common.RegisterEnabled {
-			if discordUser.ID != "" {
-				user.Username = discordUser.ID
-			} else {
-				user.Username = "discord_" + strconv.Itoa(model.GetMaxUserId()+1)
-			}
-			if discordUser.Name != "" {
-				user.DisplayName = discordUser.Name
-			} else {
-				user.DisplayName = "Discord User"
-			}
-			err := user.Insert(0)
-			if err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"success": false,
-					"message": err.Error(),
-				})
-				return
-			}
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": "管理员关闭了新用户注册",
-			})
-			return
-		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "This Discord account is not bound. Sign in first, then bind Discord from your profile.",
+		})
+		return
 	}
 
 	if user.Status != common.UserStatusEnabled {

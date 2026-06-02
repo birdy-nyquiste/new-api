@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -131,36 +130,11 @@ func GitHubOAuth(c *gin.Context) {
 			return
 		}
 	} else {
-		if common.RegisterEnabled {
-			user.Username = "github_" + strconv.Itoa(model.GetMaxUserId()+1)
-			if githubUser.Name != "" {
-				user.DisplayName = githubUser.Name
-			} else {
-				user.DisplayName = "GitHub User"
-			}
-			user.Email = githubUser.Email
-			user.Role = common.RoleCommonUser
-			user.Status = common.UserStatusEnabled
-			affCode := session.Get("aff")
-			inviterId := 0
-			if affCode != nil {
-				inviterId, _ = model.GetUserIdByAffCode(affCode.(string))
-			}
-
-			if err := user.Insert(inviterId); err != nil {
-				c.JSON(http.StatusOK, gin.H{
-					"success": false,
-					"message": err.Error(),
-				})
-				return
-			}
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"success": false,
-				"message": "管理员关闭了新用户注册",
-			})
-			return
-		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "This GitHub account is not bound. Sign in first, then bind GitHub from your profile.",
+		})
+		return
 	}
 
 	if user.Status != common.UserStatusEnabled {

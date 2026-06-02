@@ -30,6 +30,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -46,6 +47,12 @@ const basicAuthSchema = z.object({
   PasswordLoginEnabled: z.boolean(),
   PasswordRegisterEnabled: z.boolean(),
   EmailVerificationEnabled: z.boolean(),
+  EmailOTPLoginEnabled: z.boolean(),
+  EmailOTPRegisterEnabled: z.boolean(),
+  EmailOTPValidityMinutes: z.string(),
+  EmailOTPMaxAttempts: z.string(),
+  EmailOTPResendCooldownSeconds: z.string(),
+  EmailOTPHourlyLimit: z.string(),
   RegisterEnabled: z.boolean(),
   EmailDomainRestrictionEnabled: z.boolean(),
   EmailAliasRestrictionEnabled: z.boolean(),
@@ -195,6 +202,77 @@ export function BasicAuthSection({ defaultValues }: BasicAuthSectionProps) {
               </SettingsSwitchItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name='EmailOTPLoginEnabled'
+            render={({ field }) => (
+              <SettingsSwitchItem>
+                <SettingsSwitchContent>
+                  <FormLabel>{t('Email Code Login')}</FormLabel>
+                  <FormDescription>
+                    {t('Allow users to sign in with one-time email codes')}
+                  </FormDescription>
+                </SettingsSwitchContent>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </SettingsSwitchItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='EmailOTPRegisterEnabled'
+            render={({ field }) => (
+              <SettingsSwitchItem>
+                <SettingsSwitchContent>
+                  <FormLabel>{t('Email Code Registration')}</FormLabel>
+                  <FormDescription>
+                    {t('Create new accounts after email code verification')}
+                  </FormDescription>
+                </SettingsSwitchContent>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </SettingsSwitchItem>
+            )}
+          />
+
+          <div className='grid gap-4 md:grid-cols-4'>
+            {[
+              ['EmailOTPValidityMinutes', t('Code TTL minutes')],
+              ['EmailOTPMaxAttempts', t('Max attempts')],
+              ['EmailOTPResendCooldownSeconds', t('Resend cooldown seconds')],
+              ['EmailOTPHourlyLimit', t('Hourly email limit')],
+            ].map(([name, label]) => (
+              <FormField
+                key={name}
+                control={form.control}
+                name={name as keyof BasicAuthFormValues}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{label}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='number'
+                        min='1'
+                        value={String(field.value)}
+                        onChange={(event) => field.onChange(event.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
 
           <FormField
             control={form.control}

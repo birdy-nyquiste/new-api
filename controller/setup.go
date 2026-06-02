@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"strings"
 	"time"
 
 	"github.com/QuantumNous/new-api/common"
@@ -18,6 +19,7 @@ type Setup struct {
 
 type SetupRequest struct {
 	Username           string `json:"username"`
+	Email              string `json:"email"`
 	Password           string `json:"password"`
 	ConfirmPassword    string `json:"confirmPassword"`
 	SelfUseModeEnabled bool   `json:"SelfUseModeEnabled"`
@@ -100,6 +102,16 @@ func PostSetup(c *gin.Context) {
 			})
 			return
 		}
+		if strings.TrimSpace(req.Email) != "" {
+			req.Email = model.NormalizeEmailIdentity(req.Email)
+			if err := common.Validate.Var(req.Email, "email"); err != nil {
+				c.JSON(200, gin.H{
+					"success": false,
+					"message": "管理员邮箱地址无效",
+				})
+				return
+			}
+		}
 
 		// Create root user
 		hashedPassword, err := common.Password2Hash(req.Password)
@@ -112,6 +124,7 @@ func PostSetup(c *gin.Context) {
 		}
 		rootUser := model.User{
 			Username:    req.Username,
+			Email:       req.Email,
 			Password:    hashedPassword,
 			Role:        common.RoleRootUser,
 			Status:      common.UserStatusEnabled,

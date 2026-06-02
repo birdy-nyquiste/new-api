@@ -66,6 +66,7 @@ const STEPS = [
 
 const DEFAULT_FORM_VALUES: SetupFormValues = {
   username: '',
+  email: '',
   password: '',
   confirmPassword: '',
   usageMode: 'external',
@@ -172,6 +173,11 @@ export function SetupWizard() {
         shouldValidate: false,
       })
       form.setValue('password', '', {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      })
+      form.setValue('email', '', {
         shouldDirty: false,
         shouldTouch: false,
         shouldValidate: false,

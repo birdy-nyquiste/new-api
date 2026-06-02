@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/i18n"
@@ -11,7 +10,6 @@ import (
 	"github.com/QuantumNous/new-api/oauth"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 // providerParams returns map with Provider key for i18n templates
@@ -109,6 +107,8 @@ func HandleOAuth(c *gin.Context) {
 		switch err.(type) {
 		case *OAuthUserDeletedError:
 			common.ApiErrorI18n(c, i18n.MsgOAuthUserDeleted)
+		case *OAuthBindingRequiredError:
+			common.ApiErrorMsg(c, "This OAuth account is not bound. Sign in with email code or password first, then bind OAuth from your profile.")
 		case *OAuthRegistrationDisabledError:
 			common.ApiErrorI18n(c, i18n.MsgUserRegisterDisabled)
 		default:
@@ -232,102 +232,7 @@ func findOrCreateOAuthUser(c *gin.Context, provider oauth.Provider, oauthUser *o
 		}
 	}
 
-	// User doesn't exist, create new user if registration is enabled
-	if !common.RegisterEnabled {
-		return nil, &OAuthRegistrationDisabledError{}
-	}
-
-	// Set up new user
-	user.Username = provider.GetProviderPrefix() + strconv.Itoa(model.GetMaxUserId()+1)
-
-	if oauthUser.Username != "" {
-		if exists, err := model.CheckUserExistOrDeleted(oauthUser.Username, ""); err == nil && !exists {
-			// 防止索引退化
-			if len(oauthUser.Username) <= model.UserNameMaxLength {
-				user.Username = oauthUser.Username
-			}
-		}
-	}
-
-	if oauthUser.DisplayName != "" {
-		user.DisplayName = oauthUser.DisplayName
-	} else if oauthUser.Username != "" {
-		user.DisplayName = oauthUser.Username
-	} else {
-		user.DisplayName = provider.GetName() + " User"
-	}
-	if oauthUser.Email != "" {
-		user.Email = oauthUser.Email
-	}
-	user.Role = common.RoleCommonUser
-	user.Status = common.UserStatusEnabled
-
-	// Handle affiliate code
-	affCode := session.Get("aff")
-	inviterId := 0
-	if affCode != nil {
-		inviterId, _ = model.GetUserIdByAffCode(affCode.(string))
-	}
-
-	// Use transaction to ensure user creation and OAuth binding are atomic
-	if genericProvider, ok := provider.(*oauth.GenericOAuthProvider); ok {
-		// Custom provider: create user and binding in a transaction
-		err := model.DB.Transaction(func(tx *gorm.DB) error {
-			// Create user
-			if err := user.InsertWithTx(tx, inviterId); err != nil {
-				return err
-			}
-
-			// Create OAuth binding
-			binding := &model.UserOAuthBinding{
-				UserId:         user.Id,
-				ProviderId:     genericProvider.GetProviderId(),
-				ProviderUserId: oauthUser.ProviderUserID,
-			}
-			if err := model.CreateUserOAuthBindingWithTx(tx, binding); err != nil {
-				return err
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		// Perform post-transaction tasks (logs, sidebar config, inviter rewards)
-		user.FinalizeOAuthUserCreation(inviterId)
-	} else {
-		// Built-in provider: create user and update provider ID in a transaction
-		err := model.DB.Transaction(func(tx *gorm.DB) error {
-			// Create user
-			if err := user.InsertWithTx(tx, inviterId); err != nil {
-				return err
-			}
-
-			// Set the provider user ID on the user model and update
-			provider.SetProviderUserID(user, oauthUser.ProviderUserID)
-			if err := tx.Model(user).Updates(map[string]interface{}{
-				"github_id":   user.GitHubId,
-				"discord_id":  user.DiscordId,
-				"oidc_id":     user.OidcId,
-				"linux_do_id": user.LinuxDOId,
-				"wechat_id":   user.WeChatId,
-				"telegram_id": user.TelegramId,
-			}).Error; err != nil {
-				return err
-			}
-
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		// Perform post-transaction tasks
-		user.FinalizeOAuthUserCreation(inviterId)
-	}
-
-	return user, nil
+	return nil, &OAuthBindingRequiredError{}
 }
 
 // Error types for OAuth
@@ -341,6 +246,12 @@ type OAuthRegistrationDisabledError struct{}
 
 func (e *OAuthRegistrationDisabledError) Error() string {
 	return "registration is disabled"
+}
+
+type OAuthBindingRequiredError struct{}
+
+func (e *OAuthBindingRequiredError) Error() string {
+	return "oauth binding required"
 }
 
 // handleOAuthError handles OAuth errors and returns translated message

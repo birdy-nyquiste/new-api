@@ -38,6 +38,18 @@ export type SidebarSectionConfig = {
 
 export type SidebarModulesAdminConfig = Record<string, SidebarSectionConfig>
 
+export type ProfileModulesAdminConfig = {
+  notifications: boolean
+  language: boolean
+  security: boolean
+  checkin: boolean
+  passkey: boolean
+  twoFactor: boolean
+  accountBindings: boolean
+  sidebarSettings: boolean
+  [key: string]: boolean
+}
+
 export const HEADER_NAV_DEFAULT: HeaderNavModulesConfig = {
   home: true,
   console: true,
@@ -81,6 +93,17 @@ export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
     setting: true,
     subscription: true,
   },
+}
+
+export const PROFILE_MODULES_DEFAULT: ProfileModulesAdminConfig = {
+  notifications: true,
+  language: true,
+  security: true,
+  checkin: true,
+  passkey: false,
+  twoFactor: false,
+  accountBindings: false,
+  sidebarSettings: false,
 }
 
 const toBoolean = (value: unknown, fallback: boolean): boolean => {
@@ -132,6 +155,10 @@ const cloneSidebarDefault = (): SidebarModulesAdminConfig =>
     },
     {}
   )
+
+const cloneProfileDefault = (): ProfileModulesAdminConfig => ({
+  ...PROFILE_MODULES_DEFAULT,
+})
 
 export function parseHeaderNavModules(
   value: string | null | undefined
@@ -237,6 +264,32 @@ export function parseSidebarModulesAdmin(
 
 export function serializeSidebarModulesAdmin(
   config: SidebarModulesAdminConfig
+): string {
+  return JSON.stringify(config)
+}
+
+export function parseProfileModulesAdmin(
+  value: string | null | undefined
+): ProfileModulesAdminConfig {
+  const defaults = cloneProfileDefault()
+  if (!value || value.trim() === '') return defaults
+
+  try {
+    const parsed = JSON.parse(value) as Record<string, unknown>
+    const result = cloneProfileDefault()
+
+    Object.entries(parsed).forEach(([key, raw]) => {
+      result[key] = toBoolean(raw, defaults[key] ?? true)
+    })
+
+    return result
+  } catch {
+    return defaults
+  }
+}
+
+export function serializeProfileModulesAdmin(
+  config: ProfileModulesAdminConfig
 ): string {
   return JSON.stringify(config)
 }

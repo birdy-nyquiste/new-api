@@ -89,6 +89,7 @@ export function useUsersColumns(): ColumnDef<User>[] {
         const username = row.getValue('username') as string
         const displayName = row.original.display_name
         const remark = row.original.remark
+        const isEmailOTPUser = Boolean(row.original.email_auth_locked)
 
         return (
           <div className='flex min-w-[160px] flex-col gap-1'>
@@ -96,6 +97,13 @@ export function useUsersColumns(): ColumnDef<User>[] {
               <LongText className='max-w-[140px] font-medium'>
                 {username}
               </LongText>
+              {isEmailOTPUser && (
+                <StatusBadge
+                  label={t('Email OTP')}
+                  variant='neutral'
+                  copyable={false}
+                />
+              )}
               {remark && (
                 <Tooltip>
                   <TooltipTrigger

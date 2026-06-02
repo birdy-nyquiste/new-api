@@ -53,6 +53,7 @@ type User struct {
 	StripeCustomer   string         `json:"stripe_customer" gorm:"type:varchar(64);column:stripe_customer;index"`
 	CreatedAt        int64          `json:"created_at" gorm:"autoCreateTime;column:created_at"`
 	LastLoginAt      int64          `json:"last_login_at" gorm:"default:0;column:last_login_at"`
+	EmailAuthLocked  bool           `json:"email_auth_locked" gorm:"default:false;column:email_auth_locked"`
 }
 
 func (user *User) ToBaseUser() *UserBase {
@@ -682,7 +683,11 @@ func (user *User) FillUserByTelegramId() error {
 }
 
 func IsEmailAlreadyTaken(email string) bool {
-	return DB.Unscoped().Where("email = ?", email).Find(&User{}).RowsAffected == 1
+	normalized := NormalizeEmailIdentity(email)
+	if IsEmailIdentityClaimed(normalized) {
+		return true
+	}
+	return DB.Unscoped().Where("LOWER(TRIM(email)) = ?", normalized).Find(&User{}).RowsAffected >= 1
 }
 
 func IsWeChatIdAlreadyTaken(wechatId string) bool {
@@ -709,12 +714,23 @@ func ResetUserPasswordByEmail(email string, password string) error {
 	if email == "" || password == "" {
 		return errors.New("邮箱地址或密码为空！")
 	}
+	normalizedEmail := NormalizeEmailIdentity(email)
 	hashedPassword, err := common.Password2Hash(password)
 	if err != nil {
 		return err
 	}
-	err = DB.Model(&User{}).Where("email = ?", email).Update("password", hashedPassword).Error
-	return err
+	result := DB.Model(&User{}).Where("LOWER(TRIM(email)) = ? AND password <> ? AND email_auth_locked = ?", normalizedEmail, "", false).Update("password", hashedPassword)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("该邮箱不支持密码重置")
+	}
+	return nil
+}
+
+func IsPasswordResettableEmail(email string) bool {
+	return DB.Unscoped().Where("LOWER(TRIM(email)) = ? AND password <> ? AND email_auth_locked = ?", NormalizeEmailIdentity(email), "", false).Find(&User{}).RowsAffected == 1
 }
 
 func IsAdmin(userId int) bool {
