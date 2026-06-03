@@ -4672,6 +4672,14 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 Your Company. All rights reserved.",
     "、": ", ",
     "，": ", ",
-    "，and ": ", and "
+    "，and ": ", and ",
+    "Search bar": "Search bar",
+    "Global search box in the console header.": "Global search box in the console header.",
+    "Notification bell with notices and announcements.": "Notification bell with notices and announcements.",
+    "Theme and appearance configuration drawer.": "Theme and appearance configuration drawer.",
+    "Console header controls": "Console header controls",
+    "Toggle elements shown in the authenticated console header.": "Toggle elements shown in the authenticated console header.",
+    "{{module}} cards": "{{module}} cards",
+    "Custom card": "Custom card"
   }
 }

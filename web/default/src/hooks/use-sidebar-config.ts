@@ -22,12 +22,32 @@ import { useStatus } from '@/hooks/use-status'
 import type { NavGroup, NavItem } from '@/components/layout/types'
 import { parseProfileModulesAdmin } from '@/features/system-settings/maintenance/config'
 
+// A module value is either a plain boolean (simple page) or an object
+// `{ enabled, cards }` for pages that expose card-level toggles (e.g. Profile).
+type SidebarModuleNode =
+  | boolean
+  | { enabled: boolean; cards?: Record<string, boolean> }
+
 type SidebarSectionConfig = {
   enabled: boolean
-  [key: string]: boolean
+  [key: string]: SidebarModuleNode
 }
 
 type SidebarModulesAdminConfig = Record<string, SidebarSectionConfig>
+
+/** Admin-layer check: a module is allowed when present and not disabled. */
+const isAdminNodeEnabled = (node: SidebarModuleNode | undefined): boolean => {
+  if (node === undefined) return false
+  if (typeof node === 'boolean') return node
+  return node.enabled !== false
+}
+
+/** User-layer check: only narrows — hidden only when explicitly disabled. */
+const isUserNodeAllowed = (node: SidebarModuleNode | undefined): boolean => {
+  if (node === false) return false
+  if (node && typeof node === 'object' && node.enabled === false) return false
+  return true
+}
 
 // User-layer config is shape-identical to admin, but may be null
 // to signal "no narrowing" (empty/invalid/legacy users).
@@ -179,7 +199,9 @@ function isModuleEnabled(
   const { section, module } = mapping
   const adminSection = adminConfig[section]
   const adminAllowed = Boolean(
-    adminSection && adminSection.enabled && adminSection[module] === true
+    adminSection &&
+    adminSection.enabled &&
+    isAdminNodeEnabled(adminSection[module])
   )
   if (!adminAllowed) return false
 
@@ -188,7 +210,7 @@ function isModuleEnabled(
   const userSection = userConfig[section]
   if (!userSection) return true
   if (userSection.enabled === false) return false
-  return userSection[module] !== false
+  return isUserNodeAllowed(userSection[module])
 }
 
 /**
@@ -202,13 +224,15 @@ function isNavItemVisible(
   // Handle dynamic chat presets type — also runs the admin × user AND gate
   if ('type' in item && item.type === 'chat-presets') {
     const adminChat = adminConfig.chat
-    const adminAllowed = Boolean(adminChat?.enabled && adminChat.chat === true)
+    const adminAllowed = Boolean(
+      adminChat?.enabled && isAdminNodeEnabled(adminChat.chat)
+    )
     if (!adminAllowed) return false
     if (!userConfig) return true
     const userChat = userConfig.chat
     if (!userChat) return true
     if (userChat.enabled === false) return false
-    return userChat.chat !== false
+    return isUserNodeAllowed(userChat.chat)
   }
 
   // Handle direct link type
@@ -277,16 +301,25 @@ export function useSidebarConfig(navGroups: NavGroup[]): NavGroup[] {
       ),
     [status?.SidebarModulesAdmin]
   )
-  const profileConfig = useMemo(
-    () =>
-      parseProfileModulesAdmin(
-        status?.ProfileModulesAdmin as string | null | undefined
-      ),
-    [status?.ProfileModulesAdmin]
-  )
+  // "Sidebar Personal Settings" now lives under Sidebar modules →
+  // Personal → Profile cards; fall back to the legacy ProfileModulesAdmin flag.
+  const sidebarSettingsEnabled = useMemo(() => {
+    const node = adminConfig.personal?.personal
+    if (
+      node &&
+      typeof node === 'object' &&
+      node.cards &&
+      'sidebarSettings' in node.cards
+    ) {
+      return node.cards.sidebarSettings !== false
+    }
+    return parseProfileModulesAdmin(
+      status?.ProfileModulesAdmin as string | null | undefined
+    ).sidebarSettings
+  }, [adminConfig, status?.ProfileModulesAdmin])
 
   const userConfig = useMemo(() => {
-    if (!profileConfig.sidebarSettings) {
+    if (!sidebarSettingsEnabled) {
       return null
     }
     if (auth?.user?.permissions?.sidebar_settings === false) {
@@ -296,7 +329,7 @@ export function useSidebarConfig(navGroups: NavGroup[]): NavGroup[] {
   }, [
     auth?.user?.permissions?.sidebar_settings,
     auth?.user?.sidebar_modules,
-    profileConfig.sidebarSettings,
+    sidebarSettingsEnabled,
   ])
 
   const filteredNavGroups = useMemo(

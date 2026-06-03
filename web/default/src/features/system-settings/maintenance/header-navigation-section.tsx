@@ -55,6 +55,9 @@ const headerNavSchema = z.object({
   rankingsRequireAuth: z.boolean(),
   docs: z.boolean(),
   about: z.boolean(),
+  search: z.boolean(),
+  announcements: z.boolean(),
+  theme: z.boolean(),
 })
 
 type HeaderNavFormValues = z.infer<typeof headerNavSchema>
@@ -93,6 +96,18 @@ const toFormValues = (config: HeaderNavModulesConfig): HeaderNavFormValues => ({
     config.about === undefined
       ? HEADER_NAV_DEFAULT.about
       : Boolean(config.about),
+  search:
+    config.search === undefined
+      ? HEADER_NAV_DEFAULT.search
+      : Boolean(config.search),
+  announcements:
+    config.announcements === undefined
+      ? HEADER_NAV_DEFAULT.announcements
+      : Boolean(config.announcements),
+  theme:
+    config.theme === undefined
+      ? HEADER_NAV_DEFAULT.theme
+      : Boolean(config.theme),
 })
 
 export function HeaderNavigationSection({
@@ -119,6 +134,9 @@ export function HeaderNavigationSection({
       console: values.console,
       docs: values.docs,
       about: values.about,
+      search: values.search,
+      announcements: values.announcements,
+      theme: values.theme,
       pricing: {
         ...(config.pricing ?? HEADER_NAV_DEFAULT.pricing),
         enabled: values.pricingEnabled,
@@ -170,6 +188,28 @@ export function HeaderNavigationSection({
       key: 'about',
       title: t('About'),
       description: t('Static page describing the platform.'),
+    },
+  ]
+
+  const consoleHeaderModules: Array<{
+    key: keyof HeaderNavFormValues
+    title: string
+    description: string
+  }> = [
+    {
+      key: 'search',
+      title: t('Search bar'),
+      description: t('Global search box in the console header.'),
+    },
+    {
+      key: 'announcements',
+      title: t('System Announcements'),
+      description: t('Notification bell with notices and announcements.'),
+    },
+    {
+      key: 'theme',
+      title: t('Theme Settings'),
+      description: t('Theme and appearance configuration drawer.'),
     },
   ]
 
@@ -291,6 +331,43 @@ export function HeaderNavigationSection({
                 />
               </SettingsControlGroup>
             ))}
+          </div>
+
+          <div className='space-y-3'>
+            <div>
+              <h3 className='text-sm font-medium'>
+                {t('Console header controls')}
+              </h3>
+              <p className='text-muted-foreground text-xs'>
+                {t(
+                  'Toggle elements shown in the authenticated console header.'
+                )}
+              </p>
+            </div>
+            <div className='grid gap-4 md:grid-cols-2'>
+              {consoleHeaderModules.map((module) => (
+                <FormField
+                  key={module.key}
+                  control={form.control}
+                  name={module.key}
+                  render={({ field }) => (
+                    <SettingsSwitchItem>
+                      <SettingsSwitchContent>
+                        <FormLabel>{module.title}</FormLabel>
+                        <FormDescription>{module.description}</FormDescription>
+                      </SettingsSwitchContent>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </SettingsSwitchItem>
+                  )}
+                />
+              ))}
+            </div>
           </div>
         </SettingsForm>
       </Form>

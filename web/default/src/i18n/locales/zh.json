@@ -4672,6 +4672,14 @@
     "© 2025 Your Company. All rights reserved.": "© 2025 您的公司。保留所有权利。",
     "、": "、",
     "，": "，",
-    "，and ": "，"
+    "，and ": "，",
+    "Search bar": "搜索栏",
+    "Global search box in the console header.": "控制台顶部的全局搜索框。",
+    "Notification bell with notices and announcements.": "包含通知与公告的提醒铃铛。",
+    "Theme and appearance configuration drawer.": "主题与外观配置抽屉。",
+    "Console header controls": "控制台顶部控件",
+    "Toggle elements shown in the authenticated console header.": "切换登录后控制台顶部显示的元素。",
+    "{{module}} cards": "{{module}} 卡片",
+    "Custom card": "自定义卡片"
   }
 }

@@ -28,12 +28,27 @@ export type HeaderNavModulesConfig = {
   rankings: HeaderNavAccessConfig
   docs: boolean
   about: boolean
+  search: boolean
+  announcements: boolean
+  theme: boolean
   [key: string]: boolean | HeaderNavAccessConfig
 }
 
+/** Card-level visibility within a single page/module (third hierarchy level). */
+export type SidebarCardConfig = Record<string, boolean>
+
+/**
+ * A page/module entry inside a sidebar section.
+ * - `boolean`: simple page with no inner card toggles (legacy shape).
+ * - object form: page that exposes card-level children.
+ */
+export type SidebarModuleNode =
+  | boolean
+  | { enabled: boolean; cards: SidebarCardConfig }
+
 export type SidebarSectionConfig = {
   enabled: boolean
-  [key: string]: boolean
+  [moduleKey: string]: SidebarModuleNode
 }
 
 export type SidebarModulesAdminConfig = Record<string, SidebarSectionConfig>
@@ -63,6 +78,20 @@ export const HEADER_NAV_DEFAULT: HeaderNavModulesConfig = {
   },
   docs: true,
   about: true,
+  search: true,
+  announcements: true,
+  theme: true,
+}
+
+export const PROFILE_MODULES_DEFAULT: ProfileModulesAdminConfig = {
+  notifications: true,
+  language: true,
+  security: true,
+  checkin: true,
+  passkey: false,
+  twoFactor: false,
+  accountBindings: false,
+  sidebarSettings: false,
 }
 
 export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
@@ -82,7 +111,11 @@ export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
   personal: {
     enabled: true,
     topup: true,
-    personal: true,
+    // Profile page exposes its cards as third-level toggles.
+    personal: {
+      enabled: true,
+      cards: { ...PROFILE_MODULES_DEFAULT },
+    },
   },
   admin: {
     enabled: true,
@@ -93,17 +126,6 @@ export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
     setting: true,
     subscription: true,
   },
-}
-
-export const PROFILE_MODULES_DEFAULT: ProfileModulesAdminConfig = {
-  notifications: true,
-  language: true,
-  security: true,
-  checkin: true,
-  passkey: false,
-  twoFactor: false,
-  accountBindings: false,
-  sidebarSettings: false,
 }
 
 const toBoolean = (value: unknown, fallback: boolean): boolean => {
@@ -147,14 +169,68 @@ const parseAccessModule = (
   return { ...fallback }
 }
 
+const cloneModuleNode = (node: SidebarModuleNode): SidebarModuleNode =>
+  typeof node === 'object'
+    ? { enabled: node.enabled, cards: { ...node.cards } }
+    : node
+
+const cloneSidebarSection = (
+  config: SidebarSectionConfig
+): SidebarSectionConfig =>
+  Object.entries(config).reduce<SidebarSectionConfig>(
+    (acc, [key, value]) => {
+      acc[key] = key === 'enabled' ? value : cloneModuleNode(value)
+      return acc
+    },
+    { enabled: config.enabled }
+  )
+
 const cloneSidebarDefault = (): SidebarModulesAdminConfig =>
   Object.entries(SIDEBAR_MODULES_DEFAULT).reduce<SidebarModulesAdminConfig>(
     (acc, [section, config]) => {
-      acc[section] = { ...config }
+      acc[section] = cloneSidebarSection(config)
       return acc
     },
     {}
   )
+
+/**
+ * Parse a single module value against its default node, preserving the
+ * default's shape (boolean stays boolean; card-bearing modules stay objects).
+ */
+const parseModuleNode = (
+  raw: unknown,
+  defaultNode: SidebarModuleNode
+): SidebarModuleNode => {
+  if (typeof defaultNode === 'object') {
+    const cards: SidebarCardConfig = { ...defaultNode.cards }
+    let enabled = defaultNode.enabled
+    if (raw && typeof raw === 'object') {
+      const record = raw as Record<string, unknown>
+      enabled = toBoolean(record.enabled, defaultNode.enabled)
+      const rawCards =
+        record.cards && typeof record.cards === 'object'
+          ? (record.cards as Record<string, unknown>)
+          : {}
+      Object.keys(cards).forEach((cardKey) => {
+        cards[cardKey] = toBoolean(rawCards[cardKey], cards[cardKey])
+      })
+      Object.entries(rawCards).forEach(([cardKey, cardValue]) => {
+        if (!(cardKey in cards)) cards[cardKey] = toBoolean(cardValue, true)
+      })
+    } else if (
+      typeof raw === 'boolean' ||
+      typeof raw === 'string' ||
+      typeof raw === 'number'
+    ) {
+      // Legacy boolean stored for a module that now carries cards.
+      enabled = toBoolean(raw, defaultNode.enabled)
+    }
+    return { enabled, cards }
+  }
+
+  return toBoolean(raw, defaultNode)
+}
 
 const cloneProfileDefault = (): ProfileModulesAdminConfig => ({
   ...PROFILE_MODULES_DEFAULT,
@@ -207,59 +283,97 @@ export function serializeHeaderNavModules(
   return JSON.stringify(config)
 }
 
-export function parseSidebarModulesAdmin(
+/** Detect whether stored sidebar JSON already carries Profile card toggles. */
+function storedSidebarHasProfileCards(
   value: string | null | undefined
-): SidebarModulesAdminConfig {
-  const defaults = cloneSidebarDefault()
-  // If empty string, null, or undefined, use default config
-  if (!value || value.trim() === '') return defaults
-
+): boolean {
+  if (!value || value.trim() === '') return false
   try {
     const parsed = JSON.parse(value) as Record<string, unknown>
-    const result: SidebarModulesAdminConfig = {}
-
-    Object.entries(parsed).forEach(([sectionKey, raw]) => {
-      if (!raw || typeof raw !== 'object') return
-
-      const defaultSection = defaults[sectionKey] ?? { enabled: true }
-      const sectionConfig: SidebarSectionConfig = {
-        enabled: toBoolean(
-          (raw as Record<string, unknown>).enabled,
-          defaultSection.enabled ?? true
-        ),
-      }
-
-      Object.entries(raw as Record<string, unknown>).forEach(
-        ([moduleKey, moduleValue]) => {
-          if (moduleKey === 'enabled') return
-          sectionConfig[moduleKey] = toBoolean(
-            moduleValue,
-            defaultSection[moduleKey] ?? true
-          )
-        }
-      )
-
-      result[sectionKey] = sectionConfig
-    })
-
-    // Merge defaults to ensure expected sections exist
-    Object.entries(defaults).forEach(([sectionKey, config]) => {
-      if (!result[sectionKey]) {
-        result[sectionKey] = { ...config }
-        return
-      }
-
-      Object.entries(config).forEach(([moduleKey, moduleValue]) => {
-        if (!(moduleKey in result[sectionKey])) {
-          result[sectionKey][moduleKey] = moduleValue
-        }
-      })
-    })
-
-    return result
+    const personal = parsed?.personal as Record<string, unknown> | undefined
+    const profile = personal?.personal as Record<string, unknown> | undefined
+    return Boolean(
+      profile &&
+      typeof profile === 'object' &&
+      typeof profile.cards === 'object'
+    )
   } catch {
-    return defaults
+    return false
   }
+}
+
+/**
+ * Parse the admin sidebar config.
+ *
+ * @param value stored `SidebarModulesAdmin` JSON string.
+ * @param legacyProfileValue stored `ProfileModulesAdmin` JSON string. When the
+ *   sidebar config does not yet carry Profile cards, the legacy profile values
+ *   are folded into `personal.personal.cards` so existing installs keep their
+ *   settings after Profile modules moved under the sidebar tree.
+ */
+export function parseSidebarModulesAdmin(
+  value: string | null | undefined,
+  legacyProfileValue?: string | null | undefined
+): SidebarModulesAdminConfig {
+  const defaults = cloneSidebarDefault()
+
+  let parsed: Record<string, unknown> | null = null
+  if (value && value.trim() !== '') {
+    try {
+      parsed = JSON.parse(value) as Record<string, unknown>
+    } catch {
+      parsed = null
+    }
+  }
+
+  const result: SidebarModulesAdminConfig = {}
+  const sectionKeys = new Set([
+    ...Object.keys(defaults),
+    ...(parsed ? Object.keys(parsed) : []),
+  ])
+
+  sectionKeys.forEach((sectionKey) => {
+    const defaultSection = defaults[sectionKey] ?? { enabled: true }
+    const rawSection = parsed?.[sectionKey]
+    const rawSectionObj =
+      rawSection && typeof rawSection === 'object'
+        ? (rawSection as Record<string, unknown>)
+        : null
+
+    const sectionConfig: SidebarSectionConfig = {
+      enabled: toBoolean(
+        rawSectionObj?.enabled,
+        defaultSection.enabled ?? true
+      ),
+    }
+
+    const moduleKeys = new Set([
+      ...Object.keys(defaultSection),
+      ...(rawSectionObj ? Object.keys(rawSectionObj) : []),
+    ])
+    moduleKeys.forEach((moduleKey) => {
+      if (moduleKey === 'enabled') return
+      sectionConfig[moduleKey] = parseModuleNode(
+        rawSectionObj?.[moduleKey],
+        defaultSection[moduleKey] ?? true
+      )
+    })
+
+    result[sectionKey] = sectionConfig
+  })
+
+  // Fold legacy ProfileModulesAdmin into Profile cards for existing installs.
+  if (legacyProfileValue && !storedSidebarHasProfileCards(value)) {
+    const profileNode = result.personal?.personal
+    if (profileNode && typeof profileNode === 'object') {
+      const legacy = parseProfileModulesAdmin(legacyProfileValue)
+      Object.keys(profileNode.cards).forEach((cardKey) => {
+        if (cardKey in legacy) profileNode.cards[cardKey] = legacy[cardKey]
+      })
+    }
+  }
+
+  return result
 }
 
 export function serializeSidebarModulesAdmin(
@@ -286,10 +400,4 @@ export function parseProfileModulesAdmin(
   } catch {
     return defaults
   }
-}
-
-export function serializeProfileModulesAdmin(
-  config: ProfileModulesAdminConfig
-): string {
-  return JSON.stringify(config)
 }
