@@ -4689,6 +4689,13 @@
     "Create, revoke, and audit API keys.": "创建、吊销并审计 API 密钥。",
     "Compare models side by side": "并排比较模型",
     "Getting started and account overview": "入门指引与账户概览",
-    "API key management": "API 密钥管理"
+    "API key management": "API 密钥管理",
+    "Get started steps and recommended actions.": "入门步骤与推荐操作。",
+    "System performance metrics (admin only).": "系统性能指标（仅管理员）。",
+    "Service uptime and status panel.": "服务在线状态面板。",
+    "API endpoint and connection details.": "API 端点与连接详情。",
+    "System announcements panel.": "系统公告面板。",
+    "Frequently asked questions panel.": "常见问题面板。",
+    "Affiliate and referral rewards card.": "推广与推荐奖励卡片。"
   }
 }

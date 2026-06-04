@@ -103,7 +103,18 @@ export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
   },
   console: {
     enabled: true,
-    overview: true,
+    // Overview page exposes its cards as third-level toggles.
+    overview: {
+      enabled: true,
+      cards: {
+        setupGuide: true,
+        performanceHealth: true,
+        uptime: true,
+        apiInfo: true,
+        announcements: true,
+        faq: true,
+      },
+    },
     dashboard: true,
     token: true,
     log: true,
@@ -112,7 +123,13 @@ export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
   },
   personal: {
     enabled: true,
-    topup: true,
+    // Wallet page exposes its cards as third-level toggles.
+    topup: {
+      enabled: true,
+      cards: {
+        referral: true,
+      },
+    },
     // Profile page exposes its cards as third-level toggles.
     personal: {
       enabled: true,
@@ -370,7 +387,12 @@ export function parseSidebarModulesAdmin(
     !('dashboard' in rawConsole)
   ) {
     const detailVal = toBoolean(rawConsole.detail, true)
-    result.console.overview = detailVal
+    const overviewNode = result.console.overview
+    if (overviewNode && typeof overviewNode === 'object') {
+      overviewNode.enabled = detailVal
+    } else {
+      result.console.overview = detailVal
+    }
     result.console.dashboard = detailVal
   }
 

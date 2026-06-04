@@ -161,9 +161,39 @@ export function SidebarModulesSection({
     },
   }
 
-  // Card-level (third tier) metadata, keyed by card key. Reused from the
-  // former standalone Profile modules section.
+  // Card-level (third tier) metadata, keyed by card key.
   const cardMeta: Record<string, { title: string; description: string }> = {
+    // Overview page cards
+    setupGuide: {
+      title: t('Setup guide'),
+      description: t('Get started steps and recommended actions.'),
+    },
+    performanceHealth: {
+      title: t('Performance health'),
+      description: t('System performance metrics (admin only).'),
+    },
+    uptime: {
+      title: t('Uptime'),
+      description: t('Service uptime and status panel.'),
+    },
+    apiInfo: {
+      title: t('API Info'),
+      description: t('API endpoint and connection details.'),
+    },
+    announcements: {
+      title: t('Announcements'),
+      description: t('System announcements panel.'),
+    },
+    faq: {
+      title: t('FAQ'),
+      description: t('Frequently asked questions panel.'),
+    },
+    // Wallet page cards
+    referral: {
+      title: t('Referral Program'),
+      description: t('Affiliate and referral rewards card.'),
+    },
+    // Profile page cards
     notifications: {
       title: t('Notifications'),
       description: t('Email notification settings in the Profile page.'),

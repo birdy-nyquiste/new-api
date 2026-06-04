@@ -4689,6 +4689,13 @@
     "Create, revoke, and audit API keys.": "Create, revoke, and audit API keys.",
     "Compare models side by side": "Compare models side by side",
     "Getting started and account overview": "Getting started and account overview",
-    "API key management": "API key management"
+    "API key management": "API key management",
+    "Get started steps and recommended actions.": "Get started steps and recommended actions.",
+    "System performance metrics (admin only).": "System performance metrics (admin only).",
+    "Service uptime and status panel.": "Service uptime and status panel.",
+    "API endpoint and connection details.": "API endpoint and connection details.",
+    "System announcements panel.": "System announcements panel.",
+    "Frequently asked questions panel.": "Frequently asked questions panel.",
+    "Affiliate and referral rewards card.": "Affiliate and referral rewards card."
   }
 }
