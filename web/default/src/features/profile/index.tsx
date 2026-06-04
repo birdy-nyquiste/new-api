@@ -26,7 +26,10 @@ import {
   CardStaggerContainer,
   CardStaggerItem,
 } from '@/components/page-transition'
-import { parseProfileModulesAdmin } from '@/features/system-settings/maintenance/config'
+import {
+  parseProfileModulesAdmin,
+  parseSidebarModulesAdmin,
+} from '@/features/system-settings/maintenance/config'
 import { CheckinCalendarCard } from './components/checkin-calendar-card'
 import { LanguagePreferencesCard } from './components/language-preferences-card'
 import { PasskeyCard } from './components/passkey-card'
@@ -42,13 +45,21 @@ export function Profile() {
   const { t } = useTranslation()
   const { profile, loading, refreshProfile } = useProfile()
   const { status } = useStatus()
-  const profileModules = useMemo(
-    () =>
-      parseProfileModulesAdmin(
-        status?.ProfileModulesAdmin as string | null | undefined
-      ),
-    [status?.ProfileModulesAdmin]
-  )
+  // Profile card visibility now lives under Sidebar modules →
+  // Personal → Profile; fall back to the legacy ProfileModulesAdmin value.
+  const profileModules = useMemo(() => {
+    const sidebar = parseSidebarModulesAdmin(
+      status?.SidebarModulesAdmin as string | null | undefined,
+      status?.ProfileModulesAdmin as string | null | undefined
+    )
+    const node = sidebar.personal?.personal
+    if (node && typeof node === 'object') {
+      return node.cards
+    }
+    return parseProfileModulesAdmin(
+      status?.ProfileModulesAdmin as string | null | undefined
+    )
+  }, [status?.SidebarModulesAdmin, status?.ProfileModulesAdmin])
 
   const checkinEnabled = status?.checkin_enabled === true
   const turnstileEnabled = !!(

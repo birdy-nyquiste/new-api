@@ -19,15 +19,12 @@ For commercial licensing, please contact support@quantumnous.com
 import { SystemInfoSection } from '../general/system-info-section'
 import {
   parseHeaderNavModules,
-  parseProfileModulesAdmin,
   parseSidebarModulesAdmin,
   serializeHeaderNavModules,
-  serializeProfileModulesAdmin,
   serializeSidebarModulesAdmin,
 } from '../maintenance/config'
 import { HeaderNavigationSection } from '../maintenance/header-navigation-section'
 import { NoticeSection } from '../maintenance/notice-section'
-import { ProfileModulesSection } from '../maintenance/profile-modules-section'
 import { SidebarModulesSection } from '../maintenance/sidebar-modules-section'
 import type { SiteSettings } from '../types'
 import { createSectionRegistry } from '../utils/section-registry'
@@ -78,27 +75,15 @@ const SITE_SECTIONS = [
     },
   },
   {
-    id: 'profile-modules',
-    titleKey: 'Profile modules',
-    build: (settings: SiteSettings) => {
-      const profileConfig = parseProfileModulesAdmin(
-        settings.ProfileModulesAdmin
-      )
-      const profileSerialized = serializeProfileModulesAdmin(profileConfig)
-      return (
-        <ProfileModulesSection
-          config={profileConfig}
-          initialSerialized={profileSerialized}
-        />
-      )
-    },
-  },
-  {
     id: 'sidebar-modules',
     titleKey: 'Sidebar modules',
     build: (settings: SiteSettings) => {
+      // Profile card toggles now live under Personal → Profile; the legacy
+      // ProfileModulesAdmin value is folded into the sidebar config so existing
+      // installs keep their settings.
       const sidebarConfig = parseSidebarModulesAdmin(
-        settings.SidebarModulesAdmin
+        settings.SidebarModulesAdmin,
+        settings.ProfileModulesAdmin
       )
       const sidebarSerialized = serializeSidebarModulesAdmin(sidebarConfig)
       return (

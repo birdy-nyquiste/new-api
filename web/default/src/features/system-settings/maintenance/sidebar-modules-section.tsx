@@ -62,19 +62,19 @@ export function SidebarModulesSection({
 
   const sectionMeta: Record<string, { title: string; description: string }> = {
     chat: {
-      title: t('Chat area'),
+      title: t('Chat'),
       description: t('Playground experiments and live conversations.'),
     },
     console: {
-      title: t('Console area'),
-      description: t('Dashboards, tokens, and usage analytics.'),
+      title: t('General'),
+      description: t('Dashboards, keys, and usage analytics.'),
     },
     personal: {
-      title: t('Personal area'),
+      title: t('Personal'),
       description: t('Wallet management and personal preferences.'),
     },
     admin: {
-      title: t('Admin area'),
+      title: t('Admin'),
       description: t('Global configuration and administrative tools.'),
     },
   }
@@ -88,30 +88,38 @@ export function SidebarModulesSection({
         title: t('Playground'),
         description: t('Experiment with prompts and models in real time.'),
       },
+      modelCompare: {
+        title: t('Model Compare'),
+        description: t('Compare models side by side.'),
+      },
       chat: {
         title: t('Chat'),
         description: t('Access previous conversations and start new ones.'),
       },
     },
     console: {
-      detail: {
+      overview: {
+        title: t('Overview'),
+        description: t('Getting started and account overview.'),
+      },
+      dashboard: {
         title: t('Dashboard'),
         description: t('Aggregated usage metrics and trend charts.'),
       },
       token: {
-        title: t('Token management'),
-        description: t('Create, revoke, and audit API tokens.'),
+        title: t('API Keys'),
+        description: t('Create, revoke, and audit API keys.'),
       },
       log: {
-        title: t('Usage logs'),
+        title: t('Usage Logs'),
         description: t('Detailed request logs for investigations.'),
       },
       midjourney: {
-        title: t('Drawing logs'),
+        title: t('Drawing Logs'),
         description: t('History of Midjourney-style image tasks.'),
       },
       task: {
-        title: t('Task logs'),
+        title: t('Task Logs'),
         description: t('Background job tracker for queued work.'),
       },
     },
@@ -135,7 +143,7 @@ export function SidebarModulesSection({
         description: t('Manage catalog visibility and pricing.'),
       },
       redemption: {
-        title: t('Redeem codes'),
+        title: t('Redemption Codes'),
         description: t('Create and review invite or credit codes.'),
       },
       user: {
@@ -143,13 +151,80 @@ export function SidebarModulesSection({
         description: t('Administer user accounts and roles.'),
       },
       setting: {
-        title: t('System settings'),
+        title: t('System Settings'),
         description: t('Advanced platform configuration.'),
       },
       subscription: {
         title: t('Subscription Management'),
         description: t('Manage subscription plans and pricing.'),
       },
+    },
+  }
+
+  // Card-level (third tier) metadata, keyed by card key.
+  const cardMeta: Record<string, { title: string; description: string }> = {
+    // Overview page cards
+    setupGuide: {
+      title: t('Setup guide'),
+      description: t('Get started steps and recommended actions.'),
+    },
+    performanceHealth: {
+      title: t('Performance health'),
+      description: t('System performance metrics (admin only).'),
+    },
+    uptime: {
+      title: t('Uptime'),
+      description: t('Service uptime and status panel.'),
+    },
+    apiInfo: {
+      title: t('API Info'),
+      description: t('API endpoint and connection details.'),
+    },
+    announcements: {
+      title: t('Announcements'),
+      description: t('System announcements panel.'),
+    },
+    faq: {
+      title: t('FAQ'),
+      description: t('Frequently asked questions panel.'),
+    },
+    // Wallet page cards
+    referral: {
+      title: t('Referral Program'),
+      description: t('Affiliate and referral rewards card.'),
+    },
+    // Profile page cards
+    notifications: {
+      title: t('Notifications'),
+      description: t('Email notification settings in the Profile page.'),
+    },
+    language: {
+      title: t('Language Preferences'),
+      description: t('Interface language selector in the Profile page.'),
+    },
+    security: {
+      title: t('Security'),
+      description: t('Access token, password, and account deletion actions.'),
+    },
+    checkin: {
+      title: t('Check-in'),
+      description: t('Daily check-in card when check-in is enabled.'),
+    },
+    passkey: {
+      title: t('Passkey Login'),
+      description: t('Passkey management card in the Profile page.'),
+    },
+    twoFactor: {
+      title: t('Two-Factor Authentication'),
+      description: t('Two-factor authentication management card.'),
+    },
+    accountBindings: {
+      title: t('Account Bindings'),
+      description: t('Email and third-party account binding controls.'),
+    },
+    sidebarSettings: {
+      title: t('Sidebar Personal Settings'),
+      description: t('User sidebar visibility preferences card.'),
     },
   }
   const formDefaults = useMemo(() => config, [config])
@@ -225,17 +300,24 @@ export function SidebarModulesSection({
                 />
 
                 <SettingsControlChildren className='grid gap-3 md:grid-cols-2'>
-                  {modules.map(([moduleKey]) => {
+                  {modules.map(([moduleKey, moduleValue]) => {
                     const moduleInfo = moduleMeta[sectionKey]?.[moduleKey] ?? {
                       title: toTitleCase(moduleKey),
                       description: t('Custom module'),
                     }
+                    // Object nodes bind their on/off state to `<module>.enabled`;
+                    // simple boolean modules bind directly to `<module>`.
+                    const isCardBearing =
+                      moduleValue !== null && typeof moduleValue === 'object'
+                    const fieldName = isCardBearing
+                      ? `${sectionKey}.${moduleKey}.enabled`
+                      : `${sectionKey}.${moduleKey}`
                     return (
                       <FormField
                         key={`${sectionKey}.${moduleKey}`}
                         control={form.control}
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        name={`${sectionKey}.${moduleKey}` as any}
+                        name={fieldName as any}
                         render={({ field }) => (
                           <SettingsSwitchItem className='border-b-0 py-2'>
                             <SettingsSwitchContent>
@@ -260,6 +342,69 @@ export function SidebarModulesSection({
                     )
                   })}
                 </SettingsControlChildren>
+
+                {modules.map(([moduleKey, moduleValue]) => {
+                  if (moduleValue === null || typeof moduleValue !== 'object') {
+                    return null
+                  }
+                  const cardKeys = Object.keys(moduleValue.cards ?? {})
+                  if (cardKeys.length === 0) return null
+                  const moduleInfo = moduleMeta[sectionKey]?.[moduleKey] ?? {
+                    title: toTitleCase(moduleKey),
+                    description: t('Custom module'),
+                  }
+                  const sectionOff =
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    !form.watch(`${sectionKey}.enabled` as any)
+                  const moduleOff =
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    !form.watch(`${sectionKey}.${moduleKey}.enabled` as any)
+                  return (
+                    <SettingsControlChildren
+                      key={`cards-${sectionKey}-${moduleKey}`}
+                      className='mt-1'
+                    >
+                      <FormLabel className='text-muted-foreground text-xs tracking-wider uppercase'>
+                        {t('{{module}} cards', { module: moduleInfo.title })}
+                      </FormLabel>
+                      <div className='mt-2 grid gap-3 md:grid-cols-2'>
+                        {cardKeys.map((cardKey) => {
+                          const cardInfo = cardMeta[cardKey] ?? {
+                            title: toTitleCase(cardKey),
+                            description: t('Custom card'),
+                          }
+                          return (
+                            <FormField
+                              key={`${sectionKey}.${moduleKey}.cards.${cardKey}`}
+                              control={form.control}
+                              name={
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                `${sectionKey}.${moduleKey}.cards.${cardKey}` as any
+                              }
+                              render={({ field }) => (
+                                <SettingsSwitchItem className='border-b-0 py-2'>
+                                  <SettingsSwitchContent>
+                                    <FormLabel>{cardInfo.title}</FormLabel>
+                                    <FormDescription>
+                                      {cardInfo.description}
+                                    </FormDescription>
+                                  </SettingsSwitchContent>
+                                  <FormControl>
+                                    <Switch
+                                      checked={Boolean(field.value)}
+                                      onCheckedChange={field.onChange}
+                                      disabled={sectionOff || moduleOff}
+                                    />
+                                  </FormControl>
+                                </SettingsSwitchItem>
+                              )}
+                            />
+                          )
+                        })}
+                      </div>
+                    </SettingsControlChildren>
+                  )
+                })}
               </SettingsControlGroup>
             )
           })}
