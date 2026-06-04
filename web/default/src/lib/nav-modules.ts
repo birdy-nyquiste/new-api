@@ -29,6 +29,9 @@ export type HeaderNavModules = {
   rankings: ModuleAccess
   docs: boolean
   about: boolean
+  search: boolean
+  announcements: boolean
+  theme: boolean
   [key: string]: boolean | ModuleAccess
 }
 
@@ -39,6 +42,9 @@ const DEFAULT_HEADER_NAV_MODULES: HeaderNavModules = {
   rankings: { enabled: true, requireAuth: false },
   docs: true,
   about: true,
+  search: true,
+  announcements: true,
+  theme: true,
 }
 
 const DEFAULTS: Record<HeaderNavModule, ModuleAccess> = {
@@ -185,27 +191,64 @@ export async function getFreshModuleAccess(
   }
 }
 
+// A module value may be a plain boolean (simple page) or an object
+// `{ enabled, cards }` for pages that expose card-level toggles.
+type SidebarModuleNodeRaw =
+  | boolean
+  | { enabled?: boolean; cards?: Record<string, boolean> }
+
+function parseSidebarSection(
+  status: Record<string, unknown> | null,
+  section: string
+): Record<string, SidebarModuleNodeRaw> | null {
+  if (!status) return null
+  const raw = status.SidebarModulesAdmin
+  if (!raw || String(raw).trim() === '') return null
+  try {
+    const parsed = JSON.parse(String(raw)) as Record<
+      string,
+      Record<string, SidebarModuleNodeRaw>
+    >
+    return parsed[section] ?? null
+  } catch {
+    return null
+  }
+}
+
+/** A module node is "off" only when explicitly disabled. */
+function isModuleNodeOff(node: SidebarModuleNodeRaw | undefined): boolean {
+  if (node === false) return true
+  if (node && typeof node === 'object' && node.enabled === false) return true
+  return false
+}
+
 export function isSidebarModuleEnabled(
   section: string,
   module: string
 ): boolean {
-  const status = getCachedStatus()
-  if (!status) return true
+  const sectionConfig = parseSidebarSection(getCachedStatus(), section)
+  if (!sectionConfig) return true
+  if ((sectionConfig.enabled as unknown) === false) return false
+  return !isModuleNodeOff(sectionConfig[module])
+}
 
-  const raw = status.SidebarModulesAdmin
-  if (!raw || String(raw).trim() === '') return true
-
-  try {
-    const parsed = JSON.parse(String(raw)) as Record<
-      string,
-      Record<string, boolean>
-    >
-    const sectionConfig = parsed[section]
-    if (!sectionConfig) return true
-    if (sectionConfig.enabled === false) return false
-    if (sectionConfig[module] === false) return false
-    return true
-  } catch {
-    return true
+/**
+ * Whether a card within a page/module is visible. Defaults to visible when the
+ * config, section, module, or card entry is absent (legacy-safe). A card is
+ * hidden when its parent section/module is off, or the card itself is false.
+ */
+export function isSidebarCardEnabled(
+  section: string,
+  module: string,
+  card: string
+): boolean {
+  const sectionConfig = parseSidebarSection(getCachedStatus(), section)
+  if (!sectionConfig) return true
+  if ((sectionConfig.enabled as unknown) === false) return false
+  const node = sectionConfig[module]
+  if (isModuleNodeOff(node)) return false
+  if (node && typeof node === 'object' && node.cards) {
+    return node.cards[card] !== false
   }
+  return true
 }
