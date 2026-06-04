@@ -360,14 +360,20 @@ export function SidebarModulesSection({
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     !form.watch(`${sectionKey}.${moduleKey}.enabled` as any)
                   return (
-                    <SettingsControlChildren
+                    <div
                       key={`cards-${sectionKey}-${moduleKey}`}
-                      className='mt-1'
+                      className='border-primary/40 bg-background/70 mt-4 rounded-lg border border-l-4 p-3 shadow-xs'
                     >
-                      <FormLabel className='text-muted-foreground text-xs tracking-wider uppercase'>
-                        {t('{{module}} cards', { module: moduleInfo.title })}
-                      </FormLabel>
-                      <div className='mt-2 grid gap-3 md:grid-cols-2'>
+                      <div className='mb-3 flex items-center gap-2 border-b pb-2'>
+                        <span
+                          className='bg-primary/70 h-4 w-1 rounded-full'
+                          aria-hidden='true'
+                        />
+                        <FormLabel className='text-foreground text-xs font-semibold tracking-wide uppercase'>
+                          {t('{{module}} cards', { module: moduleInfo.title })}
+                        </FormLabel>
+                      </div>
+                      <div className='grid gap-3 md:grid-cols-2'>
                         {cardKeys.map((cardKey) => {
                           const cardInfo = cardMeta[cardKey] ?? {
                             title: toTitleCase(cardKey),
@@ -402,7 +408,7 @@ export function SidebarModulesSection({
                           )
                         })}
                       </div>
-                    </SettingsControlChildren>
+                    </div>
                   )
                 })}
               </SettingsControlGroup>
