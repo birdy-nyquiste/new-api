@@ -20,8 +20,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
+import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 import { cn } from '@/lib/utils'
 import { useNotifications } from '@/hooks/use-notifications'
+import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { Button } from '@/components/ui/button'
@@ -97,6 +99,18 @@ export function PublicHeader(props: PublicHeaderProps) {
   const notifications = useNotifications()
   const routerState = useRouterState()
   const pathname = routerState.location.pathname
+
+  // Admin-controlled header element visibility (shared with the console header
+  // via HeaderNavModules). Combined with the component props so an explicit
+  // prop=false still hides, and the admin toggle can hide on top of that.
+  const { status } = useStatus()
+  const headerModules = parseHeaderNavModulesFromStatus(
+    status as Record<string, unknown> | null
+  )
+  const showThemeSwitchEffective =
+    showThemeSwitch && headerModules.theme !== false
+  const showNotificationsEffective =
+    showNotifications && headerModules.announcements !== false
 
   const user = auth.user
   const isAuthenticated = !!user
@@ -262,14 +276,14 @@ export function PublicHeader(props: PublicHeaderProps) {
               })}
 
               {(showLanguageSwitcher ||
-                showThemeSwitch ||
-                showNotifications) && (
+                showThemeSwitchEffective ||
+                showNotificationsEffective) && (
                 <div className='bg-border/40 mx-2 h-4 w-px' />
               )}
 
               {showLanguageSwitcher && <LanguageSwitcher />}
-              {showThemeSwitch && <ThemeSwitch />}
-              {showNotifications && (
+              {showThemeSwitchEffective && <ThemeSwitch />}
+              {showNotificationsEffective && (
                 <NotificationPopover
                   open={notifications.popoverOpen}
                   onOpenChange={notifications.setPopoverOpen}
@@ -304,7 +318,7 @@ export function PublicHeader(props: PublicHeaderProps) {
 
             {/* Mobile: compact actions + hamburger */}
             <div className='flex items-center gap-2 sm:hidden'>
-              {showThemeSwitch && <ThemeSwitch />}
+              {showThemeSwitchEffective && <ThemeSwitch />}
               {showAuthButtons && !loading && isAuthenticated && (
                 <ProfileDropdown />
               )}

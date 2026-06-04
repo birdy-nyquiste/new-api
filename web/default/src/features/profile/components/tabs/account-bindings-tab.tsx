@@ -157,7 +157,7 @@ export function AccountBindingsTab({
         icon: Mail,
         value: profile.email,
         isBound: Boolean(profile.email),
-        isEnabled: true,
+        isEnabled: !profile.email_auth_locked,
         onBind: () => dialogs.open('email'),
       },
       {

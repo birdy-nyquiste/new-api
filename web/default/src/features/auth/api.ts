@@ -23,6 +23,8 @@ import type {
   Login2FAResponse,
   TwoFAPayload,
   RegisterPayload,
+  EmailOTPSendPayload,
+  EmailOTPVerifyPayload,
   ApiResponse,
 } from './types'
 
@@ -50,6 +52,22 @@ export async function login(payload: LoginPayload) {
 // Two-factor authentication login
 export async function login2fa(payload: TwoFAPayload) {
   const res = await api.post<Login2FAResponse>('/api/user/login/2fa', payload)
+  return res.data
+}
+
+export async function sendEmailOTP(
+  payload: EmailOTPSendPayload
+): Promise<ApiResponse<{ challenge_id?: string }>> {
+  const res = await api.post('/api/user/email-otp/send', payload, {
+    params: { turnstile: payload.turnstile ?? '' },
+  })
+  return res.data
+}
+
+export async function verifyEmailOTP(
+  payload: EmailOTPVerifyPayload
+): Promise<LoginResponse> {
+  const res = await api.post('/api/user/email-otp/verify', payload)
   return res.data
 }
 

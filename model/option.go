@@ -39,6 +39,12 @@ func InitOptionMap() {
 	common.OptionMap["PasswordLoginEnabled"] = strconv.FormatBool(common.PasswordLoginEnabled)
 	common.OptionMap["PasswordRegisterEnabled"] = strconv.FormatBool(common.PasswordRegisterEnabled)
 	common.OptionMap["EmailVerificationEnabled"] = strconv.FormatBool(common.EmailVerificationEnabled)
+	common.OptionMap["EmailOTPLoginEnabled"] = strconv.FormatBool(common.EmailOTPLoginEnabled)
+	common.OptionMap["EmailOTPRegisterEnabled"] = strconv.FormatBool(common.EmailOTPRegisterEnabled)
+	common.OptionMap["EmailOTPValidityMinutes"] = strconv.Itoa(common.EmailOTPValidityMinutes)
+	common.OptionMap["EmailOTPMaxAttempts"] = strconv.Itoa(common.EmailOTPMaxAttempts)
+	common.OptionMap["EmailOTPResendCooldownSeconds"] = strconv.Itoa(common.EmailOTPResendCooldownSeconds)
+	common.OptionMap["EmailOTPHourlyLimit"] = strconv.Itoa(common.EmailOTPHourlyLimit)
 	common.OptionMap["GitHubOAuthEnabled"] = strconv.FormatBool(common.GitHubOAuthEnabled)
 	common.OptionMap["LinuxDOOAuthEnabled"] = strconv.FormatBool(common.LinuxDOOAuthEnabled)
 	common.OptionMap["TelegramOAuthEnabled"] = strconv.FormatBool(common.TelegramOAuthEnabled)
@@ -284,6 +290,10 @@ func updateOptionMap(key string, value string) (err error) {
 			common.PasswordLoginEnabled = boolValue
 		case "EmailVerificationEnabled":
 			common.EmailVerificationEnabled = boolValue
+		case "EmailOTPLoginEnabled":
+			common.EmailOTPLoginEnabled = boolValue
+		case "EmailOTPRegisterEnabled":
+			common.EmailOTPRegisterEnabled = boolValue
 		case "GitHubOAuthEnabled":
 			common.GitHubOAuthEnabled = boolValue
 		case "LinuxDOOAuthEnabled":
@@ -361,6 +371,18 @@ func updateOptionMap(key string, value string) (err error) {
 		}
 	}
 	switch key {
+	case "EmailOTPValidityMinutes":
+		intValue, _ := strconv.Atoi(value)
+		common.EmailOTPValidityMinutes = intValue
+	case "EmailOTPMaxAttempts":
+		intValue, _ := strconv.Atoi(value)
+		common.EmailOTPMaxAttempts = intValue
+	case "EmailOTPResendCooldownSeconds":
+		intValue, _ := strconv.Atoi(value)
+		common.EmailOTPResendCooldownSeconds = intValue
+	case "EmailOTPHourlyLimit":
+		intValue, _ := strconv.Atoi(value)
+		common.EmailOTPHourlyLimit = intValue
 	case "EmailDomainWhitelist":
 		common.EmailDomainWhitelist = strings.Split(value, ",")
 	case "SMTPServer":

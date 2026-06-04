@@ -10,6 +10,28 @@ import (
 	"time"
 )
 
+func SMTPReadyForAuthEmail() (bool, string) {
+	if strings.TrimSpace(SMTPServer) == "" {
+		return false, "SMTP host is not configured"
+	}
+	if strings.TrimSpace(SMTPAccount) == "" {
+		return false, "SMTP account is not configured"
+	}
+	if strings.TrimSpace(SMTPFrom) == "" {
+		return false, "SMTP from address is not configured"
+	}
+	if strings.TrimSpace(SMTPToken) == "" {
+		return false, "SMTP password or access token is not configured"
+	}
+	if !strings.Contains(SMTPFrom, "@") {
+		return false, "SMTP from address is invalid"
+	}
+	if SMTPPort <= 0 || SMTPPort > 65535 {
+		return false, "SMTP port is invalid"
+	}
+	return true, ""
+}
+
 func generateMessageID() (string, error) {
 	split := strings.Split(SMTPFrom, "@")
 	if len(split) < 2 {

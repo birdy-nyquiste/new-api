@@ -117,6 +117,10 @@ type OptionUpdateRequest struct {
 	Value any    `json:"value"`
 }
 
+type SMTPTestEmailRequest struct {
+	Email string `json:"email"`
+}
+
 func UpdateOption(c *gin.Context) {
 	var option OptionUpdateRequest
 	err := common.DecodeJson(c.Request.Body, &option)
@@ -150,6 +154,16 @@ func UpdateOption(c *gin.Context) {
 		}
 	}
 	switch option.Key {
+	case "EmailOTPLoginEnabled", "EmailOTPRegisterEnabled":
+		if option.Value == "true" {
+			if ready, reason := common.SMTPReadyForAuthEmail(); !ready {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": "无法启用邮箱验证码登录/注册，请先完成 SMTP 邮件配置：" + reason,
+				})
+				return
+			}
+		}
 	case "GitHubOAuthEnabled":
 		if option.Value == "true" && common.GitHubClientId == "" {
 			c.JSON(http.StatusOK, gin.H{
@@ -341,4 +355,28 @@ func UpdateOption(c *gin.Context) {
 		"success": true,
 		"message": "",
 	})
+}
+
+func SendSMTPTestEmail(c *gin.Context) {
+	var req SMTPTestEmailRequest
+	if err := common.DecodeJson(c.Request.Body, &req); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	email := strings.TrimSpace(req.Email)
+	if err := common.Validate.Var(email, "required,email"); err != nil {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
+		return
+	}
+	if ready, reason := common.SMTPReadyForAuthEmail(); !ready {
+		common.ApiErrorMsg(c, "SMTP 邮件配置未完成："+reason)
+		return
+	}
+	subject := fmt.Sprintf("%s SMTP test email", common.SystemName)
+	content := fmt.Sprintf("<p>This is a test email from %s.</p><p>If you received this message, SMTP is ready for email OTP authentication.</p>", common.SystemName)
+	if err := common.SendEmail(subject, email, content); err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccess(c, nil)
 }

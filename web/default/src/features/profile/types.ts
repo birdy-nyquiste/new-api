@@ -43,6 +43,10 @@ export interface UserProfile {
   role: number
   /** Email address */
   email?: string
+  /** Email identity is locked for passwordless OTP account */
+  email_auth_locked?: boolean
+  /** Whether the account has a password hash */
+  has_password?: boolean
   /** User group */
   group: string
   /** Current quota balance */

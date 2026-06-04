@@ -78,8 +78,12 @@ const SITE_SECTIONS = [
     id: 'sidebar-modules',
     titleKey: 'Sidebar modules',
     build: (settings: SiteSettings) => {
+      // Profile card toggles now live under Personal → Profile; the legacy
+      // ProfileModulesAdmin value is folded into the sidebar config so existing
+      // installs keep their settings.
       const sidebarConfig = parseSidebarModulesAdmin(
-        settings.SidebarModulesAdmin
+        settings.SidebarModulesAdmin,
+        settings.ProfileModulesAdmin
       )
       const sidebarSerialized = serializeSidebarModulesAdmin(sidebarConfig)
       return (

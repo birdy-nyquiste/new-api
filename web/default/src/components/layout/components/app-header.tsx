@@ -16,7 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 import { useNotifications } from '@/hooks/use-notifications'
+import { useStatus } from '@/hooks/use-status'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -106,6 +108,17 @@ export function AppHeader({
   const dynamicLinks = useTopNavLinks()
   const links = dynamicLinks.length > 0 ? dynamicLinks : navLinks
 
+  // Admin-controlled header element visibility (HeaderNavModules)
+  const { status } = useStatus()
+  const headerModules = parseHeaderNavModulesFromStatus(
+    status as Record<string, unknown> | null
+  )
+  const showSearchEffective = showSearch && headerModules.search !== false
+  const showNotificationsEffective =
+    showNotifications && headerModules.announcements !== false
+  const showConfigDrawerEffective =
+    showConfigDrawer && headerModules.theme !== false
+
   // Notifications hook
   const notifications = useNotifications()
 
@@ -125,8 +138,8 @@ export function AppHeader({
                 <TopNav links={links} />
               </div>
             )}
-            {showSearch && <Search />}
-            {showNotifications && (
+            {showSearchEffective && <Search />}
+            {showNotificationsEffective && (
               <NotificationPopover
                 open={notifications.popoverOpen}
                 onOpenChange={notifications.setPopoverOpen}
@@ -139,7 +152,7 @@ export function AppHeader({
               />
             )}
             <LanguageSwitcher />
-            {showConfigDrawer && <ConfigDrawer />}
+            {showConfigDrawerEffective && <ConfigDrawer />}
             {showProfileDropdown && <ProfileDropdown />}
           </div>
         )}

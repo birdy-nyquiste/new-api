@@ -40,6 +40,7 @@ export const userSchema = z.object({
   wechat_id: z.string().optional(),
   telegram_id: z.string().optional(),
   email: z.string().optional(),
+  email_auth_locked: z.boolean().optional(),
   quota: z.number(),
   used_quota: z.number(),
   request_count: z.number(),

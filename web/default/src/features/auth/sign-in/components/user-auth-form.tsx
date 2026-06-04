@@ -21,7 +21,7 @@ import type { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
-import { Loader2, LogIn, KeyRound } from 'lucide-react'
+import { Loader2, LogIn, KeyRound, Mail } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -52,7 +52,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/password-input'
 import { Turnstile } from '@/components/turnstile'
-import { login, wechatLoginByCode } from '@/features/auth/api'
+import {
+  login,
+  sendEmailOTP,
+  verifyEmailOTP,
+  wechatLoginByCode,
+} from '@/features/auth/api'
 import { LegalConsent } from '@/features/auth/components/legal-consent'
 import { OAuthProviders } from '@/features/auth/components/oauth-providers'
 import { loginFormSchema } from '@/features/auth/constants'
@@ -60,6 +65,8 @@ import { useAuthRedirect } from '@/features/auth/hooks/use-auth-redirect'
 import { useTurnstile } from '@/features/auth/hooks/use-turnstile'
 import { beginPasskeyLogin, finishPasskeyLogin } from '@/features/auth/passkey'
 import type { AuthFormProps } from '@/features/auth/types'
+
+type SignInMethod = 'email_otp' | 'password'
 
 export function UserAuthForm({
   className,
@@ -72,6 +79,14 @@ export function UserAuthForm({
   const [agreedToLegal, setAgreedToLegal] = useState(false)
   const [passkeySupported, setPasskeySupported] = useState(false)
   const [isPasskeyLoading, setIsPasskeyLoading] = useState(false)
+  const [emailOTP, setEmailOTP] = useState('')
+  const [emailOTPCode, setEmailOTPCode] = useState('')
+  const [emailOTPChallengeId, setEmailOTPChallengeId] = useState('')
+  const [isEmailOTPSending, setIsEmailOTPSending] = useState(false)
+  const [isEmailOTPVerifying, setIsEmailOTPVerifying] = useState(false)
+  const [emailOTPCooldown, setEmailOTPCooldown] = useState(0)
+  const [selectedMethod, setSelectedMethod] =
+    useState<SignInMethod>('email_otp')
   const [isWeChatDialogOpen, setIsWeChatDialogOpen] = useState(false)
   const [isWeChatSubmitting, setIsWeChatSubmitting] = useState(false)
   const legalConsentErrorMessage = t('Please agree to the legal terms first')
@@ -85,6 +100,18 @@ export function UserAuthForm({
     (status?.password_login_enabled ??
       status?.data?.password_login_enabled ??
       true) !== false
+  const emailOTPLoginEnabled = Boolean(
+    status?.email_otp_login_enabled ?? status?.data?.email_otp_login_enabled
+  )
+  const smtpConfigured = Boolean(
+    status?.smtp_configured ?? status?.data?.smtp_configured
+  )
+  const emailOTPAvailable = emailOTPLoginEnabled && smtpConfigured
+  const emailOTPCooldownSeconds = Number(
+    status?.email_otp_resend_cooldown ??
+      status?.data?.email_otp_resend_cooldown ??
+      60
+  )
   const {
     isTurnstileEnabled,
     turnstileSiteKey,
@@ -112,6 +139,17 @@ export function UserAuthForm({
   )
   const hasAlternativeLogin =
     passkeyLoginEnabled || hasWeChatLogin || hasOAuthLogin
+  const activeMethod: SignInMethod =
+    selectedMethod === 'email_otp' && emailOTPAvailable
+      ? 'email_otp'
+      : selectedMethod === 'password' && passwordLoginEnabled
+        ? 'password'
+        : emailOTPAvailable
+          ? 'email_otp'
+          : 'password'
+  const canSwitchToPassword =
+    activeMethod !== 'password' && passwordLoginEnabled
+  const canSwitchToEmailOTP = activeMethod !== 'email_otp' && emailOTPAvailable
 
   useEffect(() => {
     if (requiresLegalConsent) {
@@ -126,6 +164,14 @@ export function UserAuthForm({
       .then(setPasskeySupported)
       .catch(() => setPasskeySupported(false))
   }, [])
+
+  useEffect(() => {
+    if (emailOTPCooldown <= 0) return
+    const timer = window.setTimeout(() => {
+      setEmailOTPCooldown((value) => Math.max(0, value - 1))
+    }, 1000)
+    return () => window.clearTimeout(timer)
+  }, [emailOTPCooldown])
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -178,6 +224,79 @@ export function UserAuthForm({
       // Errors are handled by global interceptor
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function handleSendEmailOTP() {
+    if (requiresLegalConsent && !agreedToLegal) {
+      toast.error(legalConsentErrorMessage)
+      return
+    }
+    if (!emailOTP.trim()) {
+      toast.error(t('Please enter your email'))
+      return
+    }
+    if (!validateTurnstile()) return
+
+    setIsEmailOTPSending(true)
+    try {
+      const res = await sendEmailOTP({
+        email: emailOTP.trim(),
+        purpose: 'login',
+        turnstile: turnstileToken,
+      })
+      if (res.success) {
+        const nextChallengeId =
+          typeof res.data?.challenge_id === 'string'
+            ? res.data.challenge_id
+            : ''
+        setEmailOTPChallengeId(nextChallengeId)
+        setEmailOTPCooldown(emailOTPCooldownSeconds)
+        toast.success(
+          t('A verification code will arrive shortly if this email is eligible.')
+        )
+      } else {
+        toast.error(res.message || t('Failed to send code'))
+      }
+    } catch (_error) {
+      toast.error(t('Failed to send code'))
+    } finally {
+      setIsEmailOTPSending(false)
+    }
+  }
+
+  async function handleVerifyEmailOTP() {
+    if (requiresLegalConsent && !agreedToLegal) {
+      toast.error(legalConsentErrorMessage)
+      return
+    }
+    if (!emailOTP.trim() || !emailOTPCode.trim() || !emailOTPChallengeId) {
+      toast.error(t('Please enter email and verification code'))
+      return
+    }
+
+    setIsEmailOTPVerifying(true)
+    try {
+      const res = await verifyEmailOTP({
+        email: emailOTP.trim(),
+        purpose: 'login',
+        challenge_id: emailOTPChallengeId,
+        code: emailOTPCode.trim(),
+      })
+      if (res.success) {
+        if (res.data?.require_2fa) {
+          redirectTo2FA()
+          return
+        }
+        await handleLoginSuccess(res.data as { id?: number } | null, redirectTo)
+        toast.success(t('Welcome back!'))
+      } else {
+        toast.error(res.message || loginFailedMessage)
+      }
+    } catch (_error) {
+      toast.error(loginFailedMessage)
+    } finally {
+      setIsEmailOTPVerifying(false)
     }
   }
 
@@ -328,13 +447,81 @@ export function UserAuthForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={
+          activeMethod === 'password'
+            ? form.handleSubmit(onSubmit)
+            : (event) => event.preventDefault()
+        }
         className={cn('grid gap-4', className)}
         {...props}
       >
-        {hasAlternativeLogin && alternativeLoginMethods}
+        {activeMethod === 'email_otp' && emailOTPAvailable && (
+          <div className='grid gap-3'>
+            <div className='grid gap-2'>
+              <Label htmlFor='signin-email-otp'>{t('Email')}</Label>
+              <Input
+                id='signin-email-otp'
+                type='email'
+                autoComplete='email'
+                placeholder={t('name@example.com')}
+                value={emailOTP}
+                disabled={isEmailOTPSending || isEmailOTPVerifying}
+                onChange={(event) => {
+                  setEmailOTP(event.target.value)
+                  setEmailOTPChallengeId('')
+                  setEmailOTPCode('')
+                }}
+              />
+            </div>
+            <div className='flex gap-2'>
+              <Input
+                inputMode='numeric'
+                autoComplete='one-time-code'
+                placeholder={t('Enter the email code')}
+                value={emailOTPCode}
+                disabled={!emailOTPChallengeId || isEmailOTPVerifying}
+                onChange={(event) => setEmailOTPCode(event.target.value)}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                disabled={
+                  isEmailOTPSending ||
+                  isEmailOTPVerifying ||
+                  emailOTPCooldown > 0
+                }
+                onClick={handleSendEmailOTP}
+              >
+                {isEmailOTPSending ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : emailOTPCooldown > 0 ? (
+                  t('Resend ({{seconds}}s)', { seconds: emailOTPCooldown })
+                ) : (
+                  t('Send code')
+                )}
+              </Button>
+            </div>
+            <Button
+              type='button'
+              className='w-full justify-center gap-2'
+              disabled={
+                !emailOTPChallengeId ||
+                isEmailOTPVerifying ||
+                (requiresLegalConsent && !agreedToLegal)
+              }
+              onClick={handleVerifyEmailOTP}
+            >
+              {isEmailOTPVerifying ? (
+                <Loader2 className='h-4 w-4 animate-spin' />
+              ) : (
+                <Mail className='h-4 w-4' />
+              )}
+              {t('Sign in with email code')}
+            </Button>
+          </div>
+        )}
 
-        {passwordLoginEnabled && (
+        {activeMethod === 'password' && passwordLoginEnabled && (
           <>
             {/* Username Field */}
             <FormField
@@ -387,17 +574,54 @@ export function UserAuthForm({
               {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
               {t('Sign in')}
             </Button>
-
-            {/* Turnstile */}
-            {isTurnstileEnabled && (
-              <div className='mt-2'>
-                <Turnstile
-                  siteKey={turnstileSiteKey}
-                  onVerify={setTurnstileToken}
-                />
-              </div>
-            )}
           </>
+        )}
+
+        {(canSwitchToPassword ||
+          canSwitchToEmailOTP ||
+          hasAlternativeLogin) && (
+          <div className='grid gap-2'>
+            <div className='text-muted-foreground flex items-center gap-2 text-xs font-medium'>
+              <span className='bg-border h-px flex-1' />
+              <span>{t('Other methods')}</span>
+              <span className='bg-border h-px flex-1' />
+            </div>
+
+            {canSwitchToPassword && (
+              <Button
+                type='button'
+                variant='outline'
+                className='h-11 w-full justify-center gap-2 rounded-lg'
+                onClick={() => setSelectedMethod('password')}
+              >
+                <KeyRound className='h-4 w-4' />
+                {t('Sign in with password')}
+              </Button>
+            )}
+
+            {canSwitchToEmailOTP && (
+              <Button
+                type='button'
+                variant='outline'
+                className='h-11 w-full justify-center gap-2 rounded-lg'
+                onClick={() => setSelectedMethod('email_otp')}
+              >
+                <Mail className='h-4 w-4' />
+                {t('Sign in with email code')}
+              </Button>
+            )}
+
+            {alternativeLoginMethods}
+          </div>
+        )}
+
+        {isTurnstileEnabled && (
+          <div className='mt-2'>
+            <Turnstile
+              siteKey={turnstileSiteKey}
+              onVerify={setTurnstileToken}
+            />
+          </div>
         )}
 
         <LegalConsent
@@ -406,8 +630,6 @@ export function UserAuthForm({
           onCheckedChange={setAgreedToLegal}
           className='mt-1'
         />
-
-        {!hasAlternativeLogin && alternativeLoginMethods}
       </form>
 
       {hasWeChatLogin && (

@@ -16,13 +16,20 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useAuthStore } from '@/stores/auth-store'
+import { useMemo } from 'react'
+import { Link2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useStatus } from '@/hooks/use-status'
+import { TitledCard } from '@/components/ui/titled-card'
 import { Main } from '@/components/layout'
 import {
   CardStaggerContainer,
   CardStaggerItem,
 } from '@/components/page-transition'
+import {
+  parseProfileModulesAdmin,
+  parseSidebarModulesAdmin,
+} from '@/features/system-settings/maintenance/config'
 import { CheckinCalendarCard } from './components/checkin-calendar-card'
 import { LanguagePreferencesCard } from './components/language-preferences-card'
 import { PasskeyCard } from './components/passkey-card'
@@ -30,20 +37,35 @@ import { ProfileHeader } from './components/profile-header'
 import { ProfileSecurityCard } from './components/profile-security-card'
 import { ProfileSettingsCard } from './components/profile-settings-card'
 import { SidebarModulesCard } from './components/sidebar-modules-card'
+import { AccountBindingsTab } from './components/tabs/account-bindings-tab'
 import { TwoFACard } from './components/two-fa-card'
 import { useProfile } from './hooks'
 
 export function Profile() {
+  const { t } = useTranslation()
   const { profile, loading, refreshProfile } = useProfile()
   const { status } = useStatus()
-  const permissions = useAuthStore((s) => s.auth.user?.permissions)
+  // Profile card visibility now lives under Sidebar modules →
+  // Personal → Profile; fall back to the legacy ProfileModulesAdmin value.
+  const profileModules = useMemo(() => {
+    const sidebar = parseSidebarModulesAdmin(
+      status?.SidebarModulesAdmin as string | null | undefined,
+      status?.ProfileModulesAdmin as string | null | undefined
+    )
+    const node = sidebar.personal?.personal
+    if (node && typeof node === 'object') {
+      return node.cards
+    }
+    return parseProfileModulesAdmin(
+      status?.ProfileModulesAdmin as string | null | undefined
+    )
+  }, [status?.SidebarModulesAdmin, status?.ProfileModulesAdmin])
 
   const checkinEnabled = status?.checkin_enabled === true
   const turnstileEnabled = !!(
     status?.turnstile_check && status?.turnstile_site_key
   )
   const turnstileSiteKey = status?.turnstile_site_key || ''
-  const canConfigureSidebar = permissions?.sidebar_settings !== false
 
   return (
     <Main>
@@ -54,32 +76,47 @@ export function Profile() {
           </CardStaggerItem>
 
           <CardStaggerItem>
-            <div className='grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.46fr)] xl:items-start'>
-              <div className='space-y-4 sm:space-y-6'>
+            <div className='space-y-4 sm:space-y-6'>
+              {profileModules.checkin && checkinEnabled && (
+                <CheckinCalendarCard
+                  checkinEnabled={checkinEnabled}
+                  turnstileEnabled={turnstileEnabled}
+                  turnstileSiteKey={turnstileSiteKey}
+                />
+              )}
+              {profileModules.notifications && (
                 <ProfileSettingsCard
                   profile={profile}
                   loading={loading}
                   onProfileUpdate={refreshProfile}
                 />
+              )}
+
+              {profileModules.accountBindings && (
+                <TitledCard
+                  title={t('Account Bindings')}
+                  description={t('Manage linked sign-in methods')}
+                  icon={<Link2 className='h-4 w-4' />}
+                >
+                  <AccountBindingsTab
+                    profile={profile}
+                    onUpdate={refreshProfile}
+                  />
+                </TitledCard>
+              )}
+
+              {profileModules.language && (
                 <LanguagePreferencesCard
                   profile={profile}
                   onProfileUpdate={refreshProfile}
                 />
+              )}
+              {profileModules.security && (
                 <ProfileSecurityCard profile={profile} loading={loading} />
-              </div>
-
-              <div className='space-y-4 sm:space-y-6 xl:sticky xl:top-6'>
-                {checkinEnabled && (
-                  <CheckinCalendarCard
-                    checkinEnabled={checkinEnabled}
-                    turnstileEnabled={turnstileEnabled}
-                    turnstileSiteKey={turnstileSiteKey}
-                  />
-                )}
-                {canConfigureSidebar && <SidebarModulesCard />}
-                <PasskeyCard loading={loading} />
-                <TwoFACard loading={loading} />
-              </div>
+              )}
+              {profileModules.sidebarSettings && <SidebarModulesCard />}
+              {profileModules.passkey && <PasskeyCard loading={loading} />}
+              {profileModules.twoFactor && <TwoFACard loading={loading} />}
             </div>
           </CardStaggerItem>
         </CardStaggerContainer>

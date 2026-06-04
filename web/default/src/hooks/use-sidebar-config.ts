@@ -20,13 +20,34 @@ import { useMemo } from 'react'
 import { useAuthStore } from '@/stores/auth-store'
 import { useStatus } from '@/hooks/use-status'
 import type { NavGroup, NavItem } from '@/components/layout/types'
+import { parseProfileModulesAdmin } from '@/features/system-settings/maintenance/config'
+
+// A module value is either a plain boolean (simple page) or an object
+// `{ enabled, cards }` for pages that expose card-level toggles (e.g. Profile).
+type SidebarModuleNode =
+  | boolean
+  | { enabled: boolean; cards?: Record<string, boolean> }
 
 type SidebarSectionConfig = {
   enabled: boolean
-  [key: string]: boolean
+  [key: string]: SidebarModuleNode
 }
 
 type SidebarModulesAdminConfig = Record<string, SidebarSectionConfig>
+
+/** Admin-layer check: a module is allowed when present and not disabled. */
+const isAdminNodeEnabled = (node: SidebarModuleNode | undefined): boolean => {
+  if (node === undefined) return false
+  if (typeof node === 'boolean') return node
+  return node.enabled !== false
+}
+
+/** User-layer check: only narrows — hidden only when explicitly disabled. */
+const isUserNodeAllowed = (node: SidebarModuleNode | undefined): boolean => {
+  if (node === false) return false
+  if (node && typeof node === 'object' && node.enabled === false) return false
+  return true
+}
 
 // User-layer config is shape-identical to admin, but may be null
 // to signal "no narrowing" (empty/invalid/legacy users).
@@ -39,11 +60,13 @@ const DEFAULT_SIDEBAR_MODULES: SidebarModulesAdminConfig = {
   chat: {
     enabled: true,
     playground: true,
+    modelCompare: true,
     chat: true,
   },
   console: {
     enabled: true,
-    detail: true,
+    overview: true,
+    dashboard: true,
     token: true,
     log: true,
     midjourney: true,
@@ -95,10 +118,11 @@ const mergeWithDefaultSidebarModules = (
  */
 const URL_TO_CONFIG_MAP: Record<string, { section: string; module: string }> = {
   '/playground': { section: 'chat', module: 'playground' },
-  '/dashboard': { section: 'console', module: 'detail' },
-  '/dashboard/overview': { section: 'console', module: 'detail' },
-  '/dashboard/models': { section: 'console', module: 'detail' },
-  '/dashboard/users': { section: 'console', module: 'detail' },
+  '/dashboard/model-compare': { section: 'chat', module: 'modelCompare' },
+  '/dashboard': { section: 'console', module: 'overview' },
+  '/dashboard/overview': { section: 'console', module: 'overview' },
+  '/dashboard/models': { section: 'console', module: 'dashboard' },
+  '/dashboard/users': { section: 'console', module: 'dashboard' },
   '/keys': { section: 'console', module: 'token' },
   '/usage-logs': { section: 'console', module: 'log' },
   '/usage-logs/common': { section: 'console', module: 'log' },
@@ -130,7 +154,23 @@ function parseSidebarConfig(
 
   try {
     const parsed = JSON.parse(value) as SidebarModulesAdminConfig
-    return mergeWithDefaultSidebarModules(parsed)
+    const merged = mergeWithDefaultSidebarModules(parsed)
+
+    // Migration: the old single `console.detail` toggle was split into
+    // `overview` + `dashboard`. Carry its value over when the new keys are
+    // absent so existing gating is preserved until the admin re-saves.
+    const rawConsole = (parsed?.console ?? {}) as Record<string, unknown>
+    if (
+      'detail' in rawConsole &&
+      !('overview' in rawConsole) &&
+      !('dashboard' in rawConsole)
+    ) {
+      const detailVal = rawConsole.detail !== false
+      merged.console.overview = detailVal
+      merged.console.dashboard = detailVal
+    }
+
+    return merged
   } catch {
     // eslint-disable-next-line no-console
     console.error('Failed to parse sidebar modules configuration')
@@ -143,7 +183,7 @@ function parseSidebarConfig(
  * invalid, or otherwise unusable — the caller treats null as "do not narrow",
  * so legacy users with an empty sidebar_modules field keep the full admin view.
  */
-function parseUserSidebarConfig(
+export function parseUserSidebarConfig(
   value: string | null | undefined
 ): SidebarModulesUserConfig {
   if (!value || value.trim() === '') {
@@ -178,7 +218,9 @@ function isModuleEnabled(
   const { section, module } = mapping
   const adminSection = adminConfig[section]
   const adminAllowed = Boolean(
-    adminSection && adminSection.enabled && adminSection[module] === true
+    adminSection &&
+    adminSection.enabled &&
+    isAdminNodeEnabled(adminSection[module])
   )
   if (!adminAllowed) return false
 
@@ -187,7 +229,7 @@ function isModuleEnabled(
   const userSection = userConfig[section]
   if (!userSection) return true
   if (userSection.enabled === false) return false
-  return userSection[module] !== false
+  return isUserNodeAllowed(userSection[module])
 }
 
 /**
@@ -201,13 +243,15 @@ function isNavItemVisible(
   // Handle dynamic chat presets type — also runs the admin × user AND gate
   if ('type' in item && item.type === 'chat-presets') {
     const adminChat = adminConfig.chat
-    const adminAllowed = Boolean(adminChat?.enabled && adminChat.chat === true)
+    const adminAllowed = Boolean(
+      adminChat?.enabled && isAdminNodeEnabled(adminChat.chat)
+    )
     if (!adminAllowed) return false
     if (!userConfig) return true
     const userChat = userConfig.chat
     if (!userChat) return true
     if (userChat.enabled === false) return false
-    return userChat.chat !== false
+    return isUserNodeAllowed(userChat.chat)
   }
 
   // Handle direct link type
@@ -262,19 +306,13 @@ function filterNavItems(
  *   1. Admin (status.SidebarModulesAdmin) — authoritative, falls back to
  *      DEFAULT_SIDEBAR_MODULES when empty/invalid. Disabling here hides the
  *      item for everyone regardless of user preference.
- *   2. User (auth.user.sidebar_modules) — narrower overlay, null sentinel
- *      means "don't narrow". A section/module is only hidden if the user
- *      explicitly set it to false; undefined fields default to visible so
- *      legacy users with empty sidebar_modules keep the full admin view.
- *      The overlay is also skipped entirely when the backend tells us the
- *      user cannot configure sidebar_settings (e.g. root accounts), so a
- *      stale historical value cannot lock them out of entries they have no
- *      UI to restore.
+ *   2. User (auth.user.sidebar_modules) — applied only when the admin enables
+ *      the Profile page's Sidebar Personal Settings module. Otherwise the
+ *      visible sidebar follows the admin configuration only.
  */
 export function useSidebarConfig(navGroups: NavGroup[]): NavGroup[] {
   const { status } = useStatus()
   const { auth } = useAuthStore()
-
   const adminConfig = useMemo(
     () =>
       parseSidebarConfig(
@@ -282,18 +320,36 @@ export function useSidebarConfig(navGroups: NavGroup[]): NavGroup[] {
       ),
     [status?.SidebarModulesAdmin]
   )
+  // "Sidebar Personal Settings" now lives under Sidebar modules →
+  // Personal → Profile cards; fall back to the legacy ProfileModulesAdmin flag.
+  const sidebarSettingsEnabled = useMemo(() => {
+    const node = adminConfig.personal?.personal
+    if (
+      node &&
+      typeof node === 'object' &&
+      node.cards &&
+      'sidebarSettings' in node.cards
+    ) {
+      return node.cards.sidebarSettings !== false
+    }
+    return parseProfileModulesAdmin(
+      status?.ProfileModulesAdmin as string | null | undefined
+    ).sidebarSettings
+  }, [adminConfig, status?.ProfileModulesAdmin])
 
   const userConfig = useMemo(() => {
-    // If the backend marks the user as unable to configure the sidebar
-    // (e.g. root accounts), skip the user overlay entirely — a stale
-    // historical sidebar_modules value from a previous role would otherwise
-    // hide admin entries for someone who has no in-product UI to restore
-    // them.
+    if (!sidebarSettingsEnabled) {
+      return null
+    }
     if (auth?.user?.permissions?.sidebar_settings === false) {
       return null
     }
     return parseUserSidebarConfig(auth?.user?.sidebar_modules)
-  }, [auth?.user?.permissions?.sidebar_settings, auth?.user?.sidebar_modules])
+  }, [
+    auth?.user?.permissions?.sidebar_settings,
+    auth?.user?.sidebar_modules,
+    sidebarSettingsEnabled,
+  ])
 
   const filteredNavGroups = useMemo(
     () =>

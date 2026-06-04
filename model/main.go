@@ -260,6 +260,7 @@ func migrateDB() error {
 		&Token{},
 		&User{},
 		&PasskeyCredential{},
+		&UserEmailIdentity{},
 		&Option{},
 		&Redemption{},
 		&Ability{},
@@ -283,6 +284,9 @@ func migrateDB() error {
 		&PerfMetric{},
 	)
 	if err != nil {
+		return err
+	}
+	if err := backfillUserEmailIdentities(); err != nil {
 		return err
 	}
 	if common.UsingSQLite {
@@ -309,6 +313,7 @@ func migrateDBFast() error {
 		{&Token{}, "Token"},
 		{&User{}, "User"},
 		{&PasskeyCredential{}, "PasskeyCredential"},
+		{&UserEmailIdentity{}, "UserEmailIdentity"},
 		{&Option{}, "Option"},
 		{&Redemption{}, "Redemption"},
 		{&Ability{}, "Ability"},
@@ -362,6 +367,9 @@ func migrateDBFast() error {
 		if err := DB.AutoMigrate(&SubscriptionPlan{}); err != nil {
 			return err
 		}
+	}
+	if err := backfillUserEmailIdentities(); err != nil {
+		return err
 	}
 	common.SysLog("database migrated")
 	return nil
