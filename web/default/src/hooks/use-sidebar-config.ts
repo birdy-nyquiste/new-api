@@ -60,11 +60,13 @@ const DEFAULT_SIDEBAR_MODULES: SidebarModulesAdminConfig = {
   chat: {
     enabled: true,
     playground: true,
+    modelCompare: true,
     chat: true,
   },
   console: {
     enabled: true,
-    detail: true,
+    overview: true,
+    dashboard: true,
     token: true,
     log: true,
     midjourney: true,
@@ -116,10 +118,11 @@ const mergeWithDefaultSidebarModules = (
  */
 const URL_TO_CONFIG_MAP: Record<string, { section: string; module: string }> = {
   '/playground': { section: 'chat', module: 'playground' },
-  '/dashboard': { section: 'console', module: 'detail' },
-  '/dashboard/overview': { section: 'console', module: 'detail' },
-  '/dashboard/models': { section: 'console', module: 'detail' },
-  '/dashboard/users': { section: 'console', module: 'detail' },
+  '/dashboard/model-compare': { section: 'chat', module: 'modelCompare' },
+  '/dashboard': { section: 'console', module: 'overview' },
+  '/dashboard/overview': { section: 'console', module: 'overview' },
+  '/dashboard/models': { section: 'console', module: 'dashboard' },
+  '/dashboard/users': { section: 'console', module: 'dashboard' },
   '/keys': { section: 'console', module: 'token' },
   '/usage-logs': { section: 'console', module: 'log' },
   '/usage-logs/common': { section: 'console', module: 'log' },
@@ -151,7 +154,23 @@ function parseSidebarConfig(
 
   try {
     const parsed = JSON.parse(value) as SidebarModulesAdminConfig
-    return mergeWithDefaultSidebarModules(parsed)
+    const merged = mergeWithDefaultSidebarModules(parsed)
+
+    // Migration: the old single `console.detail` toggle was split into
+    // `overview` + `dashboard`. Carry its value over when the new keys are
+    // absent so existing gating is preserved until the admin re-saves.
+    const rawConsole = (parsed?.console ?? {}) as Record<string, unknown>
+    if (
+      'detail' in rawConsole &&
+      !('overview' in rawConsole) &&
+      !('dashboard' in rawConsole)
+    ) {
+      const detailVal = rawConsole.detail !== false
+      merged.console.overview = detailVal
+      merged.console.dashboard = detailVal
+    }
+
+    return merged
   } catch {
     // eslint-disable-next-line no-console
     console.error('Failed to parse sidebar modules configuration')

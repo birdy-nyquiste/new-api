@@ -98,11 +98,13 @@ export const SIDEBAR_MODULES_DEFAULT: SidebarModulesAdminConfig = {
   chat: {
     enabled: true,
     playground: true,
+    modelCompare: true,
     chat: true,
   },
   console: {
     enabled: true,
-    detail: true,
+    overview: true,
+    dashboard: true,
     token: true,
     log: true,
     midjourney: true,
@@ -327,13 +329,12 @@ export function parseSidebarModulesAdmin(
   }
 
   const result: SidebarModulesAdminConfig = {}
-  const sectionKeys = new Set([
-    ...Object.keys(defaults),
-    ...(parsed ? Object.keys(parsed) : []),
-  ])
 
-  sectionKeys.forEach((sectionKey) => {
-    const defaultSection = defaults[sectionKey] ?? { enabled: true }
+  // Iterate the known default sections/modules only. This drops any legacy keys
+  // from stored configs (e.g. the old `console.detail`) so they don't surface
+  // as stray toggles in the admin UI.
+  Object.keys(defaults).forEach((sectionKey) => {
+    const defaultSection = defaults[sectionKey]
     const rawSection = parsed?.[sectionKey]
     const rawSectionObj =
       rawSection && typeof rawSection === 'object'
@@ -347,11 +348,7 @@ export function parseSidebarModulesAdmin(
       ),
     }
 
-    const moduleKeys = new Set([
-      ...Object.keys(defaultSection),
-      ...(rawSectionObj ? Object.keys(rawSectionObj) : []),
-    ])
-    moduleKeys.forEach((moduleKey) => {
+    Object.keys(defaultSection).forEach((moduleKey) => {
       if (moduleKey === 'enabled') return
       sectionConfig[moduleKey] = parseModuleNode(
         rawSectionObj?.[moduleKey],
@@ -361,6 +358,21 @@ export function parseSidebarModulesAdmin(
 
     result[sectionKey] = sectionConfig
   })
+
+  // Migration: the old single `console.detail` toggle was split into separate
+  // `overview` and `dashboard` modules. When a stored config still uses
+  // `detail` (and lacks the new keys), carry its value into both.
+  const rawConsole = parsed?.console as Record<string, unknown> | undefined
+  if (
+    rawConsole &&
+    'detail' in rawConsole &&
+    !('overview' in rawConsole) &&
+    !('dashboard' in rawConsole)
+  ) {
+    const detailVal = toBoolean(rawConsole.detail, true)
+    result.console.overview = detailVal
+    result.console.dashboard = detailVal
+  }
 
   // Fold legacy ProfileModulesAdmin into Profile cards for existing installs.
   if (legacyProfileValue && !storedSidebarHasProfileCards(value)) {

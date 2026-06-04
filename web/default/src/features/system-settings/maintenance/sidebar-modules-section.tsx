@@ -62,19 +62,19 @@ export function SidebarModulesSection({
 
   const sectionMeta: Record<string, { title: string; description: string }> = {
     chat: {
-      title: t('Chat area'),
+      title: t('Chat'),
       description: t('Playground experiments and live conversations.'),
     },
     console: {
-      title: t('Console area'),
-      description: t('Dashboards, tokens, and usage analytics.'),
+      title: t('General'),
+      description: t('Dashboards, keys, and usage analytics.'),
     },
     personal: {
-      title: t('Personal area'),
+      title: t('Personal'),
       description: t('Wallet management and personal preferences.'),
     },
     admin: {
-      title: t('Admin area'),
+      title: t('Admin'),
       description: t('Global configuration and administrative tools.'),
     },
   }
@@ -88,30 +88,38 @@ export function SidebarModulesSection({
         title: t('Playground'),
         description: t('Experiment with prompts and models in real time.'),
       },
+      modelCompare: {
+        title: t('Model Compare'),
+        description: t('Compare models side by side.'),
+      },
       chat: {
         title: t('Chat'),
         description: t('Access previous conversations and start new ones.'),
       },
     },
     console: {
-      detail: {
+      overview: {
+        title: t('Overview'),
+        description: t('Getting started and account overview.'),
+      },
+      dashboard: {
         title: t('Dashboard'),
         description: t('Aggregated usage metrics and trend charts.'),
       },
       token: {
-        title: t('Token management'),
-        description: t('Create, revoke, and audit API tokens.'),
+        title: t('API Keys'),
+        description: t('Create, revoke, and audit API keys.'),
       },
       log: {
-        title: t('Usage logs'),
+        title: t('Usage Logs'),
         description: t('Detailed request logs for investigations.'),
       },
       midjourney: {
-        title: t('Drawing logs'),
+        title: t('Drawing Logs'),
         description: t('History of Midjourney-style image tasks.'),
       },
       task: {
-        title: t('Task logs'),
+        title: t('Task Logs'),
         description: t('Background job tracker for queued work.'),
       },
     },
@@ -135,7 +143,7 @@ export function SidebarModulesSection({
         description: t('Manage catalog visibility and pricing.'),
       },
       redemption: {
-        title: t('Redeem codes'),
+        title: t('Redemption Codes'),
         description: t('Create and review invite or credit codes.'),
       },
       user: {
@@ -143,7 +151,7 @@ export function SidebarModulesSection({
         description: t('Administer user accounts and roles.'),
       },
       setting: {
-        title: t('System settings'),
+        title: t('System Settings'),
         description: t('Advanced platform configuration.'),
       },
       subscription: {

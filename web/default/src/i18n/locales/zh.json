@@ -4680,6 +4680,15 @@
     "Console header controls": "控制台顶部控件",
     "Toggle elements shown in the authenticated console header.": "切换登录后控制台顶部显示的元素。",
     "{{module}} cards": "{{module}} 卡片",
-    "Custom card": "自定义卡片"
+    "Custom card": "自定义卡片",
+    "Global search box in the header.": "顶栏中的全局搜索框。",
+    "Theme and appearance settings.": "主题与外观设置。",
+    "Dashboards, keys, and usage analytics.": "仪表盘、密钥与用量分析。",
+    "Compare models side by side.": "并排比较模型。",
+    "Getting started and account overview.": "入门指引与账户概览。",
+    "Create, revoke, and audit API keys.": "创建、吊销并审计 API 密钥。",
+    "Compare models side by side": "并排比较模型",
+    "Getting started and account overview": "入门指引与账户概览",
+    "API key management": "API 密钥管理"
   }
 }

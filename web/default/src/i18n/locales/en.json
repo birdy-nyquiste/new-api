@@ -4680,6 +4680,15 @@
     "Console header controls": "Console header controls",
     "Toggle elements shown in the authenticated console header.": "Toggle elements shown in the authenticated console header.",
     "{{module}} cards": "{{module}} cards",
-    "Custom card": "Custom card"
+    "Custom card": "Custom card",
+    "Global search box in the header.": "Global search box in the header.",
+    "Theme and appearance settings.": "Theme and appearance settings.",
+    "Dashboards, keys, and usage analytics.": "Dashboards, keys, and usage analytics.",
+    "Compare models side by side.": "Compare models side by side.",
+    "Getting started and account overview.": "Getting started and account overview.",
+    "Create, revoke, and audit API keys.": "Create, revoke, and audit API keys.",
+    "Compare models side by side": "Compare models side by side",
+    "Getting started and account overview": "Getting started and account overview",
+    "API key management": "API key management"
   }
 }

@@ -189,17 +189,10 @@ export function HeaderNavigationSection({
       title: t('About'),
       description: t('Static page describing the platform.'),
     },
-  ]
-
-  const consoleHeaderModules: Array<{
-    key: keyof HeaderNavFormValues
-    title: string
-    description: string
-  }> = [
     {
       key: 'search',
       title: t('Search bar'),
-      description: t('Global search box in the console header.'),
+      description: t('Global search box in the header.'),
     },
     {
       key: 'announcements',
@@ -209,7 +202,7 @@ export function HeaderNavigationSection({
     {
       key: 'theme',
       title: t('Theme Settings'),
-      description: t('Theme and appearance configuration drawer.'),
+      description: t('Theme and appearance settings.'),
     },
   ]
 
@@ -331,43 +324,6 @@ export function HeaderNavigationSection({
                 />
               </SettingsControlGroup>
             ))}
-          </div>
-
-          <div className='space-y-3'>
-            <div>
-              <h3 className='text-sm font-medium'>
-                {t('Console header controls')}
-              </h3>
-              <p className='text-muted-foreground text-xs'>
-                {t(
-                  'Toggle elements shown in the authenticated console header.'
-                )}
-              </p>
-            </div>
-            <div className='grid gap-4 md:grid-cols-2'>
-              {consoleHeaderModules.map((module) => (
-                <FormField
-                  key={module.key}
-                  control={form.control}
-                  name={module.key}
-                  render={({ field }) => (
-                    <SettingsSwitchItem>
-                      <SettingsSwitchContent>
-                        <FormLabel>{module.title}</FormLabel>
-                        <FormDescription>{module.description}</FormDescription>
-                      </SettingsSwitchContent>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </SettingsSwitchItem>
-                  )}
-                />
-              ))}
-            </div>
           </div>
         </SettingsForm>
       </Form>
