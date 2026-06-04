@@ -16,9 +16,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import {
   Form,
   FormControl,
@@ -59,6 +61,9 @@ export function SidebarModulesSection({
 }: SidebarModulesSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
+
+  // Tracks which card-bearing tabs have their level-3 dropdown expanded.
+  const [expandedTabs, setExpandedTabs] = useState<Record<string, boolean>>({})
 
   const sectionMeta: Record<string, { title: string; description: string }> = {
     chat: {
@@ -299,118 +304,156 @@ export function SidebarModulesSection({
                   )}
                 />
 
-                <SettingsControlChildren className='grid gap-3 md:grid-cols-2'>
+                <SettingsControlChildren className='space-y-2'>
                   {modules.map(([moduleKey, moduleValue]) => {
                     const moduleInfo = moduleMeta[sectionKey]?.[moduleKey] ?? {
                       title: toTitleCase(moduleKey),
                       description: t('Custom module'),
                     }
-                    // Object nodes bind their on/off state to `<module>.enabled`;
-                    // simple boolean modules bind directly to `<module>`.
                     const isCardBearing =
                       moduleValue !== null && typeof moduleValue === 'object'
-                    const fieldName = isCardBearing
-                      ? `${sectionKey}.${moduleKey}.enabled`
-                      : `${sectionKey}.${moduleKey}`
+                    const cardKeys = isCardBearing
+                      ? Object.keys(
+                          (moduleValue as { cards?: Record<string, boolean> })
+                            .cards ?? {}
+                        )
+                      : []
+                    const hasCards = cardKeys.length > 0
+                    const sectionOff =
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      !form.watch(`${sectionKey}.enabled` as any)
+
+                    // Simple tab (no level-3 cards) — plain toggle row.
+                    if (!hasCards) {
+                      const fieldName = isCardBearing
+                        ? `${sectionKey}.${moduleKey}.enabled`
+                        : `${sectionKey}.${moduleKey}`
+                      return (
+                        <FormField
+                          key={`${sectionKey}.${moduleKey}`}
+                          control={form.control}
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          name={fieldName as any}
+                          render={({ field }) => (
+                            <SettingsSwitchItem className='border-b-0 px-3 py-2'>
+                              <SettingsSwitchContent>
+                                <FormLabel>{moduleInfo.title}</FormLabel>
+                                <FormDescription>
+                                  {moduleInfo.description}
+                                </FormDescription>
+                              </SettingsSwitchContent>
+                              <FormControl>
+                                <Switch
+                                  checked={Boolean(field.value)}
+                                  onCheckedChange={field.onChange}
+                                  disabled={sectionOff}
+                                />
+                              </FormControl>
+                            </SettingsSwitchItem>
+                          )}
+                        />
+                      )
+                    }
+
+                    // Card-bearing tab — toggle row plus a collapsible dropdown
+                    // that reveals its level-3 cards.
+                    const tabKey = `${sectionKey}.${moduleKey}`
+                    const moduleOff =
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      !form.watch(`${tabKey}.enabled` as any)
+                    const open = expandedTabs[tabKey] ?? false
                     return (
-                      <FormField
-                        key={`${sectionKey}.${moduleKey}`}
-                        control={form.control}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        name={fieldName as any}
-                        render={({ field }) => (
-                          <SettingsSwitchItem className='border-b-0 py-2'>
-                            <SettingsSwitchContent>
-                              <FormLabel>{moduleInfo.title}</FormLabel>
-                              <FormDescription>
+                      <div
+                        key={tabKey}
+                        className='bg-background/60 overflow-hidden rounded-lg border'
+                      >
+                        <div className='flex items-center justify-between gap-2 px-3 py-2'>
+                          <button
+                            type='button'
+                            aria-expanded={open}
+                            onClick={() =>
+                              setExpandedTabs((prev) => ({
+                                ...prev,
+                                [tabKey]: !open,
+                              }))
+                            }
+                            className='-m-1 flex flex-1 items-center gap-2 rounded-md p-1 text-left'
+                          >
+                            <ChevronRight
+                              className={cn(
+                                'text-muted-foreground size-4 shrink-0 transition-transform',
+                                open && 'rotate-90'
+                              )}
+                              aria-hidden='true'
+                            />
+                            <span className='flex min-w-0 flex-col gap-0.5'>
+                              <span className='text-sm leading-none font-medium'>
+                                {moduleInfo.title}
+                              </span>
+                              <span className='text-muted-foreground text-xs'>
                                 {moduleInfo.description}
-                              </FormDescription>
-                            </SettingsSwitchContent>
-                            <FormControl>
-                              <Switch
-                                checked={Boolean(field.value)}
-                                onCheckedChange={field.onChange}
-                                disabled={
-                                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                  !form.watch(`${sectionKey}.enabled` as any)
-                                }
-                              />
-                            </FormControl>
-                          </SettingsSwitchItem>
+                              </span>
+                            </span>
+                            <span className='bg-muted text-muted-foreground ml-1 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium'>
+                              {t('{{total}} cards', { total: cardKeys.length })}
+                            </span>
+                          </button>
+                          <FormField
+                            control={form.control}
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            name={`${tabKey}.enabled` as any}
+                            render={({ field }) => (
+                              <FormControl>
+                                <Switch
+                                  checked={Boolean(field.value)}
+                                  onCheckedChange={field.onChange}
+                                  disabled={sectionOff}
+                                />
+                              </FormControl>
+                            )}
+                          />
+                        </div>
+                        {open && (
+                          <div className='bg-muted/20 grid gap-3 border-t px-3 py-3 md:grid-cols-2'>
+                            {cardKeys.map((cardKey) => {
+                              const cardInfo = cardMeta[cardKey] ?? {
+                                title: toTitleCase(cardKey),
+                                description: t('Custom card'),
+                              }
+                              return (
+                                <FormField
+                                  key={`${tabKey}.cards.${cardKey}`}
+                                  control={form.control}
+                                  name={
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    `${tabKey}.cards.${cardKey}` as any
+                                  }
+                                  render={({ field }) => (
+                                    <SettingsSwitchItem className='border-b-0 py-2'>
+                                      <SettingsSwitchContent>
+                                        <FormLabel>{cardInfo.title}</FormLabel>
+                                        <FormDescription>
+                                          {cardInfo.description}
+                                        </FormDescription>
+                                      </SettingsSwitchContent>
+                                      <FormControl>
+                                        <Switch
+                                          checked={Boolean(field.value)}
+                                          onCheckedChange={field.onChange}
+                                          disabled={sectionOff || moduleOff}
+                                        />
+                                      </FormControl>
+                                    </SettingsSwitchItem>
+                                  )}
+                                />
+                              )
+                            })}
+                          </div>
                         )}
-                      />
+                      </div>
                     )
                   })}
                 </SettingsControlChildren>
-
-                {modules.map(([moduleKey, moduleValue]) => {
-                  if (moduleValue === null || typeof moduleValue !== 'object') {
-                    return null
-                  }
-                  const cardKeys = Object.keys(moduleValue.cards ?? {})
-                  if (cardKeys.length === 0) return null
-                  const moduleInfo = moduleMeta[sectionKey]?.[moduleKey] ?? {
-                    title: toTitleCase(moduleKey),
-                    description: t('Custom module'),
-                  }
-                  const sectionOff =
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    !form.watch(`${sectionKey}.enabled` as any)
-                  const moduleOff =
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    !form.watch(`${sectionKey}.${moduleKey}.enabled` as any)
-                  return (
-                    <div
-                      key={`cards-${sectionKey}-${moduleKey}`}
-                      className='border-primary/40 bg-background/70 mt-4 rounded-lg border border-l-4 p-3 shadow-xs'
-                    >
-                      <div className='mb-3 flex items-center gap-2 border-b pb-2'>
-                        <span
-                          className='bg-primary/70 h-4 w-1 rounded-full'
-                          aria-hidden='true'
-                        />
-                        <FormLabel className='text-foreground text-xs font-semibold tracking-wide uppercase'>
-                          {t('{{module}} cards', { module: moduleInfo.title })}
-                        </FormLabel>
-                      </div>
-                      <div className='grid gap-3 md:grid-cols-2'>
-                        {cardKeys.map((cardKey) => {
-                          const cardInfo = cardMeta[cardKey] ?? {
-                            title: toTitleCase(cardKey),
-                            description: t('Custom card'),
-                          }
-                          return (
-                            <FormField
-                              key={`${sectionKey}.${moduleKey}.cards.${cardKey}`}
-                              control={form.control}
-                              name={
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                `${sectionKey}.${moduleKey}.cards.${cardKey}` as any
-                              }
-                              render={({ field }) => (
-                                <SettingsSwitchItem className='border-b-0 py-2'>
-                                  <SettingsSwitchContent>
-                                    <FormLabel>{cardInfo.title}</FormLabel>
-                                    <FormDescription>
-                                      {cardInfo.description}
-                                    </FormDescription>
-                                  </SettingsSwitchContent>
-                                  <FormControl>
-                                    <Switch
-                                      checked={Boolean(field.value)}
-                                      onCheckedChange={field.onChange}
-                                      disabled={sectionOff || moduleOff}
-                                    />
-                                  </FormControl>
-                                </SettingsSwitchItem>
-                              )}
-                            />
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
               </SettingsControlGroup>
             )
           })}
