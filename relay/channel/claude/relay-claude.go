@@ -254,6 +254,23 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 			claudeRequest.StopSequences = stopSequences
 		}
 	}
+
+	// Sanitize Claude request parameters: temperature and top_p cannot both be specified.
+	if claudeRequest.Temperature != nil && claudeRequest.TopP != nil {
+		if *claudeRequest.TopP == 1.0 {
+			claudeRequest.TopP = nil
+		} else {
+			claudeRequest.TopP = nil // Prioritize temperature and omit top_p
+		}
+	}
+
+	// claude-opus-4-7 rejects temperature, top_p, and top_k
+	if strings.HasPrefix(claudeRequest.Model, "claude-opus-4-7") {
+		claudeRequest.Temperature = nil
+		claudeRequest.TopP = nil
+		claudeRequest.TopK = nil
+	}
+
 	formatMessages := make([]dto.Message, 0)
 	lastMessage := dto.Message{
 		Role: "tool",
