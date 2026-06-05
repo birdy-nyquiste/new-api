@@ -145,11 +145,13 @@ export function Playground() {
     const validCompareIds = compareConfig.selectedModelIds.filter((id) =>
       modelsData.some((model) => model.value === id)
     )
-    if (validCompareIds.length !== 3 && modelsData.length >= 3) {
+    if (compareConfig.selectedModelIds.length === 0 && modelsData.length >= 3) {
       updateCompareConfig(
         'selectedModelIds',
         modelsData.slice(0, 3).map((model) => model.value)
       )
+    } else if (validCompareIds.length !== compareConfig.selectedModelIds.length) {
+      updateCompareConfig('selectedModelIds', validCompareIds)
     }
   }, [
     modelsData,
