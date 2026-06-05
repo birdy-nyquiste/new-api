@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { getUserModels, getUserGroups } from './api'
+import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
 import { ComparePanel } from './components/compare-panel'
 import { PlaygroundChat } from './components/playground-chat'
 import { PlaygroundInput } from './components/playground-input'
@@ -195,8 +196,8 @@ export function Playground() {
     }
   }, [groupsData, setGroups, config.group, updateConfig])
 
-  const handleSendMessage = (text: string) => {
-    const userMessage = createUserMessage(text)
+  const handleSendMessage = (message: PromptInputMessage) => {
+    const userMessage = createUserMessage(message.text || '', message.files)
     const assistantMessage = createLoadingAssistantMessage()
 
     const newMessages = [...messages, userMessage, assistantMessage]

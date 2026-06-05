@@ -16,6 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import type { FileUIPart } from 'ai'
+
 // Message types
 export type MessageRole = 'user' | 'assistant' | 'system'
 
@@ -41,6 +43,7 @@ export interface Message {
   status?: MessageStatus
   errorCode?: string | null
   metrics?: ResponseMetrics
+  files?: FileUIPart[]
 }
 
 // API payload types
@@ -54,10 +57,14 @@ export interface StreamOptions {
 }
 
 export interface ContentPart {
-  type: 'text' | 'image_url'
+  type: 'text' | 'image_url' | 'file'
   text?: string
   image_url?: {
     url: string
+  }
+  file?: {
+    filename: string
+    file_data: string
   }
 }
 
@@ -172,6 +179,7 @@ export interface CompareRound {
   prompt: string
   results: CompareResult[]
   createdAt: number
+  files?: FileUIPart[]
 }
 
 export interface PlaygroundSession {

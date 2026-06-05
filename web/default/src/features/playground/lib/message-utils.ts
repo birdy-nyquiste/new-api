@@ -56,14 +56,17 @@ export function updateCurrentVersionContent(
   }
 }
 
+import type { FileUIPart } from 'ai'
+
 /**
  * Create a user message
  */
-export function createUserMessage(content: string): Message {
+export function createUserMessage(content: string, files?: FileUIPart[]): Message {
   return {
     key: nanoid(),
     from: MESSAGE_ROLES.USER,
     versions: [createMessageVersion(content)],
+    files,
   }
 }
 
@@ -131,6 +134,39 @@ export function getTextContent(content: string | ContentPart[]): string {
  */
 export function formatMessageForAPI(message: Message): ChatCompletionMessage {
   const currentVersion = getCurrentVersion(message)
+
+  if (message.files && message.files.length > 0) {
+    const parts: ContentPart[] = []
+    if (currentVersion.content) {
+      parts.push({
+        type: 'text',
+        text: currentVersion.content,
+      })
+    }
+    message.files.forEach((file) => {
+      if (file.mediaType?.startsWith('image/')) {
+        parts.push({
+          type: 'image_url',
+          image_url: {
+            url: file.url,
+          },
+        })
+      } else {
+        parts.push({
+          type: 'file',
+          file: {
+            filename: file.filename || '',
+            file_data: file.url,
+          },
+        })
+      }
+    })
+    return {
+      role: message.from,
+      content: parts,
+    }
+  }
+
   return {
     role: message.from,
     content: currentVersion.content,

@@ -469,12 +469,12 @@ func openAIFileContentToClaude(mediaMessage dto.MediaContent) (*dto.ClaudeMediaM
 		return nil, nil
 	}
 	data := strings.TrimSpace(file.FileData)
+	if idx := strings.Index(data, ","); strings.HasPrefix(data, "data:") && idx >= 0 {
+		data = data[idx+1:]
+	}
 	mimeType := inferMimeTypeFromFileName(file.FileName)
 
 	if strings.HasPrefix(mimeType, "text/") || mimeType == "application/json" {
-		if idx := strings.Index(data, ","); strings.HasPrefix(data, "data:") && idx >= 0 {
-			data = data[idx+1:]
-		}
 		decoded, err := base64.StdEncoding.DecodeString(data)
 		if err != nil {
 			return nil, fmt.Errorf("decode text file content failed: %w", err)

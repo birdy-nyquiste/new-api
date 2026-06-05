@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useEffect, useMemo, useState } from 'react'
+import { FileIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -174,7 +175,9 @@ export function PlaygroundChat({
                               const showMessageContent =
                                 (message.from === MESSAGE_ROLES.USER ||
                                   !message.isReasoningStreaming) &&
-                                !!version.content
+                                (!!version.content ||
+                                  (message.from === MESSAGE_ROLES.USER &&
+                                    !!message.files?.length))
 
                               // Extract visible content (remove <think> tags for assistant messages)
                               const displayContent = isAssistant
@@ -263,7 +266,42 @@ export function PlaygroundChat({
                                             getMessageContentStyles()
                                           )}
                                         >
-                                          <Response>{displayContent}</Response>
+                                          {message.files && message.files.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 mb-3 mt-1">
+                                              {message.files.map((file, idx) => {
+                                                const isImage = file.mediaType?.startsWith('image/')
+                                                return (
+                                                  <div
+                                                    key={idx}
+                                                    className="flex items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm max-w-xs"
+                                                  >
+                                                    {isImage ? (
+                                                      <img
+                                                        src={file.url}
+                                                        alt={file.filename || 'uploaded image'}
+                                                        className="size-10 rounded object-cover"
+                                                      />
+                                                    ) : (
+                                                      <div className="flex size-10 items-center justify-center rounded bg-primary/10 text-primary">
+                                                        <FileIcon size={20} />
+                                                      </div>
+                                                    )}
+                                                    <div className="flex flex-col min-w-0 pr-2">
+                                                      <span className="truncate font-medium text-xs">
+                                                        {file.filename || (isImage ? 'Image' : 'Attachment')}
+                                                      </span>
+                                                      {file.mediaType && (
+                                                        <span className="text-[10px] text-muted-foreground truncate font-mono">
+                                                          {file.mediaType}
+                                                        </span>
+                                                      )}
+                                                    </div>
+                                                  </div>
+                                                )
+                                              })}
+                                            </div>
+                                          )}
+                                          {displayContent && <Response>{displayContent}</Response>}
                                         </MessageContent>
                                         {isAssistant && (
                                           <ResponseMetrics

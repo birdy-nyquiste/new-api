@@ -21,8 +21,6 @@ import {
   PaperclipIcon,
   FileIcon,
   ImageIcon,
-  ScreenShareIcon,
-  CameraIcon,
   GlobeIcon,
   SendIcon,
   SquareIcon,
@@ -44,6 +42,9 @@ import {
   PromptInputFooter,
   PromptInputTextarea,
   PromptInputTools,
+  PromptInputAttachments,
+  PromptInputAttachment,
+  usePromptInputAttachments,
   type PromptInputMessage,
 } from '@/components/ai-elements/prompt-input'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
@@ -51,7 +52,7 @@ import { ModelGroupSelector } from '@/components/model-group-selector'
 import type { ModelOption, GroupOption } from '../types'
 
 interface PlaygroundInputProps {
-  onSubmit: (text: string) => void
+  onSubmit: (message: PromptInputMessage) => void
   onStop?: () => void
   disabled?: boolean
   isGenerating?: boolean
@@ -85,36 +86,15 @@ const suggestions = [
   },
 ]
 
-export function PlaygroundInput({
-  onSubmit,
-  onStop,
-  disabled,
-  isGenerating,
-  models,
-  modelValue,
-  onModelChange,
-  isModelLoading = false,
-  groups,
-  groupValue,
-  onGroupChange,
-}: PlaygroundInputProps) {
+export function PlaygroundInput(props: PlaygroundInputProps) {
   const { t } = useTranslation()
   const [text, setText] = useState('')
 
-  const isModelSelectDisabled =
-    disabled || isModelLoading || models.length === 0
-  const isGroupSelectDisabled = disabled || groups.length === 0
-
   const handleSubmit = (message: PromptInputMessage) => {
-    if (!message.text?.trim() || disabled) return
-    onSubmit(message.text)
+    if (!message.text?.trim() && (!message.files || message.files.length === 0)) return
+    if (props.disabled) return
+    props.onSubmit(message)
     setText('')
-  }
-
-  const handleFileAction = (action: string) => {
-    toast.info(t('Feature in development'), {
-      description: action,
-    })
   }
 
   const handleSuggestionClick = (prompt: string) => {
@@ -130,127 +110,196 @@ export function PlaygroundInput({
 
   return (
     <div className='grid shrink-0 gap-4 px-1 md:pb-4'>
-      <PromptInput groupClassName='rounded-xl' onSubmit={handleSubmit}>
-        <PromptInputTextarea
-          autoComplete='off'
-          autoCorrect='off'
-          autoCapitalize='off'
-          spellCheck={false}
-          className='px-5 md:text-base'
-          disabled={disabled}
-          onChange={(event) => setText(event.target.value)}
-          placeholder={t('Ask anything')}
-          value={text}
-        />
-
-        <PromptInputFooter className='p-2.5'>
-          <PromptInputTools>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <PromptInputButton
-                    className='border font-medium'
-                    disabled={disabled}
-                    variant='outline'
-                  />
-                }
-              >
-                <PaperclipIcon size={16} />
-                <span className='hidden sm:inline'>{t('Attach')}</span>
-                <span className='sr-only sm:hidden'>{t('Attach')}</span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='start'>
-                <DropdownMenuItem
-                  onClick={() => handleFileAction('upload-file')}
-                >
-                  <FileIcon className='mr-2' size={16} />
-                  {t('Upload file')}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleFileAction('upload-photo')}
-                >
-                  <ImageIcon className='mr-2' size={16} />
-                  {t('Upload photo')}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleFileAction('take-screenshot')}
-                >
-                  <ScreenShareIcon className='mr-2' size={16} />
-                  {t('Take screenshot')}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleFileAction('take-photo')}
-                >
-                  <CameraIcon className='mr-2' size={16} />
-                  {t('Take photo')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <PromptInputButton
-              className='border font-medium'
-              disabled={disabled}
-              onClick={() => toast.info(t('Search feature in development'))}
-              variant='outline'
-            >
-              <GlobeIcon size={16} />
-              <span className='hidden sm:inline'>{t('Search')}</span>
-              <span className='sr-only sm:hidden'>{t('Search')}</span>
-            </PromptInputButton>
-          </PromptInputTools>
-
-          <div className='flex items-center gap-1.5 md:gap-2'>
-            <ModelGroupSelector
-              selectedModel={modelValue}
-              models={models}
-              onModelChange={onModelChange}
-              selectedGroup={groupValue}
-              groups={groups}
-              onGroupChange={onGroupChange}
-              disabled={isModelSelectDisabled || isGroupSelectDisabled}
-            />
-
-            {isGenerating && onStop ? (
-              <PromptInputButton
-                className='text-foreground font-medium'
-                onClick={onStop}
-                variant='secondary'
-              >
-                <SquareIcon className='fill-current' size={16} />
-                <span className='hidden sm:inline'>{t('Stop')}</span>
-                <span className='sr-only sm:hidden'>{t('Stop')}</span>
-              </PromptInputButton>
-            ) : (
-              <PromptInputButton
-                className='text-foreground font-medium'
-                disabled={disabled || !text.trim()}
-                type='submit'
-                variant='secondary'
-              >
-                <SendIcon size={16} />
-                <span className='hidden sm:inline'>{t('Send')}</span>
-                <span className='sr-only sm:hidden'>{t('Send')}</span>
-              </PromptInputButton>
-            )}
-          </div>
-        </PromptInputFooter>
+      <PromptInput
+        groupClassName='rounded-xl'
+        onSubmit={handleSubmit}
+        accept='image/*,application/pdf,text/*,application/json'
+        maxFiles={5}
+        maxFileSize={20 * 1024 * 1024}
+        onError={(err) => toast.error(err.message)}
+      >
+        <PlaygroundInputInner {...props} text={text} setText={setText} />
       </PromptInput>
 
       <Suggestions>
-        {suggestions.map(({ icon: Icon, text, color, prompt }) => (
+        {suggestions.map(({ icon: Icon, text: sugText, color, prompt }) => (
           <Suggestion
             className={`text-xs font-normal sm:text-sm ${
-              text === 'More' ? 'hidden sm:flex' : ''
+              sugText === 'More' ? 'hidden sm:flex' : ''
             }`}
-            key={text}
+            key={sugText}
             onClick={() => handleSuggestionClick(prompt)}
-            suggestion={text}
+            suggestion={sugText}
           >
             {Icon && <Icon size={16} style={{ color }} />}
-            {t(text)}
+            {t(sugText)}
           </Suggestion>
         ))}
       </Suggestions>
     </div>
+  )
+}
+
+function PromptInputAttachmentsList() {
+  const attachments = usePromptInputAttachments()
+  if (attachments.files.length === 0) return null
+  return (
+    <div className='flex flex-wrap gap-2 px-5 pb-2'>
+      <PromptInputAttachments>
+        {(file) => <PromptInputAttachment key={file.id} data={file} />}
+      </PromptInputAttachments>
+    </div>
+  )
+}
+
+function PlaygroundSubmitButton({
+  disabled,
+  text,
+  isGenerating,
+  onStop,
+}: {
+  disabled?: boolean
+  text: string
+  isGenerating?: boolean
+  onStop?: () => void
+}) {
+  const { t } = useTranslation()
+  const attachments = usePromptInputAttachments()
+  const hasContent = text.trim().length > 0 || attachments.files.length > 0
+
+  if (isGenerating && onStop) {
+    return (
+      <PromptInputButton
+        className='text-foreground font-medium'
+        onClick={onStop}
+        variant='secondary'
+      >
+        <SquareIcon className='fill-current' size={16} />
+        <span className='hidden sm:inline'>{t('Stop')}</span>
+        <span className='sr-only sm:hidden'>{t('Stop')}</span>
+      </PromptInputButton>
+    )
+  }
+
+  return (
+    <PromptInputButton
+      className='text-foreground font-medium'
+      disabled={disabled || !hasContent}
+      type='submit'
+      variant='secondary'
+    >
+      <SendIcon size={16} />
+      <span className='hidden sm:inline'>{t('Send')}</span>
+      <span className='sr-only sm:hidden'>{t('Send')}</span>
+    </PromptInputButton>
+  )
+}
+
+interface PlaygroundInputInnerProps extends PlaygroundInputProps {
+  text: string
+  setText: (v: string) => void
+}
+
+function PlaygroundInputInner({
+  disabled,
+  isGenerating,
+  models,
+  modelValue,
+  onModelChange,
+  isModelLoading = false,
+  groups,
+  groupValue,
+  onGroupChange,
+  onStop,
+  text,
+  setText,
+}: PlaygroundInputInnerProps) {
+  const { t } = useTranslation()
+  const attachments = usePromptInputAttachments()
+
+  const isModelSelectDisabled =
+    disabled || isModelLoading || models.length === 0
+  const isGroupSelectDisabled = disabled || groups.length === 0
+
+  return (
+    <>
+      <PromptInputTextarea
+        autoComplete='off'
+        autoCorrect='off'
+        autoCapitalize='off'
+        spellCheck={false}
+        className='px-5 md:text-base'
+        disabled={disabled}
+        onChange={(event) => setText(event.target.value)}
+        placeholder={t('Ask anything')}
+        value={text}
+      />
+
+      <PromptInputAttachmentsList />
+
+      <PromptInputFooter className='p-2.5'>
+        <PromptInputTools>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <PromptInputButton
+                  className='border font-medium'
+                  disabled={disabled}
+                  variant='outline'
+                />
+              }
+            >
+              <PaperclipIcon size={16} />
+              <span className='hidden sm:inline'>{t('Attach')}</span>
+              <span className='sr-only sm:hidden'>{t('Attach')}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='start'>
+              <DropdownMenuItem
+                onClick={() => attachments.openFileDialog()}
+              >
+                <FileIcon className='mr-2' size={16} />
+                {t('Upload file')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => attachments.openFileDialog()}
+              >
+                <ImageIcon className='mr-2' size={16} />
+                {t('Upload photo')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <PromptInputButton
+            className='border font-medium'
+            disabled={disabled}
+            onClick={() => toast.info(t('Search feature in development'))}
+            variant='outline'
+          >
+            <GlobeIcon size={16} />
+            <span className='hidden sm:inline'>{t('Search')}</span>
+            <span className='sr-only sm:hidden'>{t('Search')}</span>
+          </PromptInputButton>
+        </PromptInputTools>
+
+        <div className='flex items-center gap-1.5 md:gap-2'>
+          <ModelGroupSelector
+            selectedModel={modelValue}
+            models={models}
+            onModelChange={onModelChange}
+            selectedGroup={groupValue}
+            groups={groups}
+            onGroupChange={onGroupChange}
+            disabled={isModelSelectDisabled || isGroupSelectDisabled}
+          />
+
+          <PlaygroundSubmitButton
+            disabled={disabled}
+            text={text}
+            isGenerating={isGenerating}
+            onStop={onStop}
+          />
+        </div>
+      </PromptInputFooter>
+    </>
   )
 }
