@@ -44,6 +44,10 @@ export function buildChatCompletionPayload(
     stream: config.stream,
   }
 
+  if (config.stream) {
+    payload.stream_options = { include_usage: true }
+  }
+
   // Add enabled parameters
   const parameterKeys: Array<keyof ParameterEnabled> = [
     'temperature',

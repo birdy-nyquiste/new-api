@@ -57,17 +57,12 @@ export function SidebarModulesCard() {
     {
       key: 'chat',
       title: t('Chat'),
-      description: t('Playground and chat functions'),
+      description: t('Model Lab and chat functions'),
       modules: [
         {
           key: 'playground',
-          title: t('Playground'),
+          title: t('Model Lab'),
           description: t('AI model testing environment'),
-        },
-        {
-          key: 'modelCompare',
-          title: t('Model Compare'),
-          description: t('Compare models side by side'),
         },
         {
           key: 'chat',

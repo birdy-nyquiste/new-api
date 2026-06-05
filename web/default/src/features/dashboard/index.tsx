@@ -23,7 +23,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { ROLE } from '@/lib/roles'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Main, SectionPageLayout } from '@/components/layout'
+import { SectionPageLayout } from '@/components/layout'
 import { FadeIn } from '@/components/page-transition'
 import { ModelsChartPreferences } from './components/models/models-chart-preferences'
 import { ModelsFilter } from './components/models/models-filter-dialog'
@@ -74,12 +74,6 @@ const LazyPerformanceOverview = lazy(() =>
 const LazyUserCharts = lazy(() =>
   import('./components/users/user-charts').then((m) => ({
     default: m.UserCharts,
-  }))
-)
-
-const LazyModelCompare = lazy(() =>
-  import('../model-compare').then((m) => ({
-    default: m.ModelComparePanel,
   }))
 )
 
@@ -146,9 +140,6 @@ const SECTION_META: Record<DashboardSectionId, { titleKey: string }> = {
   users: {
     titleKey: 'User Analytics',
   },
-  'model-compare': {
-    titleKey: 'Model Compare',
-  },
 }
 
 export function Dashboard() {
@@ -199,7 +190,6 @@ export function Dashboard() {
       DASHBOARD_SECTION_IDS.filter(
         (section) =>
           section !== 'overview' &&
-          section !== 'model-compare' &&
           (section !== 'users' || isAdmin)
       ),
     [isAdmin]
@@ -215,7 +205,6 @@ export function Dashboard() {
   )
   const showSectionTabs =
     activeSection !== 'overview' &&
-    activeSection !== 'model-compare' &&
     visibleSections.length > 1
   const modelActions =
     activeSection === 'models' ? (
@@ -231,18 +220,6 @@ export function Dashboard() {
         />
       </>
     ) : null
-
-  if (activeSection === 'model-compare') {
-    return (
-      <Main>
-        <div className='min-h-0 flex-1 overflow-hidden p-3 sm:p-4'>
-          <Suspense fallback={<ModelChartsFallback />}>
-            <LazyModelCompare />
-          </Suspense>
-        </div>
-      </Main>
-    )
-  }
 
   return (
     <SectionPageLayout>

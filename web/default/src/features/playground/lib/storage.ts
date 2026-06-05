@@ -17,8 +17,102 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { STORAGE_KEYS } from '../constants'
-import type { PlaygroundConfig, ParameterEnabled, Message } from '../types'
+import {
+  DEFAULT_COMPARE_CONFIG,
+  DEFAULT_CONFIG,
+  DEFAULT_PARAMETER_ENABLED,
+} from '../constants'
+import type {
+  CompareRound,
+  Message,
+  ParameterEnabled,
+  PlaygroundConfig,
+  PlaygroundSession,
+} from '../types'
 import { sanitizeMessagesOnLoad } from './message-utils'
+
+const MAX_SESSIONS = 50
+
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function titleFromMessages(messages: Message[]): string {
+  const firstUser = messages.find((message) => message.from === 'user')
+  const content = firstUser?.versions?.[0]?.content?.trim()
+  if (!content) return 'New session'
+  return content.length > 48 ? `${content.slice(0, 48)}...` : content
+}
+
+function titleFromCompareRounds(rounds: CompareRound[]): string {
+  const prompt = rounds[0]?.prompt?.trim()
+  if (!prompt) return 'New session'
+  return prompt.length > 48 ? `${prompt.slice(0, 48)}...` : prompt
+}
+
+export function createDefaultSession(
+  overrides: Partial<PlaygroundSession> = {}
+): PlaygroundSession {
+  const now = Date.now()
+  return {
+    id: generateId(),
+    title: 'New session',
+    mode: 'chat',
+    config: DEFAULT_CONFIG,
+    parameterEnabled: DEFAULT_PARAMETER_ENABLED,
+    messages: [],
+    compareRounds: [],
+    compareConfig: DEFAULT_COMPARE_CONFIG,
+    createdAt: now,
+    updatedAt: now,
+    ...overrides,
+  }
+}
+
+function normalizeSession(raw: Partial<PlaygroundSession>): PlaygroundSession {
+  const messages = Array.isArray(raw.messages)
+    ? sanitizeMessagesOnLoad(raw.messages)
+    : []
+  const compareRounds = Array.isArray(raw.compareRounds)
+    ? raw.compareRounds
+    : []
+  return createDefaultSession({
+    id: typeof raw.id === 'string' && raw.id ? raw.id : generateId(),
+    title:
+      typeof raw.title === 'string' && raw.title.trim()
+        ? raw.title
+        : messages.length > 0
+          ? titleFromMessages(messages)
+          : titleFromCompareRounds(compareRounds),
+    mode: raw.mode === 'compare' ? 'compare' : 'chat',
+    config: { ...DEFAULT_CONFIG, ...(raw.config ?? {}) },
+    parameterEnabled: {
+      ...DEFAULT_PARAMETER_ENABLED,
+      ...(raw.parameterEnabled ?? {}),
+    },
+    messages,
+    compareRounds,
+    compareConfig: {
+      ...DEFAULT_COMPARE_CONFIG,
+      ...(raw.compareConfig ?? {}),
+      selectedModelIds:
+        raw.compareConfig?.selectedModelIds?.length === 3
+          ? raw.compareConfig.selectedModelIds
+          : DEFAULT_COMPARE_CONFIG.selectedModelIds,
+    },
+    createdAt:
+      typeof raw.createdAt === 'number' && raw.createdAt > 0
+        ? raw.createdAt
+        : 0,
+    updatedAt:
+      typeof raw.updatedAt === 'number' && raw.updatedAt > 0
+        ? raw.updatedAt
+        : 0,
+  })
+}
 
 /**
  * Load playground config from localStorage
@@ -126,8 +220,142 @@ export function clearPlaygroundData(): void {
     localStorage.removeItem(STORAGE_KEYS.CONFIG)
     localStorage.removeItem(STORAGE_KEYS.PARAMETER_ENABLED)
     localStorage.removeItem(STORAGE_KEYS.MESSAGES)
+    localStorage.removeItem(STORAGE_KEYS.SESSIONS)
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_SESSION)
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Failed to clear playground data:', error)
+  }
+}
+
+function loadLegacyCompareRounds(): CompareRound[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.LEGACY_COMPARE_ROUNDS)
+    if (!saved) return []
+    const parsed = JSON.parse(saved) as Array<{
+      id?: string
+      prompt?: string
+      results?: Array<{
+        modelId?: string
+        modelName?: string
+        status?: string
+        answerFull?: string
+        answerPreview?: string
+        errorMessage?: string
+        responseTimeMs?: number
+        useTimeMs?: number | null
+        promptTokens?: number
+        completionTokens?: number
+        totalTokens?: number
+        quotaRaw?: number | null
+      }>
+    }>
+    if (!Array.isArray(parsed)) return []
+    return parsed.map((round) => ({
+      id: round.id || generateId(),
+      prompt: round.prompt || '',
+      createdAt: Number(round.id) || Date.now(),
+      results: Array.isArray(round.results)
+        ? round.results.map((result) => ({
+            id: `${round.id || generateId()}-${result.modelId || generateId()}`,
+            modelId: result.modelId || '',
+            modelName: result.modelName || result.modelId || '',
+            status:
+              result.status === 'loading'
+                ? 'error'
+                : result.status === 'error'
+                  ? 'error'
+                  : 'done',
+            content: result.answerFull || result.answerPreview || '',
+            errorMessage:
+              result.status === 'loading'
+                ? 'Request was interrupted'
+                : result.errorMessage,
+            metrics: {
+              responseTimeMs: result.responseTimeMs,
+              useTimeMs: result.useTimeMs,
+              promptTokens: result.promptTokens,
+              completionTokens: result.completionTokens,
+              totalTokens: result.totalTokens,
+              quotaRaw: result.quotaRaw,
+            },
+          }))
+        : [],
+    }))
+  } catch {
+    return []
+  }
+}
+
+function loadLegacySession(): PlaygroundSession {
+  const config = { ...DEFAULT_CONFIG, ...loadConfig() }
+  const parameterEnabled = {
+    ...DEFAULT_PARAMETER_ENABLED,
+    ...loadParameterEnabled(),
+  }
+  const messages = loadMessages() || []
+  const compareRounds = loadLegacyCompareRounds()
+  const mode =
+    compareRounds.length > 0 && messages.length === 0 ? 'compare' : 'chat'
+  return createDefaultSession({
+    title:
+      messages.length > 0
+        ? titleFromMessages(messages)
+        : titleFromCompareRounds(compareRounds),
+    mode,
+    config,
+    parameterEnabled,
+    messages,
+    compareRounds,
+  })
+}
+
+export function loadSessions(): PlaygroundSession[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.SESSIONS)
+    if (saved) {
+      const parsed = JSON.parse(saved) as Partial<PlaygroundSession>[]
+      if (Array.isArray(parsed)) {
+        const sessions = parsed.map(normalizeSession).slice(-MAX_SESSIONS)
+        return sessions.length > 0 ? sessions : [createDefaultSession()]
+      }
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to load Model Lab sessions:', error)
+  }
+
+  const legacySession = loadLegacySession()
+  return [legacySession]
+}
+
+export function saveSessions(sessions: PlaygroundSession[]): void {
+  try {
+    const nonEmptySessions = sessions.filter(
+      (s) => s.messages.length > 0 || s.compareRounds.length > 0
+    )
+    localStorage.setItem(
+      STORAGE_KEYS.SESSIONS,
+      JSON.stringify(nonEmptySessions.slice(-MAX_SESSIONS))
+    )
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to save Model Lab sessions:', error)
+  }
+}
+
+export function loadActiveSessionId(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.ACTIVE_SESSION)
+  } catch {
+    return null
+  }
+}
+
+export function saveActiveSessionId(sessionId: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_SESSION, sessionId)
+  } catch {
+    // Ignore storage errors.
   }
 }

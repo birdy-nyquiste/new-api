@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useCallback } from 'react'
 import { toast } from 'sonner'
-import { sendChatCompletion } from '../api'
+import { fetchRequestMetrics, sendChatCompletionWithMeta } from '../api'
 import { MESSAGE_STATUS, ERROR_MESSAGES } from '../constants'
 import {
   buildChatCompletionPayload,
@@ -27,7 +27,12 @@ import {
   processStreamingContent,
   finalizeMessage,
 } from '../lib'
-import type { Message, PlaygroundConfig, ParameterEnabled } from '../types'
+import type {
+  Message,
+  PlaygroundConfig,
+  ParameterEnabled,
+  ResponseMetrics,
+} from '../types'
 import { useStreamRequest } from './use-stream-request'
 
 interface UseChatHandlerOptions {
@@ -45,6 +50,29 @@ export function useChatHandler({
   onMessageUpdate,
 }: UseChatHandlerOptions) {
   const { sendStreamRequest, stopStream, isStreaming } = useStreamRequest()
+
+  const patchLastAssistantMetrics = useCallback(
+    (metrics: ResponseMetrics) => {
+      onMessageUpdate((prev) =>
+        updateLastAssistantMessage(prev, (message) => ({
+          ...message,
+          metrics: { ...message.metrics, ...metrics },
+        }))
+      )
+    },
+    [onMessageUpdate]
+  )
+
+  const hydrateMetricsFromLog = useCallback(
+    async (metrics: ResponseMetrics) => {
+      if (!metrics.requestId) return
+      const logMetrics = await fetchRequestMetrics(metrics.requestId)
+      if (logMetrics) {
+        patchLastAssistantMetrics({ ...metrics, ...logMetrics })
+      }
+    },
+    [patchLastAssistantMetrics]
+  )
 
   // Handle stream update
   const handleStreamUpdate = useCallback(
@@ -78,16 +106,24 @@ export function useChatHandler({
   )
 
   // Handle stream complete
-  const handleStreamComplete = useCallback(() => {
-    onMessageUpdate((prev) =>
-      updateLastAssistantMessage(prev, (message) =>
-        message.status === MESSAGE_STATUS.COMPLETE ||
-        message.status === MESSAGE_STATUS.ERROR
-          ? message
-          : { ...finalizeMessage(message), status: MESSAGE_STATUS.COMPLETE }
+  const handleStreamComplete = useCallback(
+    (metrics: ResponseMetrics) => {
+      onMessageUpdate((prev) =>
+        updateLastAssistantMessage(prev, (message) =>
+          message.status === MESSAGE_STATUS.COMPLETE ||
+          message.status === MESSAGE_STATUS.ERROR
+            ? message
+            : {
+                ...finalizeMessage(message),
+                status: MESSAGE_STATUS.COMPLETE,
+                metrics: { ...message.metrics, ...metrics },
+              }
+        )
       )
-    )
-  }, [onMessageUpdate])
+      void hydrateMetricsFromLog(metrics)
+    },
+    [onMessageUpdate, hydrateMetricsFromLog]
+  )
 
   // Handle stream error
   const handleStreamError = useCallback(
@@ -112,7 +148,8 @@ export function useChatHandler({
         payload,
         handleStreamUpdate,
         handleStreamComplete,
-        handleStreamError
+        handleStreamError,
+        patchLastAssistantMetrics
       )
     },
     [
@@ -122,6 +159,7 @@ export function useChatHandler({
       handleStreamUpdate,
       handleStreamComplete,
       handleStreamError,
+      patchLastAssistantMetrics,
     ]
   )
 
@@ -135,7 +173,8 @@ export function useChatHandler({
       )
 
       try {
-        const response = await sendChatCompletion(payload)
+        const { data: response, metrics } =
+          await sendChatCompletionWithMeta(payload)
         const choice = response.choices?.[0]
         if (!choice) return
 
@@ -154,8 +193,10 @@ export function useChatHandler({
               choice.message?.reasoning_content
             ),
             status: MESSAGE_STATUS.COMPLETE,
+            metrics: { ...message.metrics, ...metrics },
           }))
         )
+        void hydrateMetricsFromLog(metrics)
       } catch (error: unknown) {
         const err = error as {
           response?: {
@@ -171,7 +212,13 @@ export function useChatHandler({
         )
       }
     },
-    [config, parameterEnabled, onMessageUpdate, handleStreamError]
+    [
+      config,
+      parameterEnabled,
+      onMessageUpdate,
+      handleStreamError,
+      hydrateMetricsFromLog,
+    ]
   )
 
   // Send chat request (stream or non-stream based on config)
