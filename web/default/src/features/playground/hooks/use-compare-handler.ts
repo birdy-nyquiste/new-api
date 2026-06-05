@@ -31,6 +31,7 @@ import type {
   ParameterEnabled,
   PlaygroundConfig,
   ResponseMetrics,
+  ContentPart,
 } from '../types'
 
 interface UseCompareHandlerOptions {
@@ -50,26 +51,54 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
+function formatComparePromptMessage(prompt: string, files?: any[]): ChatCompletionMessage {
+  if (files && files.length > 0) {
+    const parts: ContentPart[] = []
+    if (prompt) {
+      parts.push({ type: 'text', text: prompt })
+    }
+    files.forEach((file) => {
+      if (file.mediaType?.startsWith('image/')) {
+        parts.push({
+          type: 'image_url',
+          image_url: { url: file.url }
+        })
+      } else {
+        parts.push({
+          type: 'file',
+          file: {
+            filename: file.filename || '',
+            file_data: file.url
+          }
+        })
+      }
+    })
+    return { role: 'user', content: parts }
+  }
+  return { role: 'user', content: prompt }
+}
+
 function buildContextMessages(
   rounds: CompareRound[],
   modelId: string,
   prompt: string,
-  includeContext: boolean
+  includeContext: boolean,
+  currentFiles?: any[]
 ): ChatCompletionMessage[] {
   if (!includeContext) {
-    return [{ role: 'user', content: prompt }]
+    return [formatComparePromptMessage(prompt, currentFiles)]
   }
 
   const messages: ChatCompletionMessage[] = []
   rounds.forEach((round) => {
     const result = round.results.find((item) => item.modelId === modelId)
     if (!result || result.status === 'error') return
-    messages.push({ role: 'user', content: round.prompt })
+    messages.push(formatComparePromptMessage(round.prompt, round.files))
     if (result.content.trim()) {
       messages.push({ role: 'assistant', content: result.content })
     }
   })
-  messages.push({ role: 'user', content: prompt })
+  messages.push(formatComparePromptMessage(prompt, currentFiles))
   return messages
 }
 
@@ -145,9 +174,10 @@ export function useCompareHandler({
   }, [])
 
   const sendCompare = useCallback(
-    (prompt: string, selectedModels: ModelOption[]) => {
+    (prompt: string, selectedModels: ModelOption[], files?: any[]) => {
       const trimmed = prompt.trim()
-      if (!trimmed || selectedModels.length !== 3 || streamsRef.current.size > 0) {
+      const hasAttachments = files && files.length > 0
+      if ((!trimmed && !hasAttachments) || selectedModels.length !== 3 || streamsRef.current.size > 0) {
         return
       }
 
@@ -164,14 +194,14 @@ export function useCompareHandler({
 
       onRoundsUpdate((prev) => [
         ...prev,
-        { id: roundId, prompt: trimmed, results: initialResults, createdAt },
+        { id: roundId, prompt: trimmed, results: initialResults, createdAt, files },
       ])
 
       selectedModels.forEach((model) => {
         const resultId = `${roundId}-${model.value}`
         const payload = buildPayload(
           model.value,
-          buildContextMessages(rounds, model.value, trimmed, includeContext),
+          buildContextMessages(rounds, model.value, trimmed, includeContext, files),
           config,
           parameterEnabled
         )

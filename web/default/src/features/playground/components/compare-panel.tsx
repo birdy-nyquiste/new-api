@@ -24,8 +24,6 @@ import {
   PaperclipIcon,
   FileIcon,
   ImageIcon,
-  ScreenShareIcon,
-  CameraIcon,
   GlobeIcon,
   SendIcon,
   CpuIcon,
@@ -62,6 +60,9 @@ import {
   PromptInputFooter,
   PromptInputTextarea,
   PromptInputTools,
+  PromptInputAttachments,
+  PromptInputAttachment,
+  usePromptInputAttachments,
   type PromptInputMessage,
 } from '@/components/ai-elements/prompt-input'
 import {
@@ -116,7 +117,7 @@ interface ComparePanelProps {
     value: CompareConfig[K]
   ) => void
   isComparing: boolean
-  onSend: (prompt: string, selectedModels: ModelOption[]) => void
+  onSend: (prompt: string, selectedModels: ModelOption[], files?: any[]) => void
   onStop: () => void
   mode?: PlaygroundMode
   onModeChange?: (mode: PlaygroundMode) => void
@@ -171,15 +172,10 @@ export function ComparePanel({
 
   const submit = (message: PromptInputMessage) => {
     const text = message.text?.trim()
-    if (!text || selectedModels.length !== 3 || isComparing) return
-    onSend(text, selectedModels)
+    const hasAttachments = message.files && message.files.length > 0
+    if ((!text && !hasAttachments) || selectedModels.length !== 3 || isComparing) return
+    onSend(text || '', selectedModels, message.files)
     setPrompt('')
-  }
-
-  const handleFileAction = (action: string) => {
-    toast.info(t('Feature in development'), {
-      description: action,
-    })
   }
 
   const handleSuggestionClick = (prompt: string) => {
@@ -197,155 +193,36 @@ export function ComparePanel({
   const renderInputBar = () => {
     return (
       <div className='grid shrink-0 gap-4 px-1 md:pb-4'>
-        <PromptInput groupClassName='rounded-xl' onSubmit={submit}>
-          <PromptInputTextarea
-            autoComplete='off'
-            autoCorrect='off'
-            className='px-5 md:text-base'
-            disabled={isComparing}
-            onChange={(event) => setPrompt(event.target.value)}
-            placeholder={
-              selectedModels.length === 3
-                ? t('Ask anything')
-                : t('Select exactly 3 models to compare')
-            }
-            spellCheck={false}
-            value={prompt}
+        <PromptInput
+          groupClassName='rounded-xl'
+          onSubmit={submit}
+          accept='image/*,application/pdf,text/*,application/json'
+          maxFiles={5}
+          maxFileSize={20 * 1024 * 1024}
+          onError={(err) => toast.error(err.message)}
+        >
+          <CompareInputInner
+            prompt={prompt}
+            setPrompt={setPrompt}
+            isComparing={isComparing}
+            selectedModels={selectedModels}
+            onStop={onStop}
+            groups={groups}
+            groupValue={groupValue}
+            onGroupChange={onGroupChange}
+            setSelectorOpen={setSelectorOpen}
+            compareConfig={compareConfig}
+            onCompareConfigChange={onCompareConfigChange}
           />
-          <PromptInputFooter className='p-2.5'>
-            <PromptInputTools>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <PromptInputButton
-                      className='border font-medium'
-                      disabled={isComparing}
-                      variant='outline'
-                    />
-                  }
-                >
-                  <PaperclipIcon size={16} />
-                  <span className='hidden sm:inline'>{t('Attach')}</span>
-                  <span className='sr-only sm:hidden'>{t('Attach')}</span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='start'>
-                  <DropdownMenuItem
-                    onClick={() => handleFileAction('upload-file')}
-                  >
-                    <FileIcon className='mr-2' size={16} />
-                    {t('Upload file')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleFileAction('upload-photo')}
-                  >
-                    <ImageIcon className='mr-2' size={16} />
-                    {t('Upload photo')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleFileAction('take-screenshot')}
-                  >
-                    <ScreenShareIcon className='mr-2' size={16} />
-                    {t('Take screenshot')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleFileAction('take-photo')}
-                  >
-                    <CameraIcon className='mr-2' size={16} />
-                    {t('Take photo')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <PromptInputButton
-                className='border font-medium'
-                disabled={isComparing}
-                onClick={() => toast.info(t('Search feature in development'))}
-                variant='outline'
-              >
-                <GlobeIcon size={16} />
-                <span className='hidden sm:inline'>{t('Search')}</span>
-                <span className='sr-only sm:hidden'>{t('Search')}</span>
-              </PromptInputButton>
-            </PromptInputTools>
-
-            <div className='flex items-center gap-1.5 md:gap-2'>
-              <GroupSelector
-                selectedGroup={groupValue}
-                groups={groups}
-                onGroupChange={onGroupChange}
-                disabled={groups.length === 0 || isComparing}
-              />
-
-              <Button
-                variant='outline'
-                size='sm'
-                disabled={isComparing}
-                onClick={() => setSelectorOpen(true)}
-                className={cn(
-                  'flex h-8 items-center gap-2 border px-3 font-medium',
-                  'justify-center p-0 sm:w-auto sm:justify-start sm:px-3',
-                  'w-8 sm:w-auto',
-                  'bg-background text-foreground',
-                  'hover:bg-accent transition-colors',
-                  'focus:!ring-0 focus:!outline-none',
-                  'text-xs shadow-none'
-                )}
-              >
-                <CpuIcon className='text-muted-foreground size-4' />
-                <span className='hidden sm:inline-block'>
-                  {t('Models')} ({selectedModels.length}/3)
-                </span>
-                <span className='inline-block text-xs sm:hidden'>
-                  {selectedModels.length}
-                </span>
-              </Button>
-
-              <label className='bg-background hover:bg-accent flex h-8 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-xs transition-colors select-none'>
-                <Switch
-                  checked={compareConfig.includeContext}
-                  onCheckedChange={(checked) =>
-                    onCompareConfigChange('includeContext', checked)
-                  }
-                  size='sm'
-                  className='origin-left scale-90'
-                />
-                <span className='hidden sm:inline'>{t('Use context')}</span>
-                <span className='sr-only sm:hidden'>{t('Context')}</span>
-              </label>
-
-              {isComparing ? (
-                <PromptInputButton
-                  className='text-foreground font-medium'
-                  onClick={onStop}
-                  variant='secondary'
-                >
-                  <SquareIcon className='fill-current' size={16} />
-                  <span className='hidden sm:inline'>{t('Stop')}</span>
-                  <span className='sr-only sm:hidden'>{t('Stop')}</span>
-                </PromptInputButton>
-              ) : (
-                <PromptInputButton
-                  className='text-foreground font-medium'
-                  disabled={!prompt.trim() || selectedModels.length !== 3}
-                  type='submit'
-                  variant='secondary'
-                >
-                  <SendIcon size={16} />
-                  <span className='hidden sm:inline'>{t('Send')}</span>
-                  <span className='sr-only sm:hidden'>{t('Send')}</span>
-                </PromptInputButton>
-              )}
-            </div>
-          </PromptInputFooter>
         </PromptInput>
         <Suggestions>
-          {suggestions.map(({ icon: Icon, text, color, prompt }) => (
+          {suggestions.map(({ icon: Icon, text, color, prompt: sugPrompt }) => (
             <Suggestion
               className={`text-xs font-normal sm:text-sm ${
                 text === 'More' ? 'hidden sm:flex' : ''
               }`}
               key={text}
-              onClick={() => handleSuggestionClick(prompt)}
+              onClick={() => handleSuggestionClick(sugPrompt)}
               suggestion={text}
             >
               {Icon && <Icon size={16} style={{ color }} />}
@@ -459,10 +336,47 @@ export function ComparePanel({
         <div className='mx-auto max-w-6xl space-y-5'>
           {rounds.map((round) => (
             <section key={round.id} className='space-y-3'>
-              <div className='flex justify-end'>
-                <div className='bg-primary text-primary-foreground max-w-[88%] rounded-lg px-4 py-2 text-sm'>
-                  {round.prompt}
-                </div>
+              <div className='flex flex-col items-end gap-1.5'>
+                {round.prompt && (
+                  <div className='bg-primary text-primary-foreground max-w-[88%] rounded-lg px-4 py-2 text-sm'>
+                    {round.prompt}
+                  </div>
+                )}
+                {round.files && round.files.length > 0 && (
+                  <div className="flex flex-wrap gap-2 justify-end max-w-[88%]">
+                    {round.files.map((file, idx) => {
+                      const isImage = file.mediaType?.startsWith('image/')
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm max-w-xs"
+                        >
+                          {isImage ? (
+                            <img
+                              src={file.url}
+                              alt={file.filename || 'uploaded image'}
+                              className="size-8 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="flex size-8 items-center justify-center rounded bg-primary/10 text-primary">
+                              <FileIcon size={16} />
+                            </div>
+                          )}
+                          <div className="flex flex-col min-w-0 pr-1 text-left">
+                            <span className="truncate font-medium text-[10px] text-foreground">
+                              {file.filename || (isImage ? 'Image' : 'Attachment')}
+                            </span>
+                            {file.mediaType && (
+                              <span className="text-[8px] text-muted-foreground truncate font-mono">
+                                {file.mediaType}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
               <div className='grid gap-3 lg:grid-cols-3'>
                 {round.results.map((result) => (
@@ -583,5 +497,212 @@ function CompareResultCard({ result }: { result: CompareResult }) {
         <ResponseMetrics metrics={result.metrics} />
       </div>
     </article>
+  )
+}
+
+function PromptInputAttachmentsList() {
+  const attachments = usePromptInputAttachments()
+  if (attachments.files.length === 0) return null
+  return (
+    <div className='flex flex-wrap gap-2 px-5 pb-2'>
+      <PromptInputAttachments>
+        {(file) => <PromptInputAttachment key={file.id} data={file} />}
+      </PromptInputAttachments>
+    </div>
+  )
+}
+
+function CompareSubmitButton({
+  disabled,
+  text,
+  isComparing,
+  onStop,
+}: {
+  disabled?: boolean
+  text: string
+  isComparing?: boolean
+  onStop?: () => void
+}) {
+  const { t } = useTranslation()
+  const attachments = usePromptInputAttachments()
+  const hasContent = text.trim().length > 0 || attachments.files.length > 0
+
+  if (isComparing && onStop) {
+    return (
+      <PromptInputButton
+        className='text-foreground font-medium'
+        onClick={onStop}
+        variant='secondary'
+      >
+        <SquareIcon className='fill-current' size={16} />
+        <span className='hidden sm:inline'>{t('Stop')}</span>
+        <span className='sr-only sm:hidden'>{t('Stop')}</span>
+      </PromptInputButton>
+    )
+  }
+
+  return (
+    <Button
+      type='submit'
+      className='text-foreground border bg-secondary font-medium hover:bg-secondary/85 shadow-none'
+      disabled={disabled || !hasContent}
+    >
+      <SendIcon size={16} />
+      <span className='hidden sm:inline'>{t('Compare')}</span>
+      <span className='sr-only sm:hidden'>{t('Compare')}</span>
+    </Button>
+  )
+}
+
+interface CompareInputInnerProps {
+  prompt: string
+  setPrompt: (v: string) => void
+  isComparing: boolean
+  selectedModels: ModelOption[]
+  onStop: () => void
+  groups: GroupOption[]
+  groupValue: string
+  onGroupChange: (value: string) => void
+  setSelectorOpen: (open: boolean) => void
+  compareConfig: CompareConfig
+  onCompareConfigChange: <K extends keyof CompareConfig>(
+    key: K,
+    value: CompareConfig[K]
+  ) => void
+}
+
+function CompareInputInner({
+  prompt,
+  setPrompt,
+  isComparing,
+  selectedModels,
+  onStop,
+  groups,
+  groupValue,
+  onGroupChange,
+  setSelectorOpen,
+  compareConfig,
+  onCompareConfigChange,
+}: CompareInputInnerProps) {
+  const { t } = useTranslation()
+  const attachments = usePromptInputAttachments()
+
+  return (
+    <>
+      <PromptInputTextarea
+        autoComplete='off'
+        autoCorrect='off'
+        className='px-5 md:text-base'
+        disabled={isComparing}
+        onChange={(event) => setPrompt(event.target.value)}
+        placeholder={
+          selectedModels.length === 3
+            ? t('Ask anything')
+            : t('Select exactly 3 models to compare')
+        }
+        spellCheck={false}
+        value={prompt}
+      />
+
+      <PromptInputAttachmentsList />
+
+      <PromptInputFooter className='p-2.5'>
+        <PromptInputTools>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <PromptInputButton
+                  className='border font-medium'
+                  disabled={isComparing}
+                  variant='outline'
+                />
+              }
+            >
+              <PaperclipIcon size={16} />
+              <span className='hidden sm:inline'>{t('Attach')}</span>
+              <span className='sr-only sm:hidden'>{t('Attach')}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='start'>
+              <DropdownMenuItem
+                onClick={() => attachments.openFileDialog()}
+              >
+                <FileIcon className='mr-2' size={16} />
+                {t('Upload file')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => attachments.openFileDialog()}
+              >
+                <ImageIcon className='mr-2' size={16} />
+                {t('Upload photo')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <PromptInputButton
+            className='border font-medium'
+            disabled={isComparing}
+            onClick={() => toast.info(t('Search feature in development'))}
+            variant='outline'
+          >
+            <GlobeIcon size={16} />
+            <span className='hidden sm:inline'>{t('Search')}</span>
+            <span className='sr-only sm:hidden'>{t('Search')}</span>
+          </PromptInputButton>
+        </PromptInputTools>
+
+        <div className='flex items-center gap-1.5 md:gap-2'>
+          <GroupSelector
+            selectedGroup={groupValue}
+            groups={groups}
+            onGroupChange={onGroupChange}
+            disabled={groups.length === 0 || isComparing}
+          />
+
+          <Button
+            variant='outline'
+            size='sm'
+            disabled={isComparing}
+            onClick={() => setSelectorOpen(true)}
+            className={cn(
+              'flex h-8 items-center gap-2 border px-3 font-medium',
+              'justify-center p-0 sm:w-auto sm:justify-start sm:px-3',
+              'w-8 sm:w-auto',
+              'bg-background text-foreground',
+              'hover:bg-accent transition-colors',
+              'focus:!ring-0 focus:!outline-none',
+              'text-xs shadow-none'
+            )}
+          >
+            <CpuIcon className='text-muted-foreground size-4' />
+            <span className='hidden sm:inline-block'>
+              {t('Models')} ({selectedModels.length}/3)
+            </span>
+            <span className='inline-block text-xs sm:hidden'>
+              {selectedModels.length}
+            </span>
+          </Button>
+
+          <label className='bg-background hover:bg-accent flex h-8 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-xs transition-colors select-none'>
+            <Switch
+              checked={compareConfig.includeContext}
+              onCheckedChange={(checked) =>
+                onCompareConfigChange('includeContext', checked)
+              }
+              size='sm'
+              className='origin-left scale-90'
+            />
+            <span className='hidden sm:inline'>{t('Use context')}</span>
+            <span className='sr-only sm:hidden'>{t('Context')}</span>
+          </label>
+
+          <CompareSubmitButton
+            disabled={isComparing || selectedModels.length !== 3}
+            text={prompt}
+            onStop={onStop}
+            isComparing={isComparing}
+          />
+        </div>
+      </PromptInputFooter>
+    </>
   )
 }

@@ -127,6 +127,21 @@ func ClaudeHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *typ
 			}
 		}
 	}
+	// Sanitize Claude request parameters: temperature and top_p cannot both be specified.
+	if request.Temperature != nil && request.TopP != nil {
+		if *request.TopP == 1.0 {
+			request.TopP = nil
+		} else {
+			request.TopP = nil // Prioritize temperature and omit top_p
+		}
+	}
+
+	// claude-opus-4-7 rejects temperature, top_p, and top_k
+	if strings.HasPrefix(request.Model, "claude-opus-4-7") {
+		request.Temperature = nil
+		request.TopP = nil
+		request.TopK = nil
+	}
 
 	if !model_setting.GetGlobalSettings().PassThroughRequestEnabled &&
 		!info.ChannelSetting.PassThroughBodyEnabled &&

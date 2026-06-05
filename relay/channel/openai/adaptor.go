@@ -346,6 +346,21 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 		}
 	}
 
+	// Sanitize Claude-specific parameter conflicts for OpenAI-compatible channels
+	// (e.g., OpenRouter) that proxy to Claude models.
+	if strings.HasPrefix(info.UpstreamModelName, "claude") ||
+		strings.HasPrefix(info.UpstreamModelName, "anthropic/claude") {
+		// claude-opus-4-7 rejects temperature, top_p, and top_k entirely
+		if strings.Contains(info.UpstreamModelName, "claude-opus-4-7") {
+			request.Temperature = nil
+			request.TopP = nil
+			request.TopK = nil
+		} else if request.Temperature != nil && request.TopP != nil {
+			// Claude rejects requests with both temperature and top_p specified
+			request.TopP = nil
+		}
+	}
+
 	return request, nil
 }
 

@@ -321,7 +321,7 @@ func TestRequestOpenAI2ClaudeMessage_SupportsPDFFileContent(t *testing.T) {
 						Type: dto.ContentTypeFile,
 						File: &dto.MessageFile{
 							FileName: "spec.pdf",
-							FileData: "JVBERi0xLjQK",
+							FileData: "data:application/pdf;base64,JVBERi0xLjQK",
 						},
 					},
 					dto.MediaContent{
