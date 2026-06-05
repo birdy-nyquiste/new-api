@@ -380,3 +380,41 @@ func TestRequestOpenAI2ClaudeMessage_ConvertsTextFileContentToText(t *testing.T)
 	require.NotNil(t, content[0].Text)
 	require.Equal(t, "alpha\nbeta", *content[0].Text)
 }
+
+func TestRequestOpenAI2ClaudeMessage_SanitizeParameters(t *testing.T) {
+	temp := 0.7
+	topP := 1.0
+	topK := 5
+
+	// Test 1: Sanitization when both temperature and top_p are specified
+	req1 := dto.GeneralOpenAIRequest{
+		Model:       "claude-3-5-sonnet",
+		Temperature: &temp,
+		TopP:        &topP,
+		Messages: []dto.Message{
+			{Role: "user", Content: "hello"},
+		},
+	}
+	claudeReq1, err := RequestOpenAI2ClaudeMessage(nil, req1)
+	require.NoError(t, err)
+	require.NotNil(t, claudeReq1.Temperature)
+	require.Equal(t, temp, *claudeReq1.Temperature)
+	require.Nil(t, claudeReq1.TopP) // top_p should be omitted/nil
+
+	// Test 2: Sanitization for claude-opus-4-7 (should reject temperature, top_p, top_k)
+	req2 := dto.GeneralOpenAIRequest{
+		Model:       "claude-opus-4-7",
+		Temperature: &temp,
+		TopP:        &topP,
+		TopK:        &topK,
+		Messages: []dto.Message{
+			{Role: "user", Content: "hello"},
+		},
+	}
+	claudeReq2, err := RequestOpenAI2ClaudeMessage(nil, req2)
+	require.NoError(t, err)
+	require.Nil(t, claudeReq2.Temperature)
+	require.Nil(t, claudeReq2.TopP)
+	require.Nil(t, claudeReq2.TopK)
+}
+
