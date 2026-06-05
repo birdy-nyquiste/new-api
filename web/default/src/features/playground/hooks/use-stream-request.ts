@@ -20,7 +20,11 @@ import { useCallback, useRef } from 'react'
 import { SSE } from 'sse.js'
 import { getCommonHeaders } from '@/lib/api'
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../constants'
-import type { ChatCompletionRequest, ChatCompletionChunk } from '../types'
+import type {
+  ChatCompletionRequest,
+  ChatCompletionChunk,
+  ResponseMetrics,
+} from '../types'
 
 /**
  * Hook for handling streaming chat completion requests
@@ -33,9 +37,12 @@ export function useStreamRequest() {
     (
       payload: ChatCompletionRequest,
       onUpdate: (type: 'reasoning' | 'content', chunk: string) => void,
-      onComplete: () => void,
-      onError: (error: string, errorCode?: string) => void
+      onComplete: (metrics: ResponseMetrics) => void,
+      onError: (error: string, errorCode?: string) => void,
+      onMetrics?: (metrics: ResponseMetrics) => void
     ) => {
+      const startedAt = Date.now()
+      const metrics: ResponseMetrics = {}
       const source = new SSE(API_ENDPOINTS.CHAT_COMPLETIONS, {
         headers: getCommonHeaders(),
         method: 'POST',
@@ -60,14 +67,22 @@ export function useStreamRequest() {
       source.addEventListener('message', (e: MessageEvent) => {
         if (e.data === '[DONE]') {
           isStreamCompleteRef.current = true
+          metrics.responseTimeMs = Date.now() - startedAt
+          onMetrics?.({ ...metrics })
           closeSource()
-          onComplete()
+          onComplete({ ...metrics })
           return
         }
 
         try {
           const chunk: ChatCompletionChunk = JSON.parse(e.data)
           const delta = chunk.choices?.[0]?.delta
+          if (chunk.usage) {
+            metrics.promptTokens = chunk.usage.prompt_tokens
+            metrics.completionTokens = chunk.usage.completion_tokens
+            metrics.totalTokens = chunk.usage.total_tokens
+            onMetrics?.({ ...metrics })
+          }
 
           if (delta) {
             if (delta.reasoning_content) {
@@ -107,6 +122,21 @@ export function useStreamRequest() {
           handleError(errorMessage, errorCode)
         }
       })
+
+      source.addEventListener(
+        'open',
+        (
+          e: Event & {
+            headers?: Record<string, string[]>
+          }
+        ) => {
+          const requestId = e.headers?.['x-oneapi-request-id']?.[0]
+          if (requestId) {
+            metrics.requestId = requestId
+            onMetrics?.({ ...metrics })
+          }
+        }
+      )
 
       source.addEventListener(
         'readystatechange',

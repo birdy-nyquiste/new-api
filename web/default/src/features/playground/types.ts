@@ -40,12 +40,17 @@ export interface Message {
   isContentComplete?: boolean
   status?: MessageStatus
   errorCode?: string | null
+  metrics?: ResponseMetrics
 }
 
 // API payload types
 export interface ChatCompletionMessage {
   role: MessageRole
   content: string | ContentPart[]
+}
+
+export interface StreamOptions {
+  include_usage?: boolean
 }
 
 export interface ContentPart {
@@ -61,6 +66,7 @@ export interface ChatCompletionRequest {
   group?: string
   messages: ChatCompletionMessage[]
   stream: boolean
+  stream_options?: StreamOptions
   temperature?: number
   top_p?: number
   max_tokens?: number
@@ -83,6 +89,7 @@ export interface ChatCompletionChunk {
     }
     finish_reason: string | null
   }>
+  usage?: UsageInfo | null
 }
 
 export interface ChatCompletionResponse {
@@ -99,11 +106,23 @@ export interface ChatCompletionResponse {
     }
     finish_reason: string
   }>
-  usage?: {
-    prompt_tokens: number
-    completion_tokens: number
-    total_tokens: number
-  }
+  usage?: UsageInfo
+}
+
+export interface UsageInfo {
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+}
+
+export interface ResponseMetrics {
+  requestId?: string
+  responseTimeMs?: number
+  useTimeMs?: number | null
+  promptTokens?: number
+  completionTokens?: number
+  totalTokens?: number
+  quotaRaw?: number | null
 }
 
 // Configuration types
@@ -126,6 +145,46 @@ export interface ParameterEnabled {
   frequency_penalty: boolean
   presence_penalty: boolean
   seed: boolean
+}
+
+export type PlaygroundMode = 'chat' | 'compare'
+
+export interface CompareConfig {
+  selectedModelIds: string[]
+  includeContext: boolean
+}
+
+export type CompareResultStatus = 'loading' | 'streaming' | 'done' | 'error'
+
+export interface CompareResult {
+  id: string
+  modelId: string
+  modelName: string
+  status: CompareResultStatus
+  content: string
+  reasoning?: string
+  errorMessage?: string
+  metrics?: ResponseMetrics
+}
+
+export interface CompareRound {
+  id: string
+  prompt: string
+  results: CompareResult[]
+  createdAt: number
+}
+
+export interface PlaygroundSession {
+  id: string
+  title: string
+  mode: PlaygroundMode
+  config: PlaygroundConfig
+  parameterEnabled: ParameterEnabled
+  messages: Message[]
+  compareRounds: CompareRound[]
+  compareConfig: CompareConfig
+  createdAt: number
+  updatedAt: number
 }
 
 // Model and group options

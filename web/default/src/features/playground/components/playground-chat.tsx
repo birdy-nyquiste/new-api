@@ -54,6 +54,7 @@ import { parseThinkTags } from '../lib/message-utils'
 import type { Message as MessageType } from '../types'
 import { MessageActions } from './message-actions'
 import { MessageError } from './message-error'
+import { ResponseMetrics } from './response-metrics'
 
 interface PlaygroundChatProps {
   messages: MessageType[]
@@ -245,6 +246,12 @@ export function PlaygroundChat({
                                         message={message}
                                         className='mb-2'
                                       />
+                                      {isAssistant && (
+                                        <ResponseMetrics
+                                          metrics={message.metrics}
+                                          className='mb-2'
+                                        />
+                                      )}
                                       {actions}
                                     </>
                                   ) : (
@@ -258,6 +265,12 @@ export function PlaygroundChat({
                                         >
                                           <Response>{displayContent}</Response>
                                         </MessageContent>
+                                        {isAssistant && (
+                                          <ResponseMetrics
+                                            metrics={message.metrics}
+                                            className='mt-2'
+                                          />
+                                        )}
                                         {actions}
                                       </>
                                     )

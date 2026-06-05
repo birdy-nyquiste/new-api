@@ -26,11 +26,9 @@ import {
   GlobeIcon,
   SendIcon,
   SquareIcon,
-  BarChartIcon,
-  BoxIcon,
-  NotepadTextIcon,
-  CodeSquareIcon,
-  GraduationCapIcon,
+  MailIcon,
+  FileTextIcon,
+  LanguagesIcon,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -67,12 +65,24 @@ interface PlaygroundInputProps {
 }
 
 const suggestions = [
-  { icon: BarChartIcon, text: 'Analyze data', color: '#76d0eb' },
-  { icon: BoxIcon, text: 'Surprise me', color: '#76d0eb' },
-  { icon: NotepadTextIcon, text: 'Summarize text', color: '#ea8444' },
-  { icon: CodeSquareIcon, text: 'Code', color: '#6c71ff' },
-  { icon: GraduationCapIcon, text: 'Get advice', color: '#76d0eb' },
-  { icon: null, text: 'More' },
+  {
+    icon: MailIcon,
+    text: 'Draft an email',
+    color: '#b388ff',
+    prompt: 'Draft a professional email regarding [Insert topic, e.g. project update, meeting request] to [Insert recipient, e.g. client, team]. The tone should be [Insert tone, e.g. polite, formal] and include the following key details:\n- ',
+  },
+  {
+    icon: FileTextIcon,
+    text: 'Summarize text',
+    color: '#ffd54f',
+    prompt: 'Provide a concise bullet-point summary of the main points and key takeaways from the following text:\n\n[Insert text here]',
+  },
+  {
+    icon: LanguagesIcon,
+    text: 'Translate language',
+    color: '#81c784',
+    prompt: 'Translate the following text into [Insert target language, e.g. Spanish, Chinese, French, Japanese]. Ensure the translation preserves the original tone, idioms, and context:\n\n"[Insert text here]"',
+  },
 ]
 
 export function PlaygroundInput({
@@ -107,8 +117,15 @@ export function PlaygroundInput({
     })
   }
 
-  const handleSuggestionClick = (suggestion: string) => {
-    onSubmit(suggestion)
+  const handleSuggestionClick = (prompt: string) => {
+    setText(t(prompt))
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea[name="message"]') as HTMLTextAreaElement | null
+      if (textarea) {
+        textarea.focus()
+        textarea.selectionStart = textarea.selectionEnd = textarea.value.length
+      }
+    }, 0)
   }
 
   return (
@@ -220,17 +237,17 @@ export function PlaygroundInput({
       </PromptInput>
 
       <Suggestions>
-        {suggestions.map(({ icon: Icon, text, color }) => (
+        {suggestions.map(({ icon: Icon, text, color, prompt }) => (
           <Suggestion
             className={`text-xs font-normal sm:text-sm ${
               text === 'More' ? 'hidden sm:flex' : ''
             }`}
             key={text}
-            onClick={() => handleSuggestionClick(text)}
+            onClick={() => handleSuggestionClick(prompt)}
             suggestion={text}
           >
             {Icon && <Icon size={16} style={{ color }} />}
-            {text}
+            {t(text)}
           </Suggestion>
         ))}
       </Suggestions>

@@ -23,7 +23,10 @@ import type {
   ChatCompletionResponse,
   ModelOption,
   GroupOption,
+  ResponseMetrics,
 } from './types'
+
+const LOG_TYPE_CONSUME = 2
 
 /**
  * Send chat completion request (non-streaming)
@@ -35,6 +38,65 @@ export async function sendChatCompletion(
     skipErrorHandler: true,
   } as Record<string, unknown>)
   return res.data
+}
+
+export async function sendChatCompletionWithMeta(
+  payload: ChatCompletionRequest
+): Promise<{ data: ChatCompletionResponse; metrics: ResponseMetrics }> {
+  const start = Date.now()
+  const res = await api.post(API_ENDPOINTS.CHAT_COMPLETIONS, payload, {
+    skipErrorHandler: true,
+  } as Record<string, unknown>)
+  const usage = (res.data as ChatCompletionResponse).usage
+  return {
+    data: res.data,
+    metrics: {
+      requestId:
+        (res.headers as Record<string, string>)['x-oneapi-request-id'] || '',
+      responseTimeMs: Date.now() - start,
+      promptTokens: usage?.prompt_tokens,
+      completionTokens: usage?.completion_tokens,
+      totalTokens: usage?.total_tokens,
+    },
+  }
+}
+
+export async function fetchRequestMetrics(
+  requestId: string
+): Promise<ResponseMetrics | null> {
+  if (!requestId) return null
+
+  try {
+    const res = await api.get(API_ENDPOINTS.USER_LOGS, {
+      params: { request_id: requestId, type: LOG_TYPE_CONSUME, p: 1, size: 1 },
+    })
+    const item = res.data?.data?.items?.[0] as
+      | {
+          use_time?: number
+          quota?: number
+          prompt_tokens?: number
+          completion_tokens?: number
+          token_used?: number
+        }
+      | undefined
+    if (!item) return null
+    return {
+      requestId,
+      useTimeMs:
+        typeof item.use_time === 'number' ? item.use_time * 1000 : null,
+      quotaRaw: typeof item.quota === 'number' ? item.quota : null,
+      promptTokens:
+        typeof item.prompt_tokens === 'number' ? item.prompt_tokens : undefined,
+      completionTokens:
+        typeof item.completion_tokens === 'number'
+          ? item.completion_tokens
+          : undefined,
+      totalTokens:
+        typeof item.token_used === 'number' ? item.token_used : undefined,
+    }
+  } catch {
+    return null
+  }
 }
 
 /**

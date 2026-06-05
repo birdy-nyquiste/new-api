@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import type { PlaygroundConfig, ParameterEnabled } from './types'
+import type { PlaygroundConfig, ParameterEnabled, CompareConfig } from './types'
 
 // Message constants
 export const MESSAGE_ROLES = {
@@ -37,6 +37,7 @@ export const API_ENDPOINTS = {
   CHAT_COMPLETIONS: '/pg/chat/completions',
   USER_MODELS: '/api/user/models',
   USER_GROUPS: '/api/user/self/groups',
+  USER_LOGS: '/api/log/self',
 } as const
 
 // Default group — uses 'default' as the safe fallback; auto-group is
@@ -56,6 +57,17 @@ export const DEFAULT_CONFIG: PlaygroundConfig = {
   stream: true,
 }
 
+export const DEFAULT_COMPARE_MODEL_IDS = [
+  'doubao-seed-2-0-lite-260428',
+  'gpt-5.4-mini',
+  'deepseek-v4-flash',
+] as const
+
+export const DEFAULT_COMPARE_CONFIG: CompareConfig = {
+  selectedModelIds: [...DEFAULT_COMPARE_MODEL_IDS],
+  includeContext: true,
+}
+
 export const DEFAULT_PARAMETER_ENABLED: ParameterEnabled = {
   temperature: true,
   top_p: true,
@@ -70,6 +82,9 @@ export const STORAGE_KEYS = {
   CONFIG: 'playground_config',
   MESSAGES: 'playground_messages',
   PARAMETER_ENABLED: 'playground_parameter_enabled',
+  SESSIONS: 'model_lab_sessions',
+  ACTIVE_SESSION: 'model_lab_active_session',
+  LEGACY_COMPARE_ROUNDS: 'model_compare_rounds',
 } as const
 
 // Error messages
