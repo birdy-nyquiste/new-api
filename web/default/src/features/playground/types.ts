@@ -68,6 +68,10 @@ export interface ContentPart {
   }
 }
 
+export interface WebSearchOptions {
+  search_context_size?: 'low' | 'medium' | 'high'
+}
+
 export interface ChatCompletionRequest {
   model: string
   group?: string
@@ -80,6 +84,7 @@ export interface ChatCompletionRequest {
   frequency_penalty?: number
   presence_penalty?: number
   seed?: number
+  web_search_options?: WebSearchOptions
 }
 
 export interface ChatCompletionChunk {
@@ -143,6 +148,7 @@ export interface PlaygroundConfig {
   presence_penalty: number
   seed: number | null
   stream: boolean
+  web_search: boolean
 }
 
 export interface ParameterEnabled {
@@ -201,6 +207,8 @@ export interface ModelOption {
   value: string
   category?: string
   categoryIcon?: string
+  tags?: string[]
+  supportedEndpointTypes?: string[]
 }
 
 export interface GroupOption {

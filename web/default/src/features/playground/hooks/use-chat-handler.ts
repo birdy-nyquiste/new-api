@@ -27,6 +27,7 @@ import {
   processStreamingContent,
   finalizeMessage,
 } from '../lib'
+import type { WebSearchSupport } from '../lib'
 import type {
   Message,
   PlaygroundConfig,
@@ -38,6 +39,7 @@ import { useStreamRequest } from './use-stream-request'
 interface UseChatHandlerOptions {
   config: PlaygroundConfig
   parameterEnabled: ParameterEnabled
+  webSearchSupport: WebSearchSupport
   onMessageUpdate: (updater: (prev: Message[]) => Message[]) => void
 }
 
@@ -47,6 +49,7 @@ interface UseChatHandlerOptions {
 export function useChatHandler({
   config,
   parameterEnabled,
+  webSearchSupport,
   onMessageUpdate,
 }: UseChatHandlerOptions) {
   const { sendStreamRequest, stopStream, isStreaming } = useStreamRequest()
@@ -142,7 +145,8 @@ export function useChatHandler({
       const payload = buildChatCompletionPayload(
         messages,
         config,
-        parameterEnabled
+        parameterEnabled,
+        webSearchSupport
       )
       sendStreamRequest(
         payload,
@@ -155,6 +159,7 @@ export function useChatHandler({
     [
       config,
       parameterEnabled,
+      webSearchSupport,
       sendStreamRequest,
       handleStreamUpdate,
       handleStreamComplete,
@@ -169,7 +174,8 @@ export function useChatHandler({
       const payload = buildChatCompletionPayload(
         messages,
         config,
-        parameterEnabled
+        parameterEnabled,
+        webSearchSupport
       )
 
       try {
@@ -215,6 +221,7 @@ export function useChatHandler({
     [
       config,
       parameterEnabled,
+      webSearchSupport,
       onMessageUpdate,
       handleStreamError,
       hydrateMetricsFromLog,

@@ -41,6 +41,8 @@ type PricingResponse = {
   data?: Array<{
     model_name?: unknown
     vendor_id?: unknown
+    tags?: unknown
+    supported_endpoint_types?: unknown
   }>
   vendors?: Array<{
     id?: unknown
@@ -52,6 +54,26 @@ type PricingResponse = {
 type ModelCategoryMeta = {
   name: string
   icon?: string
+}
+
+type ModelCapabilityMeta = {
+  tags?: string[]
+  supportedEndpointTypes?: string[]
+}
+
+function parseModelTags(tags: unknown): string[] | undefined {
+  if (typeof tags !== 'string' || !tags.trim()) return undefined
+  const parsed = tags
+    .split(/[,;|\s]+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+  return parsed.length > 0 ? parsed : undefined
+}
+
+function parseEndpointTypes(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const parsed = value.filter((e): e is string => typeof e === 'string')
+  return parsed.length > 0 ? parsed : undefined
 }
 
 function compareModelOptions(a: ModelOption, b: ModelOption) {
@@ -123,6 +145,21 @@ function parsePricingModelCategories(data: PricingResponse) {
     }
   })
   return categories
+}
+
+function parsePricingModelCapabilities(data: PricingResponse) {
+  const capabilities = new Map<string, ModelCapabilityMeta>()
+  data.data?.forEach((model) => {
+    if (typeof model.model_name !== 'string') return
+    const tags = parseModelTags(model.tags)
+    const supportedEndpointTypes = parseEndpointTypes(
+      model.supported_endpoint_types
+    )
+    if (tags || supportedEndpointTypes) {
+      capabilities.set(model.model_name, { tags, supportedEndpointTypes })
+    }
+  })
+  return capabilities
 }
 
 /**
@@ -218,21 +255,36 @@ export async function getUserModels(): Promise<ModelOption[]> {
     return []
   }
 
-  const pricingCategories =
+  const pricingData =
     pricingResult.status === 'fulfilled'
-      ? parsePricingModelCategories(pricingResult.value.data as PricingResponse)
-      : new Map<string, ModelCategoryMeta>()
+      ? (pricingResult.value.data as PricingResponse)
+      : undefined
+  const pricingCategories = pricingData
+    ? parsePricingModelCategories(pricingData)
+    : new Map<string, ModelCategoryMeta>()
+  const pricingCapabilities = pricingData
+    ? parsePricingModelCapabilities(pricingData)
+    : new Map<string, ModelCapabilityMeta>()
 
   return parseUserModelOptions(data.data)
     .map((model) => {
       const pricingCategory = pricingCategories.get(model.value)
-      return pricingCategory
-        ? {
-            ...model,
-            category: pricingCategory.name,
-            categoryIcon: pricingCategory.icon,
-          }
-        : model
+      const capability = pricingCapabilities.get(model.value)
+      return {
+        ...model,
+        ...(pricingCategory
+          ? {
+              category: pricingCategory.name,
+              categoryIcon: pricingCategory.icon,
+            }
+          : {}),
+        ...(capability
+          ? {
+              tags: capability.tags,
+              supportedEndpointTypes: capability.supportedEndpointTypes,
+            }
+          : {}),
+      }
     })
     .sort(compareModelOptions)
 }

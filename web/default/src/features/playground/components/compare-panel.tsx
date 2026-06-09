@@ -23,7 +23,6 @@ import {
   PlusIcon,
   PaperclipIcon,
   FileIcon,
-  GlobeIcon,
   SendIcon,
   CpuIcon,
   MailIcon,
@@ -72,6 +71,10 @@ import { Response } from '@/components/ai-elements/response'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { GroupSelector } from '@/components/model-group-selector'
 import { parseThinkTags } from '../lib/message-utils'
+import {
+  getWebSearchSupport,
+  type WebSearchSupport,
+} from '../lib/web-search-support'
 import type {
   CompareConfig,
   CompareRound,
@@ -82,6 +85,7 @@ import type {
 } from '../types'
 import { ResponseMetrics } from './response-metrics'
 import { UploadedFilesPreview } from './uploaded-files-preview'
+import { WebSearchChip, WebSearchMenuItem } from './web-search-controls'
 
 const suggestions = [
   {
@@ -120,6 +124,8 @@ interface ComparePanelProps {
   onStop: () => void
   mode?: PlaygroundMode
   onModeChange?: (mode: PlaygroundMode) => void
+  webSearchEnabled?: boolean
+  onWebSearchToggle?: () => void
 }
 
 export function ComparePanel({
@@ -135,6 +141,8 @@ export function ComparePanel({
   onStop,
   mode,
   onModeChange,
+  webSearchEnabled = false,
+  onWebSearchToggle,
 }: ComparePanelProps) {
   const { t } = useTranslation()
   const [prompt, setPrompt] = useState('')
@@ -298,6 +306,8 @@ export function ComparePanel({
             compareConfig={compareConfig}
             onCompareConfigChange={onCompareConfigChange}
             initialView={rounds.length === 0}
+            webSearchEnabled={webSearchEnabled}
+            onWebSearchToggle={onWebSearchToggle}
           />
         </PromptInput>
         <Suggestions>
@@ -571,6 +581,8 @@ interface CompareInputInnerProps {
     value: CompareConfig[K]
   ) => void
   initialView?: boolean
+  webSearchEnabled?: boolean
+  onWebSearchToggle?: () => void
 }
 
 function CompareInputInner({
@@ -586,10 +598,21 @@ function CompareInputInner({
   compareConfig,
   onCompareConfigChange,
   initialView = false,
+  webSearchEnabled = false,
+  onWebSearchToggle,
 }: CompareInputInnerProps) {
   const { t } = useTranslation()
   const attachments = usePromptInputAttachments()
   const inputMenuSide = initialView ? 'bottom' : 'top'
+
+  // Web search applies per compared model; the global toggle is available
+  // when at least one selected model supports it via web_search_options.
+  const webSearchSupport = useMemo<WebSearchSupport>(() => {
+    const supports = selectedModels.map((model) => getWebSearchSupport(model))
+    if (supports.includes('supported')) return 'supported'
+    if (supports.includes('builtin')) return 'builtin'
+    return 'unsupported'
+  }, [selectedModels])
 
   return (
     <>
@@ -630,14 +653,20 @@ function CompareInputInner({
                 <PaperclipIcon className='mr-2' size={16} />
                 {t('Add files & photos')}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => toast.info(t('Search feature in development'))}
-              >
-                <GlobeIcon className='mr-2' size={16} />
-                {t('Web search')}
-              </DropdownMenuItem>
+              <WebSearchMenuItem
+                support={webSearchSupport}
+                enabled={webSearchEnabled}
+                onToggle={onWebSearchToggle}
+              />
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <WebSearchChip
+            support={webSearchSupport}
+            enabled={webSearchEnabled}
+            onToggle={onWebSearchToggle}
+            disabled={isComparing}
+          />
         </PromptInputTools>
 
         <div className='flex items-center gap-1.5 md:gap-2'>

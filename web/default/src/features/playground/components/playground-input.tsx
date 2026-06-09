@@ -20,7 +20,6 @@ import { useState } from 'react'
 import {
   PlusIcon,
   PaperclipIcon,
-  GlobeIcon,
   SendIcon,
   SquareIcon,
   MailIcon,
@@ -46,8 +45,10 @@ import {
 } from '@/components/ai-elements/prompt-input'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { ModelGroupSelector } from '@/components/model-group-selector'
+import type { WebSearchSupport } from '../lib/web-search-support'
 import type { ModelOption, GroupOption } from '../types'
 import { UploadedFilesPreview } from './uploaded-files-preview'
+import { WebSearchChip, WebSearchMenuItem } from './web-search-controls'
 
 interface PlaygroundInputProps {
   onSubmit: (message: PromptInputMessage) => void
@@ -62,6 +63,9 @@ interface PlaygroundInputProps {
   groups: GroupOption[]
   groupValue: string
   onGroupChange: (value: string) => void
+  webSearchEnabled?: boolean
+  webSearchSupport?: WebSearchSupport
+  onWebSearchToggle?: () => void
 }
 
 const suggestions = [
@@ -201,6 +205,9 @@ function PlaygroundInputInner({
   onStop,
   text,
   setText,
+  webSearchEnabled = false,
+  webSearchSupport = 'unsupported',
+  onWebSearchToggle,
 }: PlaygroundInputInnerProps) {
   const { t } = useTranslation()
   const attachments = usePromptInputAttachments()
@@ -246,14 +253,20 @@ function PlaygroundInputInner({
                 <PaperclipIcon className='mr-2' size={16} />
                 {t('Add files & photos')}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => toast.info(t('Search feature in development'))}
-              >
-                <GlobeIcon className='mr-2' size={16} />
-                {t('Web search')}
-              </DropdownMenuItem>
+              <WebSearchMenuItem
+                support={webSearchSupport}
+                enabled={webSearchEnabled}
+                onToggle={onWebSearchToggle}
+              />
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <WebSearchChip
+            support={webSearchSupport}
+            enabled={webSearchEnabled}
+            onToggle={onWebSearchToggle}
+            disabled={disabled}
+          />
         </PromptInputTools>
 
         <div className='flex items-center gap-1.5 md:gap-2'>
