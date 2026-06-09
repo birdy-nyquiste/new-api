@@ -103,6 +103,14 @@ export type AttachmentsContext = {
   fileInputRef: RefObject<HTMLInputElement | null>
 }
 
+function getAttachmentIdentity(file: { filename?: string; mediaType?: string }) {
+  return `${file.filename || ''}::${file.mediaType || ''}`.toLowerCase()
+}
+
+function getFileIdentity(file: File) {
+  return `${file.name}::${file.type}`.toLowerCase()
+}
+
 export type TextInputContext = {
   value: string
   setInput: (v: string) => void
@@ -179,9 +187,17 @@ export function PromptInputProvider({
     const incoming = Array.from(files)
     if (incoming.length === 0) return
 
-    setAttachements((prev) =>
-      prev.concat(
-        incoming.map((file) => ({
+    setAttachements((prev) => {
+      const existing = new Set(prev.map(getAttachmentIdentity))
+      const uniqueIncoming = incoming.filter((file) => {
+        const identity = getFileIdentity(file)
+        if (existing.has(identity)) return false
+        existing.add(identity)
+        return true
+      })
+
+      return prev.concat(
+        uniqueIncoming.map((file) => ({
           id: nanoid(),
           type: 'file' as const,
           url: URL.createObjectURL(file),
@@ -189,7 +205,7 @@ export function PromptInputProvider({
           filename: file.name,
         }))
       )
-    )
+    })
   }, [])
 
   const remove = useCallback((id: string) => {
@@ -438,7 +454,7 @@ export type PromptInputProps = Omit<
   maxFiles?: number
   maxFileSize?: number // bytes
   onError?: (err: {
-    code: 'max_files' | 'max_file_size' | 'accept'
+    code: 'max_files' | 'max_file_size' | 'accept' | 'duplicate_file'
     message: string
   }) => void
   onSubmit: (
@@ -534,33 +550,48 @@ export const PromptInput = ({
         return
       }
 
-      setItems((prev) => {
-        const capacity =
-          typeof maxFiles === 'number'
-            ? Math.max(0, maxFiles - prev.length)
-            : undefined
-        const capped =
-          typeof capacity === 'number' ? sized.slice(0, capacity) : sized
-        if (typeof capacity === 'number' && sized.length > capacity) {
-          onError?.({
-            code: 'max_files',
-            message: t('Too many files. Some were not added.'),
-          })
+      const existing = new Set(items.map(getAttachmentIdentity))
+      let duplicateCount = 0
+      const deduped = sized.filter((file) => {
+        const identity = getFileIdentity(file)
+        if (existing.has(identity)) {
+          duplicateCount += 1
+          return false
         }
-        const next: (FileUIPart & { id: string })[] = []
-        for (const file of capped) {
-          next.push({
-            id: nanoid(),
-            type: 'file',
-            url: URL.createObjectURL(file),
-            mediaType: file.type,
-            filename: file.name,
-          })
-        }
-        return prev.concat(next)
+        existing.add(identity)
+        return true
       })
+      if (duplicateCount > 0) {
+        onError?.({
+          code: 'duplicate_file',
+          message: t('This file is already attached.'),
+        })
+      }
+
+      const capacity =
+        typeof maxFiles === 'number'
+          ? Math.max(0, maxFiles - items.length)
+          : undefined
+      const capped =
+        typeof capacity === 'number' ? deduped.slice(0, capacity) : deduped
+      if (typeof capacity === 'number' && deduped.length > capacity) {
+        onError?.({
+          code: 'max_files',
+          message: t('Too many files. Some were not added.'),
+        })
+      }
+      if (capped.length === 0) return
+
+      const next: (FileUIPart & { id: string })[] = capped.map((file) => ({
+        id: nanoid(),
+        type: 'file',
+        url: URL.createObjectURL(file),
+        mediaType: file.type,
+        filename: file.name,
+      }))
+      setItems((prev) => prev.concat(next))
     },
-    [matchesAccept, maxFiles, maxFileSize, onError, t]
+    [items, matchesAccept, maxFiles, maxFileSize, onError, t]
   )
 
   const add = useMemo(
@@ -689,6 +720,7 @@ export const PromptInput = ({
     if (event.currentTarget.files) {
       add(event.currentTarget.files)
     }
+    event.currentTarget.value = ''
   }
 
   const convertBlobUrlToDataUrl = async (url: string): Promise<string> => {
@@ -839,21 +871,6 @@ export const PromptInputTextarea = ({
       e.currentTarget.form?.requestSubmit()
     }
 
-    // Remove last attachment when Backspace is pressed and textarea is empty
-    if (
-      e.key === 'Backspace' &&
-      e.currentTarget.value === '' &&
-      attachments.files.length > 0
-    ) {
-      e.preventDefault()
-      const lastAttachment =
-        attachments.files.length > 0
-          ? attachments.files[attachments.files.length - 1]
-          : undefined
-      if (lastAttachment) {
-        attachments.remove(lastAttachment.id)
-      }
-    }
   }
 
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {

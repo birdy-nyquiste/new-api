@@ -146,12 +146,7 @@ export function Playground() {
     const validCompareIds = compareConfig.selectedModelIds.filter((id) =>
       modelsData.some((model) => model.value === id)
     )
-    if (compareConfig.selectedModelIds.length === 0 && modelsData.length >= 3) {
-      updateCompareConfig(
-        'selectedModelIds',
-        modelsData.slice(0, 3).map((model) => model.value)
-      )
-    } else if (validCompareIds.length !== compareConfig.selectedModelIds.length) {
+    if (validCompareIds.length !== compareConfig.selectedModelIds.length) {
       updateCompareConfig('selectedModelIds', validCompareIds)
     }
   }, [
@@ -433,6 +428,7 @@ export function Playground() {
                 disabled={isGenerating}
                 groups={groups}
                 groupValue={config.group}
+                initialView
                 isGenerating={isGenerating}
                 isModelLoading={isLoadingModels}
                 modelValue={config.model}

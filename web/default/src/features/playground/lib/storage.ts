@@ -101,7 +101,7 @@ function normalizeSession(raw: Partial<PlaygroundSession>): PlaygroundSession {
       selectedModelIds:
         raw.compareConfig?.selectedModelIds?.length === 3
           ? raw.compareConfig.selectedModelIds
-          : DEFAULT_COMPARE_CONFIG.selectedModelIds,
+          : [],
     },
     createdAt:
       typeof raw.createdAt === 'number' && raw.createdAt > 0

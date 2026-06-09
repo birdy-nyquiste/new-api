@@ -16,9 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Clock3, DollarSign, Hash } from 'lucide-react'
+import { Clock3, Hash } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useSystemConfigStore } from '@/stores/system-config-store'
 import { cn } from '@/lib/utils'
 import type { ResponseMetrics as ResponseMetricsType } from '../types'
 
@@ -38,26 +37,11 @@ function formatTime(metrics?: ResponseMetricsType) {
   return `${Math.round(time)}ms`
 }
 
-function formatPrice(metrics: ResponseMetricsType | undefined, quotaPerUnit: number) {
-  if (
-    !metrics ||
-    typeof metrics.quotaRaw !== 'number' ||
-    metrics.quotaRaw <= 0 ||
-    quotaPerUnit <= 0
-  ) {
-    return '-'
-  }
-  return `$${(metrics.quotaRaw / quotaPerUnit).toFixed(6)}`
-}
-
 export function ResponseMetrics({
   metrics,
   className,
 }: ResponseMetricsProps) {
   const { t } = useTranslation()
-  const quotaPerUnit = useSystemConfigStore(
-    (state) => state.config.currency.quotaPerUnit
-  )
 
   return (
     <div
@@ -78,10 +62,6 @@ export function ResponseMetrics({
         <span title={t('Output Tokens')}>
           {t('Output')}: {formatNumber(metrics?.completionTokens)}
         </span>
-      </span>
-      <span className='inline-flex items-center gap-1'>
-        <DollarSign className='size-3.5' />
-        <span>{formatPrice(metrics, quotaPerUnit)}</span>
       </span>
     </div>
   )

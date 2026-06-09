@@ -57,14 +57,8 @@ export const DEFAULT_CONFIG: PlaygroundConfig = {
   stream: true,
 }
 
-export const DEFAULT_COMPARE_MODEL_IDS = [
-  'doubao-seed-2-0-lite-260428',
-  'gpt-5.4-mini',
-  'deepseek-v4-flash',
-] as const
-
 export const DEFAULT_COMPARE_CONFIG: CompareConfig = {
-  selectedModelIds: [...DEFAULT_COMPARE_MODEL_IDS],
+  selectedModelIds: [],
   includeContext: true,
 }
 

@@ -199,6 +199,8 @@ export interface PlaygroundSession {
 export interface ModelOption {
   label: string
   value: string
+  category?: string
+  categoryIcon?: string
 }
 
 export interface GroupOption {

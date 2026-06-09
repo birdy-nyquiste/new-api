@@ -20,6 +20,7 @@ import React, { useState, useMemo, useCallback } from 'react'
 import { ChevronsUpDown, Check, CpuIcon, LayersIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { getLobeIcon } from '@/lib/lobe-icon'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import {
@@ -47,6 +48,7 @@ interface ModelOption {
   label: string
   value: string
   category?: string
+  categoryIcon?: string
   description?: string
 }
 
@@ -163,11 +165,15 @@ export const ModelSelector: React.FC<ModelSelectorProps> = React.memo(
     )
 
     // Group models by category
-    const groupedModels = useMemo(
-      () =>
-        models.reduce(
+    const groupedModels = useMemo(() => {
+      const otherCategory = t('Other')
+      const grouped = [...models]
+        .sort((a, b) =>
+          a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })
+        )
+        .reduce(
           (acc, model) => {
-            const category = model.category || t('Other')
+            const category = model.category || otherCategory
             if (!acc[category]) {
               acc[category] = []
             }
@@ -175,9 +181,18 @@ export const ModelSelector: React.FC<ModelSelectorProps> = React.memo(
             return acc
           },
           {} as Record<string, ModelOption[]>
-        ),
-      [models, t]
-    )
+        )
+
+      return Object.fromEntries(
+        Object.entries(grouped).sort(([categoryA], [categoryB]) => {
+          if (categoryA === otherCategory) return 1
+          if (categoryB === otherCategory) return -1
+          return categoryA.localeCompare(categoryB, undefined, {
+            sensitivity: 'base',
+          })
+        })
+      )
+    }, [models, t])
 
     // Filter models by search query
     const filteredModels = useMemo(() => {
@@ -246,11 +261,16 @@ export const ModelSelector: React.FC<ModelSelectorProps> = React.memo(
                   )}
                   <div
                     className={cn(
-                      'text-muted-foreground px-2 py-1 font-medium',
+                      'text-muted-foreground flex items-center gap-1.5 px-2 py-1 font-medium',
                       isMobile ? 'text-xs' : 'text-[10px]'
                     )}
                   >
-                    {t('{{category}} Models', { category })}
+                    {categoryModels[0]?.categoryIcon && (
+                      <span className='shrink-0'>
+                        {getLobeIcon(categoryModels[0].categoryIcon, 14)}
+                      </span>
+                    )}
+                    <span>{category}</span>
                   </div>
                   {categoryModels.map((model) => (
                     <CommandItem

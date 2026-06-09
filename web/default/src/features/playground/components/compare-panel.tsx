@@ -18,12 +18,11 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useMemo, useRef, useState, useEffect } from 'react'
 import {
-  CheckIcon,
   Loader2Icon,
   SquareIcon,
+  PlusIcon,
   PaperclipIcon,
   FileIcon,
-  ImageIcon,
   GlobeIcon,
   SendIcon,
   CpuIcon,
@@ -38,6 +37,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { getLobeIcon } from '@/lib/lobe-icon'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -60,8 +60,6 @@ import {
   PromptInputFooter,
   PromptInputTextarea,
   PromptInputTools,
-  PromptInputAttachments,
-  PromptInputAttachment,
   usePromptInputAttachments,
   type PromptInputMessage,
 } from '@/components/ai-elements/prompt-input'
@@ -83,6 +81,7 @@ import type {
   PlaygroundMode,
 } from '../types'
 import { ResponseMetrics } from './response-metrics'
+import { UploadedFilesPreview } from './uploaded-files-preview'
 
 const suggestions = [
   {
@@ -149,6 +148,32 @@ export function ComparePanel({
         .filter(Boolean) as ModelOption[],
     [compareConfig.selectedModelIds, models]
   )
+  const groupedModels = useMemo(() => {
+    const otherCategory = t('Other')
+    const grouped = [...models]
+      .sort((a, b) =>
+        a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })
+      )
+      .reduce(
+        (acc, model) => {
+          const category = model.category || otherCategory
+          if (!acc[category]) {
+            acc[category] = []
+          }
+          acc[category].push(model)
+          return acc
+        },
+        {} as Record<string, ModelOption[]>
+      )
+
+    return Object.entries(grouped).sort(([categoryA], [categoryB]) => {
+      if (categoryA === otherCategory) return 1
+      if (categoryB === otherCategory) return -1
+      return categoryA.localeCompare(categoryB, undefined, {
+        sensitivity: 'base',
+      })
+    })
+  }, [models, t])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -190,6 +215,65 @@ export function ComparePanel({
     }, 0)
   }
 
+  const renderModelSelectorContent = () => (
+    <div className='max-h-[56vh] overflow-y-auto pr-1'>
+      <div className='space-y-4'>
+        {groupedModels.map(([category, categoryModels]) => (
+          <section key={category} className='space-y-2'>
+            <div className='text-muted-foreground flex items-center gap-1.5 px-1 text-xs font-medium'>
+              {categoryModels[0]?.categoryIcon && (
+                <span className='shrink-0'>
+                  {getLobeIcon(categoryModels[0].categoryIcon, 14)}
+                </span>
+              )}
+              <span>{category}</span>
+            </div>
+            <div className='grid gap-2 sm:grid-cols-2'>
+              {categoryModels.map((model) => {
+                const selectedIndex = compareConfig.selectedModelIds.indexOf(
+                  model.value
+                )
+                const selected = selectedIndex >= 0
+                const atMax =
+                  !selected && compareConfig.selectedModelIds.length >= 3
+                return (
+                  <button
+                    key={model.value}
+                    type='button'
+                    disabled={atMax}
+                    onClick={() => toggleModel(model.value)}
+                    className={cn(
+                      'flex items-center justify-between rounded-lg border p-3 text-left transition',
+                      selected
+                        ? 'border-primary bg-primary/5'
+                        : atMax
+                          ? 'cursor-not-allowed opacity-40'
+                          : 'hover:bg-muted/60'
+                    )}
+                  >
+                    <span className='min-w-0'>
+                      <span className='block truncate text-sm font-medium'>
+                        {model.label}
+                      </span>
+                      <span className='text-muted-foreground block truncate text-xs'>
+                        {model.value}
+                      </span>
+                    </span>
+                    {selected && (
+                      <span className='bg-primary text-primary-foreground flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold'>
+                        {selectedIndex + 1}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  )
+
   const renderInputBar = () => {
     return (
       <div className='grid shrink-0 gap-4 px-1 md:pb-4'>
@@ -213,6 +297,7 @@ export function ComparePanel({
             setSelectorOpen={setSelectorOpen}
             compareConfig={compareConfig}
             onCompareConfigChange={onCompareConfigChange}
+            initialView={rounds.length === 0}
           />
         </PromptInput>
         <Suggestions>
@@ -279,43 +364,7 @@ export function ComparePanel({
                 {t('Choose exactly 3 models for comparison.')}
               </DialogDescription>
             </DialogHeader>
-            <div className='max-h-[56vh] overflow-y-auto pr-1'>
-              <div className='grid gap-2 sm:grid-cols-2'>
-                {models.map((model) => {
-                  const selected = compareConfig.selectedModelIds.includes(
-                    model.value
-                  )
-                  const atMax =
-                    !selected && compareConfig.selectedModelIds.length >= 3
-                  return (
-                    <button
-                      key={model.value}
-                      type='button'
-                      disabled={atMax}
-                      onClick={() => toggleModel(model.value)}
-                      className={cn(
-                        'flex items-center justify-between rounded-lg border p-3 text-left transition',
-                        selected
-                          ? 'border-primary bg-primary/5'
-                          : atMax
-                            ? 'cursor-not-allowed opacity-40'
-                            : 'hover:bg-muted/60'
-                      )}
-                    >
-                      <span className='min-w-0'>
-                        <span className='block truncate text-sm font-medium'>
-                          {model.label}
-                        </span>
-                        <span className='text-muted-foreground block truncate text-xs'>
-                          {model.value}
-                        </span>
-                      </span>
-                      {selected && <CheckIcon className='size-4 shrink-0' />}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+            {renderModelSelectorContent()}
             <DialogFooter>
               <Button
                 disabled={compareConfig.selectedModelIds.length !== 3}
@@ -401,43 +450,7 @@ export function ComparePanel({
               {t('Choose exactly 3 models for comparison.')}
             </DialogDescription>
           </DialogHeader>
-          <div className='max-h-[56vh] overflow-y-auto pr-1'>
-            <div className='grid gap-2 sm:grid-cols-2'>
-              {models.map((model) => {
-                const selected = compareConfig.selectedModelIds.includes(
-                  model.value
-                )
-                const atMax =
-                  !selected && compareConfig.selectedModelIds.length >= 3
-                return (
-                  <button
-                    key={model.value}
-                    type='button'
-                    disabled={atMax}
-                    onClick={() => toggleModel(model.value)}
-                    className={cn(
-                      'flex items-center justify-between rounded-lg border p-3 text-left transition',
-                      selected
-                        ? 'border-primary bg-primary/5'
-                        : atMax
-                          ? 'cursor-not-allowed opacity-40'
-                          : 'hover:bg-muted/60'
-                    )}
-                  >
-                    <span className='min-w-0'>
-                      <span className='block truncate text-sm font-medium'>
-                        {model.label}
-                      </span>
-                      <span className='text-muted-foreground block truncate text-xs'>
-                        {model.value}
-                      </span>
-                    </span>
-                    {selected && <CheckIcon className='size-4 shrink-0' />}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          {renderModelSelectorContent()}
           <DialogFooter>
             <Button
               disabled={compareConfig.selectedModelIds.length !== 3}
@@ -459,7 +472,7 @@ function CompareResultCard({ result }: { result: CompareResult }) {
   const visibleContent = parsed.visibleContent || result.content
 
   return (
-    <article className='bg-card flex min-h-64 flex-col rounded-lg border'>
+    <article className='bg-card flex min-h-64 max-h-[min(34rem,65vh)] flex-col overflow-hidden rounded-lg border'>
       <header className='flex items-center justify-between gap-2 border-b p-3'>
         <div className='min-w-0'>
           <p className='truncate text-sm font-semibold'>{result.modelName}</p>
@@ -471,7 +484,7 @@ function CompareResultCard({ result }: { result: CompareResult }) {
           <Loader2Icon className='text-muted-foreground size-4 animate-spin' />
         )}
       </header>
-      <div className='min-h-0 flex-1 space-y-3 overflow-y-auto p-3'>
+      <div className='min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3'>
         {reasoning && (
           <Reasoning
             defaultOpen={false}
@@ -497,18 +510,6 @@ function CompareResultCard({ result }: { result: CompareResult }) {
         <ResponseMetrics metrics={result.metrics} />
       </div>
     </article>
-  )
-}
-
-function PromptInputAttachmentsList() {
-  const attachments = usePromptInputAttachments()
-  if (attachments.files.length === 0) return null
-  return (
-    <div className='flex flex-wrap gap-2 px-5 pb-2'>
-      <PromptInputAttachments>
-        {(file) => <PromptInputAttachment key={file.id} data={file} />}
-      </PromptInputAttachments>
-    </div>
   )
 }
 
@@ -569,6 +570,7 @@ interface CompareInputInnerProps {
     key: K,
     value: CompareConfig[K]
   ) => void
+  initialView?: boolean
 }
 
 function CompareInputInner({
@@ -583,12 +585,16 @@ function CompareInputInner({
   setSelectorOpen,
   compareConfig,
   onCompareConfigChange,
+  initialView = false,
 }: CompareInputInnerProps) {
   const { t } = useTranslation()
   const attachments = usePromptInputAttachments()
+  const inputMenuSide = initialView ? 'bottom' : 'top'
 
   return (
     <>
+      <UploadedFilesPreview />
+
       <PromptInputTextarea
         autoComplete='off'
         autoCorrect='off'
@@ -604,8 +610,6 @@ function CompareInputInner({
         value={prompt}
       />
 
-      <PromptInputAttachmentsList />
-
       <PromptInputFooter className='p-2.5'>
         <PromptInputTools>
           <DropdownMenu>
@@ -618,36 +622,22 @@ function CompareInputInner({
                 />
               }
             >
-              <PaperclipIcon size={16} />
-              <span className='hidden sm:inline'>{t('Attach')}</span>
-              <span className='sr-only sm:hidden'>{t('Attach')}</span>
+              <PlusIcon size={16} />
+              <span className='sr-only'>{t('More input options')}</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align='start'>
-              <DropdownMenuItem
-                onClick={() => attachments.openFileDialog()}
-              >
-                <FileIcon className='mr-2' size={16} />
-                {t('Upload file')}
+            <DropdownMenuContent align='start' side={inputMenuSide}>
+              <DropdownMenuItem onClick={() => attachments.openFileDialog()}>
+                <PaperclipIcon className='mr-2' size={16} />
+                {t('Add files & photos')}
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => attachments.openFileDialog()}
+                onClick={() => toast.info(t('Search feature in development'))}
               >
-                <ImageIcon className='mr-2' size={16} />
-                {t('Upload photo')}
+                <GlobeIcon className='mr-2' size={16} />
+                {t('Web search')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <PromptInputButton
-            className='border font-medium'
-            disabled={isComparing}
-            onClick={() => toast.info(t('Search feature in development'))}
-            variant='outline'
-          >
-            <GlobeIcon size={16} />
-            <span className='hidden sm:inline'>{t('Search')}</span>
-            <span className='sr-only sm:hidden'>{t('Search')}</span>
-          </PromptInputButton>
         </PromptInputTools>
 
         <div className='flex items-center gap-1.5 md:gap-2'>
