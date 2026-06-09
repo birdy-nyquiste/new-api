@@ -21,6 +21,7 @@ import { SSE } from 'sse.js'
 import { getCommonHeaders } from '@/lib/api'
 import { fetchRequestMetrics } from '../api'
 import { API_ENDPOINTS, ERROR_MESSAGES } from '../constants'
+import { getWebSearchSupport } from '../lib/web-search-support'
 import type {
   ChatCompletionChunk,
   ChatCompletionMessage,
@@ -103,13 +104,13 @@ function buildContextMessages(
 }
 
 function buildPayload(
-  modelId: string,
+  model: ModelOption,
   messages: ChatCompletionMessage[],
   config: PlaygroundConfig,
   parameterEnabled: ParameterEnabled
 ): ChatCompletionRequest {
   const payload: ChatCompletionRequest = {
-    model: modelId,
+    model: model.value,
     group: config.group,
     messages,
     stream: true,
@@ -132,6 +133,13 @@ function buildPayload(
       ;(payload as unknown as Record<string, unknown>)[key] = value
     }
   })
+
+  // Web search per compared model: only send web_search_options when this
+  // model's relay path can translate it ('builtin' models search regardless
+  // and may reject the unknown parameter; 'unsupported' models are skipped).
+  if (config.web_search && getWebSearchSupport(model) === 'supported') {
+    payload.web_search_options = {}
+  }
 
   return payload
 }
@@ -200,7 +208,7 @@ export function useCompareHandler({
       selectedModels.forEach((model) => {
         const resultId = `${roundId}-${model.value}`
         const payload = buildPayload(
-          model.value,
+          model,
           buildContextMessages(rounds, model.value, trimmed, includeContext, files),
           config,
           parameterEnabled

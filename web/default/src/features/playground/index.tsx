@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Columns2,
@@ -36,7 +36,11 @@ import { PlaygroundChat } from './components/playground-chat'
 import { PlaygroundInput } from './components/playground-input'
 import { SessionHistory } from './components/session-history'
 import { usePlaygroundState, useChatHandler, useCompareHandler } from './hooks'
-import { createUserMessage, createLoadingAssistantMessage } from './lib'
+import {
+  createUserMessage,
+  createLoadingAssistantMessage,
+  getWebSearchSupport,
+} from './lib'
 import type { Message as MessageType } from './types'
 
 export function Playground() {
@@ -66,9 +70,24 @@ export function Playground() {
     clearSessions,
   } = usePlaygroundState()
 
+  // Web search support for the currently selected chat model
+  const webSearchSupport = useMemo(
+    () =>
+      getWebSearchSupport(
+        models.find((m) => m.value === config.model),
+        config.model
+      ),
+    [models, config.model]
+  )
+  const toggleWebSearch = useCallback(
+    () => updateConfig('web_search', !config.web_search),
+    [updateConfig, config.web_search]
+  )
+
   const { sendChat, stopGeneration, isGenerating } = useChatHandler({
     config,
     parameterEnabled,
+    webSearchSupport,
     onMessageUpdate: updateMessages,
   })
   const { sendCompare, stopCompare, isComparing } = useCompareHandler({
@@ -146,12 +165,7 @@ export function Playground() {
     const validCompareIds = compareConfig.selectedModelIds.filter((id) =>
       modelsData.some((model) => model.value === id)
     )
-    if (compareConfig.selectedModelIds.length === 0 && modelsData.length >= 3) {
-      updateCompareConfig(
-        'selectedModelIds',
-        modelsData.slice(0, 3).map((model) => model.value)
-      )
-    } else if (validCompareIds.length !== compareConfig.selectedModelIds.length) {
+    if (validCompareIds.length !== compareConfig.selectedModelIds.length) {
       updateCompareConfig('selectedModelIds', validCompareIds)
     }
   }, [
@@ -162,6 +176,14 @@ export function Playground() {
     updateConfig,
     updateCompareConfig,
   ])
+
+  // Auto-disable web search when switching to a chat model that doesn't support it
+  useEffect(() => {
+    if (mode !== 'chat') return
+    if (config.web_search && webSearchSupport === 'unsupported') {
+      updateConfig('web_search', false)
+    }
+  }, [mode, config.web_search, webSearchSupport, updateConfig])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -397,6 +419,8 @@ export function Playground() {
             onStop={stopCompare}
             mode={mode}
             onModeChange={handleModeChange}
+            webSearchEnabled={config.web_search}
+            onWebSearchToggle={toggleWebSearch}
           />
         ) : isSessionEmpty ? (
           <div className='flex flex-1 flex-col items-center justify-center p-4 md:p-8 relative min-h-0 overflow-y-auto'>
@@ -433,6 +457,7 @@ export function Playground() {
                 disabled={isGenerating}
                 groups={groups}
                 groupValue={config.group}
+                initialView
                 isGenerating={isGenerating}
                 isModelLoading={isLoadingModels}
                 modelValue={config.model}
@@ -441,6 +466,9 @@ export function Playground() {
                 onModelChange={(value) => updateConfig('model', value)}
                 onStop={stopGeneration}
                 onSubmit={handleSendMessage}
+                webSearchEnabled={config.web_search}
+                webSearchSupport={webSearchSupport}
+                onWebSearchToggle={toggleWebSearch}
               />
             </div>
           </div>
@@ -476,6 +504,9 @@ export function Playground() {
                 onModelChange={(value) => updateConfig('model', value)}
                 onStop={stopGeneration}
                 onSubmit={handleSendMessage}
+                webSearchEnabled={config.web_search}
+                webSearchSupport={webSearchSupport}
+                onWebSearchToggle={toggleWebSearch}
               />
             </div>
           </>

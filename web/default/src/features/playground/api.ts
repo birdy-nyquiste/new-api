@@ -28,6 +28,140 @@ import type {
 
 const LOG_TYPE_CONSUME = 2
 
+type UserModelResponseItem =
+  | string
+  | {
+      label?: unknown
+      value?: unknown
+      category?: unknown
+      categoryIcon?: unknown
+    }
+
+type PricingResponse = {
+  data?: Array<{
+    model_name?: unknown
+    vendor_id?: unknown
+    tags?: unknown
+    supported_endpoint_types?: unknown
+  }>
+  vendors?: Array<{
+    id?: unknown
+    name?: unknown
+    icon?: unknown
+  }>
+}
+
+type ModelCategoryMeta = {
+  name: string
+  icon?: string
+}
+
+type ModelCapabilityMeta = {
+  tags?: string[]
+  supportedEndpointTypes?: string[]
+}
+
+function parseModelTags(tags: unknown): string[] | undefined {
+  if (typeof tags !== 'string' || !tags.trim()) return undefined
+  const parsed = tags
+    .split(/[,;|\s]+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+  return parsed.length > 0 ? parsed : undefined
+}
+
+function parseEndpointTypes(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const parsed = value.filter((e): e is string => typeof e === 'string')
+  return parsed.length > 0 ? parsed : undefined
+}
+
+function compareModelOptions(a: ModelOption, b: ModelOption) {
+  const categoryCompare = (a.category || '\uffff').localeCompare(
+    b.category || '\uffff',
+    undefined,
+    { sensitivity: 'base' }
+  )
+  if (categoryCompare !== 0) return categoryCompare
+  return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' })
+}
+
+function parseUserModelOptions(data: unknown): ModelOption[] {
+  if (!Array.isArray(data)) return []
+
+  return (data as UserModelResponseItem[])
+    .map((item) => {
+      if (typeof item === 'string') {
+        return {
+          label: item,
+          value: item,
+        }
+      }
+
+      const value = typeof item.value === 'string' ? item.value : ''
+      const label = typeof item.label === 'string' ? item.label : value
+      const category =
+        typeof item.category === 'string' && item.category.trim()
+          ? item.category
+          : undefined
+      const categoryIcon =
+        typeof item.categoryIcon === 'string' && item.categoryIcon.trim()
+          ? item.categoryIcon
+          : undefined
+
+      return {
+        label,
+        value,
+        category,
+        categoryIcon,
+      }
+    })
+    .filter((model) => model.value)
+}
+
+function parsePricingModelCategories(data: PricingResponse) {
+  const vendors = new Map<number, ModelCategoryMeta>()
+  data.vendors?.forEach((vendor) => {
+    if (typeof vendor.id !== 'number' || typeof vendor.name !== 'string') {
+      return
+    }
+    vendors.set(vendor.id, {
+      name: vendor.name,
+      icon: typeof vendor.icon === 'string' ? vendor.icon : undefined,
+    })
+  })
+
+  const categories = new Map<string, ModelCategoryMeta>()
+  data.data?.forEach((model) => {
+    if (
+      typeof model.model_name !== 'string' ||
+      typeof model.vendor_id !== 'number'
+    ) {
+      return
+    }
+    const vendor = vendors.get(model.vendor_id)
+    if (vendor) {
+      categories.set(model.model_name, vendor)
+    }
+  })
+  return categories
+}
+
+function parsePricingModelCapabilities(data: PricingResponse) {
+  const capabilities = new Map<string, ModelCapabilityMeta>()
+  data.data?.forEach((model) => {
+    if (typeof model.model_name !== 'string') return
+    const tags = parseModelTags(model.tags)
+    const supportedEndpointTypes = parseEndpointTypes(
+      model.supported_endpoint_types
+    )
+    if (tags || supportedEndpointTypes) {
+      capabilities.set(model.model_name, { tags, supportedEndpointTypes })
+    }
+  })
+  return capabilities
+}
+
 /**
  * Send chat completion request (non-streaming)
  */
@@ -103,17 +237,56 @@ export async function fetchRequestMetrics(
  * Get user available models
  */
 export async function getUserModels(): Promise<ModelOption[]> {
-  const res = await api.get(API_ENDPOINTS.USER_MODELS)
-  const { data } = res
+  const [modelsResult, pricingResult] = await Promise.allSettled([
+    api.get(API_ENDPOINTS.USER_MODELS, {
+      params: { with_metadata: true },
+    }),
+    api.get('/api/pricing', {
+      skipErrorHandler: true,
+    }),
+  ])
 
-  if (!data.success || !Array.isArray(data.data)) {
+  if (modelsResult.status !== 'fulfilled') {
     return []
   }
 
-  return data.data.map((model: string) => ({
-    label: model,
-    value: model,
-  }))
+  const { data } = modelsResult.value
+  if (!data.success) {
+    return []
+  }
+
+  const pricingData =
+    pricingResult.status === 'fulfilled'
+      ? (pricingResult.value.data as PricingResponse)
+      : undefined
+  const pricingCategories = pricingData
+    ? parsePricingModelCategories(pricingData)
+    : new Map<string, ModelCategoryMeta>()
+  const pricingCapabilities = pricingData
+    ? parsePricingModelCapabilities(pricingData)
+    : new Map<string, ModelCapabilityMeta>()
+
+  return parseUserModelOptions(data.data)
+    .map((model) => {
+      const pricingCategory = pricingCategories.get(model.value)
+      const capability = pricingCapabilities.get(model.value)
+      return {
+        ...model,
+        ...(pricingCategory
+          ? {
+              category: pricingCategory.name,
+              categoryIcon: pricingCategory.icon,
+            }
+          : {}),
+        ...(capability
+          ? {
+              tags: capability.tags,
+              supportedEndpointTypes: capability.supportedEndpointTypes,
+            }
+          : {}),
+      }
+    })
+    .sort(compareModelOptions)
 }
 
 /**

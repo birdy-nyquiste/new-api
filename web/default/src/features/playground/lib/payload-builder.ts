@@ -23,6 +23,7 @@ import type {
   ParameterEnabled,
 } from '../types'
 import { formatMessageForAPI, isValidMessage } from './message-utils'
+import type { WebSearchSupport } from './web-search-support'
 
 /**
  * Build API request payload from messages and config
@@ -30,7 +31,8 @@ import { formatMessageForAPI, isValidMessage } from './message-utils'
 export function buildChatCompletionPayload(
   messages: Message[],
   config: PlaygroundConfig,
-  parameterEnabled: ParameterEnabled
+  parameterEnabled: ParameterEnabled,
+  webSearchSupport: WebSearchSupport = 'unsupported'
 ): ChatCompletionRequest {
   // Filter and format valid messages
   const processedMessages = messages
@@ -66,6 +68,12 @@ export function buildChatCompletionPayload(
       }
     }
   })
+
+  // Web search: only send web_search_options when the relay can translate it.
+  // 'builtin' models search regardless and may reject the unknown parameter.
+  if (config.web_search && webSearchSupport === 'supported') {
+    payload.web_search_options = {}
+  }
 
   return payload
 }

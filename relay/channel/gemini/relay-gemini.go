@@ -431,6 +431,24 @@ func CovertOpenAI2Gemini(c *gin.Context, textRequest dto.GeneralOpenAIRequest, i
 		}
 	}
 
+	// Map OpenAI-style web_search_options to Gemini googleSearch grounding tool.
+	// Must be outside the Tools != nil guard: requests may carry web_search_options without tools.
+	if textRequest.WebSearchOptions != nil {
+		geminiTools := geminiRequest.GetTools()
+		hasGoogleSearch := false
+		for _, tool := range geminiTools {
+			if tool.GoogleSearch != nil {
+				hasGoogleSearch = true
+				break
+			}
+		}
+		if !hasGoogleSearch {
+			geminiRequest.SetTools(append(geminiTools, dto.GeminiChatTool{
+				GoogleSearch: make(map[string]string),
+			}))
+		}
+	}
+
 	if textRequest.ResponseFormat != nil && (textRequest.ResponseFormat.Type == "json_schema" || textRequest.ResponseFormat.Type == "json_object") {
 		geminiRequest.GenerationConfig.ResponseMimeType = "application/json"
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -42,6 +43,13 @@ type EmailOTPVerifyRequest struct {
 	ChallengeID string `json:"challenge_id"`
 	Code        string `json:"code"`
 	AffCode     string `json:"aff_code"`
+}
+
+type UserModelOption struct {
+	Label        string `json:"label"`
+	Value        string `json:"value"`
+	Category     string `json:"category,omitempty"`
+	CategoryIcon string `json:"categoryIcon,omitempty"`
 }
 
 func Login(c *gin.Context) {
@@ -669,10 +677,65 @@ func GetUserModels(c *gin.Context) {
 			}
 		}
 	}
+
+	if c.Query("with_metadata") != "true" {
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "",
+			"data":    models,
+		})
+		return
+	}
+
+	type vendorMeta struct {
+		Name string
+		Icon string
+	}
+	vendors := make(map[int]vendorMeta)
+	for _, vendor := range model.GetVendors() {
+		vendors[vendor.ID] = vendorMeta{
+			Name: vendor.Name,
+			Icon: vendor.Icon,
+		}
+	}
+	modelVendors := make(map[string]vendorMeta)
+	for _, pricing := range model.GetPricing() {
+		if pricing.VendorID == 0 {
+			continue
+		}
+		if vendor := vendors[pricing.VendorID]; vendor.Name != "" {
+			modelVendors[pricing.ModelName] = vendor
+		}
+	}
+	modelOptions := make([]UserModelOption, 0, len(models))
+	for _, modelName := range models {
+		vendor := modelVendors[modelName]
+		modelOptions = append(modelOptions, UserModelOption{
+			Label:        modelName,
+			Value:        modelName,
+			Category:     vendor.Name,
+			CategoryIcon: vendor.Icon,
+		})
+	}
+	sort.SliceStable(modelOptions, func(i, j int) bool {
+		leftCategory := strings.ToLower(modelOptions[i].Category)
+		rightCategory := strings.ToLower(modelOptions[j].Category)
+		if leftCategory != rightCategory {
+			if leftCategory == "" {
+				return false
+			}
+			if rightCategory == "" {
+				return true
+			}
+			return leftCategory < rightCategory
+		}
+		return strings.ToLower(modelOptions[i].Label) < strings.ToLower(modelOptions[j].Label)
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",
-		"data":    models,
+		"data":    modelOptions,
 	})
 	return
 }

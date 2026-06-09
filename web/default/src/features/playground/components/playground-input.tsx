@@ -18,10 +18,8 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useState } from 'react'
 import {
+  PlusIcon,
   PaperclipIcon,
-  FileIcon,
-  ImageIcon,
-  GlobeIcon,
   SendIcon,
   SquareIcon,
   MailIcon,
@@ -42,20 +40,22 @@ import {
   PromptInputFooter,
   PromptInputTextarea,
   PromptInputTools,
-  PromptInputAttachments,
-  PromptInputAttachment,
   usePromptInputAttachments,
   type PromptInputMessage,
 } from '@/components/ai-elements/prompt-input'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { ModelGroupSelector } from '@/components/model-group-selector'
+import type { WebSearchSupport } from '../lib/web-search-support'
 import type { ModelOption, GroupOption } from '../types'
+import { UploadedFilesPreview } from './uploaded-files-preview'
+import { WebSearchChip, WebSearchMenuItem } from './web-search-controls'
 
 interface PlaygroundInputProps {
   onSubmit: (message: PromptInputMessage) => void
   onStop?: () => void
   disabled?: boolean
   isGenerating?: boolean
+  initialView?: boolean
   models: ModelOption[]
   modelValue: string
   onModelChange: (value: string) => void
@@ -63,6 +63,9 @@ interface PlaygroundInputProps {
   groups: GroupOption[]
   groupValue: string
   onGroupChange: (value: string) => void
+  webSearchEnabled?: boolean
+  webSearchSupport?: WebSearchSupport
+  onWebSearchToggle?: () => void
 }
 
 const suggestions = [
@@ -140,18 +143,6 @@ export function PlaygroundInput(props: PlaygroundInputProps) {
   )
 }
 
-function PromptInputAttachmentsList() {
-  const attachments = usePromptInputAttachments()
-  if (attachments.files.length === 0) return null
-  return (
-    <div className='flex flex-wrap gap-2 px-5 pb-2'>
-      <PromptInputAttachments>
-        {(file) => <PromptInputAttachment key={file.id} data={file} />}
-      </PromptInputAttachments>
-    </div>
-  )
-}
-
 function PlaygroundSubmitButton({
   disabled,
   text,
@@ -203,6 +194,7 @@ interface PlaygroundInputInnerProps extends PlaygroundInputProps {
 function PlaygroundInputInner({
   disabled,
   isGenerating,
+  initialView = false,
   models,
   modelValue,
   onModelChange,
@@ -213,6 +205,9 @@ function PlaygroundInputInner({
   onStop,
   text,
   setText,
+  webSearchEnabled = false,
+  webSearchSupport = 'unsupported',
+  onWebSearchToggle,
 }: PlaygroundInputInnerProps) {
   const { t } = useTranslation()
   const attachments = usePromptInputAttachments()
@@ -220,9 +215,12 @@ function PlaygroundInputInner({
   const isModelSelectDisabled =
     disabled || isModelLoading || models.length === 0
   const isGroupSelectDisabled = disabled || groups.length === 0
+  const inputMenuSide = initialView ? 'bottom' : 'top'
 
   return (
     <>
+      <UploadedFilesPreview />
+
       <PromptInputTextarea
         autoComplete='off'
         autoCorrect='off'
@@ -234,8 +232,6 @@ function PlaygroundInputInner({
         placeholder={t('Ask anything')}
         value={text}
       />
-
-      <PromptInputAttachmentsList />
 
       <PromptInputFooter className='p-2.5'>
         <PromptInputTools>
@@ -249,36 +245,28 @@ function PlaygroundInputInner({
                 />
               }
             >
-              <PaperclipIcon size={16} />
-              <span className='hidden sm:inline'>{t('Attach')}</span>
-              <span className='sr-only sm:hidden'>{t('Attach')}</span>
+              <PlusIcon size={16} />
+              <span className='sr-only'>{t('More input options')}</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align='start'>
-              <DropdownMenuItem
-                onClick={() => attachments.openFileDialog()}
-              >
-                <FileIcon className='mr-2' size={16} />
-                {t('Upload file')}
+            <DropdownMenuContent align='start' side={inputMenuSide}>
+              <DropdownMenuItem onClick={() => attachments.openFileDialog()}>
+                <PaperclipIcon className='mr-2' size={16} />
+                {t('Add files & photos')}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => attachments.openFileDialog()}
-              >
-                <ImageIcon className='mr-2' size={16} />
-                {t('Upload photo')}
-              </DropdownMenuItem>
+              <WebSearchMenuItem
+                support={webSearchSupport}
+                enabled={webSearchEnabled}
+                onToggle={onWebSearchToggle}
+              />
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <PromptInputButton
-            className='border font-medium'
+          <WebSearchChip
+            support={webSearchSupport}
+            enabled={webSearchEnabled}
+            onToggle={onWebSearchToggle}
             disabled={disabled}
-            onClick={() => toast.info(t('Search feature in development'))}
-            variant='outline'
-          >
-            <GlobeIcon size={16} />
-            <span className='hidden sm:inline'>{t('Search')}</span>
-            <span className='sr-only sm:hidden'>{t('Search')}</span>
-          </PromptInputButton>
+          />
         </PromptInputTools>
 
         <div className='flex items-center gap-1.5 md:gap-2'>
