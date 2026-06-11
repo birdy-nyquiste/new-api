@@ -24,6 +24,7 @@ import { ChatSettingsSection } from './chat-settings-section'
 import { DashboardSection } from './dashboard-section'
 import { DrawingSettingsSection } from './drawing-settings-section'
 import { FAQSection } from './faq-section'
+import { ModelLabSection } from './model-lab-section'
 import { UptimeKumaSection } from './uptime-kuma-section'
 
 /**
@@ -98,6 +99,22 @@ const CONTENT_SECTIONS = [
     titleKey: 'Chat Presets',
     build: (settings: ContentSettings) => (
       <ChatSettingsSection defaultValue={settings.Chats} />
+    ),
+  },
+  {
+    id: 'model-lab',
+    titleKey: 'Model Lab',
+    build: (settings: ContentSettings) => (
+      <ModelLabSection
+        defaultValues={{
+          'model_lab_setting.evaluation_enabled':
+            settings['model_lab_setting.evaluation_enabled'],
+          'model_lab_setting.evaluation_model':
+            settings['model_lab_setting.evaluation_model'],
+          'model_lab_setting.evaluation_prompt':
+            settings['model_lab_setting.evaluation_prompt'],
+        }}
+      />
     ),
   },
   {

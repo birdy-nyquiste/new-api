@@ -180,12 +180,23 @@ export interface CompareResult {
   metrics?: ResponseMetrics
 }
 
+export interface CompareEvaluation {
+  id: string
+  status: CompareResultStatus
+  content: string
+  reasoning?: string
+  errorMessage?: string
+  metrics?: ResponseMetrics
+  createdAt: number
+}
+
 export interface CompareRound {
   id: string
   prompt: string
   results: CompareResult[]
   createdAt: number
   files?: FileUIPart[]
+  evaluation?: CompareEvaluation
 }
 
 export interface PlaygroundSession {
