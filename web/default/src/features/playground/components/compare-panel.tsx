@@ -31,12 +31,19 @@ import {
   FlaskConicalIcon,
   MessagesSquareIcon,
   Columns2,
+  Check,
+  Copy,
+  Edit,
+  Maximize2Icon,
+  Minimize2Icon,
+  RefreshCw,
+  Trash2,
 } from 'lucide-react'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import { getLobeIcon } from '@/lib/lobe-icon'
+import { cn } from '@/lib/utils'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -53,6 +60,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import {
   PromptInput,
   PromptInputButton,
@@ -70,6 +80,7 @@ import {
 import { Response } from '@/components/ai-elements/response'
 import { Suggestion, Suggestions } from '@/components/ai-elements/suggestion'
 import { GroupSelector } from '@/components/model-group-selector'
+import { MESSAGE_ACTION_LABELS } from '../constants'
 import { parseThinkTags } from '../lib/message-utils'
 import {
   getWebSearchSupport,
@@ -83,6 +94,7 @@ import type {
   ModelOption,
   PlaygroundMode,
 } from '../types'
+import { MessageActionButton } from './message-action-button'
 import { ResponseMetrics } from './response-metrics'
 import { UploadedFilesPreview } from './uploaded-files-preview'
 import { WebSearchChip, WebSearchMenuItem } from './web-search-controls'
@@ -92,19 +104,22 @@ const suggestions = [
     icon: MailIcon,
     text: 'Draft an email',
     color: '#b388ff',
-    prompt: 'Draft a professional email regarding [Insert topic, e.g. project update, meeting request] to [Insert recipient, e.g. client, team]. The tone should be [Insert tone, e.g. polite, formal] and include the following key details:\n- ',
+    prompt:
+      'Draft a professional email regarding [Insert topic, e.g. project update, meeting request] to [Insert recipient, e.g. client, team]. The tone should be [Insert tone, e.g. polite, formal] and include the following key details:\n- ',
   },
   {
     icon: FileTextIcon,
     text: 'Summarize text',
     color: '#ffd54f',
-    prompt: 'Provide a concise bullet-point summary of the main points and key takeaways from the following text:\n\n[Insert text here]',
+    prompt:
+      'Provide a concise bullet-point summary of the main points and key takeaways from the following text:\n\n[Insert text here]',
   },
   {
     icon: LanguagesIcon,
     text: 'Translate language',
     color: '#81c784',
-    prompt: 'Translate the following text into [Insert target language, e.g. Spanish, Chinese, French, Japanese]. Ensure the translation preserves the original tone, idioms, and context:\n\n"[Insert text here]"',
+    prompt:
+      'Translate the following text into [Insert target language, e.g. Spanish, Chinese, French, Japanese]. Ensure the translation preserves the original tone, idioms, and context:\n\n"[Insert text here]"',
   },
 ]
 
@@ -118,6 +133,9 @@ interface ComparePanelProps {
   onCompareConfigChange: <K extends keyof CompareConfig>(
     key: K,
     value: CompareConfig[K]
+  ) => void
+  onRoundsChange: (
+    updater: CompareRound[] | ((prev: CompareRound[]) => CompareRound[])
   ) => void
   isComparing: boolean
   onSend: (prompt: string, selectedModels: ModelOption[], files?: any[]) => void
@@ -136,6 +154,7 @@ export function ComparePanel({
   onGroupChange,
   compareConfig,
   onCompareConfigChange,
+  onRoundsChange,
   isComparing,
   onSend,
   onStop,
@@ -147,7 +166,14 @@ export function ComparePanel({
   const { t } = useTranslation()
   const [prompt, setPrompt] = useState('')
   const [selectorOpen, setSelectorOpen] = useState(false)
+  const [expandedResultKey, setExpandedResultKey] = useState<string | null>(
+    null
+  )
+  const [editingResultKey, setEditingResultKey] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const shouldStickToBottomRef = useRef(true)
 
   const selectedModels = useMemo(
     () =>
@@ -184,8 +210,13 @@ export function ComparePanel({
   }, [models, t])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [rounds])
+    if (expandedResultKey) return
+    if (!shouldStickToBottomRef.current) return
+    const scrollArea = scrollAreaRef.current
+    if (!scrollArea) return
+
+    scrollArea.scrollTop = scrollArea.scrollHeight
+  }, [rounds, expandedResultKey])
 
   const toggleModel = (modelId: string) => {
     const selected = compareConfig.selectedModelIds.includes(modelId)
@@ -206,7 +237,13 @@ export function ComparePanel({
   const submit = (message: PromptInputMessage) => {
     const text = message.text?.trim()
     const hasAttachments = message.files && message.files.length > 0
-    if ((!text && !hasAttachments) || selectedModels.length !== 3 || isComparing) return
+    if (
+      (!text && !hasAttachments) ||
+      selectedModels.length !== 3 ||
+      isComparing
+    )
+      return
+    shouldStickToBottomRef.current = true
     onSend(text || '', selectedModels, message.files)
     setPrompt('')
   }
@@ -215,12 +252,88 @@ export function ComparePanel({
     if (selectedModels.length !== 3 || isComparing) return
     setPrompt(t(prompt))
     setTimeout(() => {
-      const textarea = document.querySelector('textarea[name="message"]') as HTMLTextAreaElement | null
+      const textarea = document.querySelector(
+        'textarea[name="message"]'
+      ) as HTMLTextAreaElement | null
       if (textarea) {
         textarea.focus()
         textarea.selectionStart = textarea.selectionEnd = textarea.value.length
       }
     }, 0)
+  }
+
+  const getResultKey = (roundId: string, resultIndex: number) =>
+    `${roundId}:${resultIndex}`
+
+  const getRoundModels = (round: CompareRound) =>
+    round.results
+      .map((result) => {
+        const model = models.find((item) => item.value === result.modelId)
+        return (
+          model ?? {
+            label: result.modelName,
+            value: result.modelId,
+          }
+        )
+      })
+      .slice(0, 3)
+
+  const updateCompareResult = (
+    roundId: string,
+    resultIndex: number,
+    updater: (result: CompareResult) => CompareResult
+  ) => {
+    onRoundsChange((prev) =>
+      prev.map((round) =>
+        round.id !== roundId
+          ? round
+          : {
+              ...round,
+              results: round.results.map((result, index) =>
+                index === resultIndex ? updater(result) : result
+              ),
+            }
+      )
+    )
+  }
+
+  const deleteCompareResult = (roundId: string, resultIndex: number) => {
+    onRoundsChange((prev) =>
+      prev
+        .map((round) =>
+          round.id !== roundId
+            ? round
+            : {
+                ...round,
+                results: round.results.filter(
+                  (_, index) => index !== resultIndex
+                ),
+              }
+        )
+        .filter((round) => round.results.length > 0)
+    )
+    setExpandedResultKey(null)
+    setEditingResultKey(null)
+  }
+
+  const saveCompareResultEdit = (roundId: string, resultIndex: number) => {
+    const nextContent = editText.trim()
+    if (!nextContent) return
+
+    updateCompareResult(roundId, resultIndex, (result) => ({
+      ...result,
+      content: nextContent,
+      reasoning: undefined,
+    }))
+    setEditingResultKey(null)
+  }
+
+  const regenerateCompareRound = (round: CompareRound) => {
+    const roundModels = getRoundModels(round)
+    if (roundModels.length !== 3 || isComparing) return
+    onSend(round.prompt, roundModels, round.files)
+    setExpandedResultKey(null)
+    setEditingResultKey(null)
   }
 
   const renderModelSelectorContent = () => (
@@ -331,14 +444,16 @@ export function ComparePanel({
 
   if (rounds.length === 0) {
     return (
-      <div className='flex flex-1 flex-col items-center justify-center p-4 md:p-8 relative min-h-0 overflow-y-auto w-full'>
+      <div className='relative flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8'>
         {/* Brand Logo & Title */}
-        <div className='flex flex-col items-center gap-2 mb-6 text-center select-none'>
+        <div className='mb-6 flex flex-col items-center gap-2 text-center select-none'>
           <div className='bg-muted flex size-12 items-center justify-center rounded-2xl'>
-            <FlaskConicalIcon className='size-6 text-foreground' />
+            <FlaskConicalIcon className='text-foreground size-6' />
           </div>
-          <h2 className='text-2xl font-bold tracking-tight mt-2'>{t('Model Lab')}</h2>
-          <p className='text-muted-foreground text-sm max-w-sm'>
+          <h2 className='mt-2 text-2xl font-bold tracking-tight'>
+            {t('Model Lab')}
+          </h2>
+          <p className='text-muted-foreground max-w-sm text-sm'>
             {t('Chat with models and compare responses side by side.')}
           </p>
         </div>
@@ -347,13 +462,19 @@ export function ComparePanel({
         {mode && onModeChange && (
           <div className='mb-6'>
             <Tabs value={mode} onValueChange={onModeChange}>
-              <TabsList className='grid grid-cols-2 w-60 h-9 p-1 bg-muted rounded-lg'>
-                <TabsTrigger value='chat' className='w-full text-xs font-medium'>
-                  <MessagesSquareIcon className='size-3.5 mr-1.5' />
+              <TabsList className='bg-muted grid h-9 w-60 grid-cols-2 rounded-lg p-1'>
+                <TabsTrigger
+                  value='chat'
+                  className='w-full text-xs font-medium'
+                >
+                  <MessagesSquareIcon className='mr-1.5 size-3.5' />
                   {t('Chat')}
                 </TabsTrigger>
-                <TabsTrigger value='compare' className='w-full text-xs font-medium'>
-                  <Columns2 className='size-3.5 mr-1.5' />
+                <TabsTrigger
+                  value='compare'
+                  className='w-full text-xs font-medium'
+                >
+                  <Columns2 className='mr-1.5 size-3.5' />
                   {t('Compare')}
                 </TabsTrigger>
               </TabsList>
@@ -362,9 +483,7 @@ export function ComparePanel({
         )}
 
         {/* Input Bar (Centered) */}
-        <div className='w-full max-w-4xl shrink-0'>
-          {renderInputBar()}
-        </div>
+        <div className='w-full max-w-4xl shrink-0'>{renderInputBar()}</div>
 
         <Dialog open={selectorOpen} onOpenChange={setSelectorOpen}>
           <DialogContent className='sm:max-w-4xl'>
@@ -390,9 +509,18 @@ export function ComparePanel({
   }
 
   return (
-    <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
-      <div className='min-h-0 flex-1 overflow-y-auto px-4 py-4'>
-        <div className='mx-auto max-w-6xl space-y-5'>
+    <div className='relative flex min-h-0 flex-1 flex-col overflow-hidden'>
+      <div
+        ref={scrollAreaRef}
+        className='relative min-h-0 flex-1 overflow-y-auto px-4 py-4'
+        onScroll={(event) => {
+          const target = event.currentTarget
+          const distanceFromBottom =
+            target.scrollHeight - target.scrollTop - target.clientHeight
+          shouldStickToBottomRef.current = distanceFromBottom < 80
+        }}
+      >
+        <div className='mx-auto w-full max-w-4xl space-y-5'>
           {rounds.map((round) => (
             <section key={round.id} className='space-y-3'>
               <div className='flex flex-col items-end gap-1.5'>
@@ -402,31 +530,32 @@ export function ComparePanel({
                   </div>
                 )}
                 {round.files && round.files.length > 0 && (
-                  <div className="flex flex-wrap gap-2 justify-end max-w-[88%]">
+                  <div className='flex max-w-[88%] flex-wrap justify-end gap-2'>
                     {round.files.map((file, idx) => {
                       const isImage = file.mediaType?.startsWith('image/')
                       return (
                         <div
                           key={idx}
-                          className="flex items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm max-w-xs"
+                          className='bg-muted/40 flex max-w-xs items-center gap-2 rounded-lg border p-2 text-sm'
                         >
                           {isImage ? (
                             <img
                               src={file.url}
                               alt={file.filename || 'uploaded image'}
-                              className="size-8 rounded object-cover"
+                              className='size-8 rounded object-cover'
                             />
                           ) : (
-                            <div className="flex size-8 items-center justify-center rounded bg-primary/10 text-primary">
+                            <div className='bg-primary/10 text-primary flex size-8 items-center justify-center rounded'>
                               <FileIcon size={16} />
                             </div>
                           )}
-                          <div className="flex flex-col min-w-0 pr-1 text-left">
-                            <span className="truncate font-medium text-[10px] text-foreground">
-                              {file.filename || (isImage ? 'Image' : 'Attachment')}
+                          <div className='flex min-w-0 flex-col pr-1 text-left'>
+                            <span className='text-foreground truncate text-[10px] font-medium'>
+                              {file.filename ||
+                                (isImage ? 'Image' : 'Attachment')}
                             </span>
                             {file.mediaType && (
-                              <span className="text-[8px] text-muted-foreground truncate font-mono">
+                              <span className='text-muted-foreground truncate font-mono text-[8px]'>
                                 {file.mediaType}
                               </span>
                             )}
@@ -437,10 +566,56 @@ export function ComparePanel({
                   </div>
                 )}
               </div>
-              <div className='grid gap-3 lg:grid-cols-3'>
-                {round.results.map((result) => (
-                  <CompareResultCard key={result.id} result={result} />
-                ))}
+              <div className='relative grid min-h-[min(34rem,65vh)] gap-3 lg:grid-cols-3'>
+                {expandedResultKey?.startsWith(`${round.id}:`) && (
+                  <button
+                    type='button'
+                    aria-label={t('Collapse')}
+                    className='absolute inset-0 z-20 cursor-default'
+                    onClick={() => {
+                      setExpandedResultKey(null)
+                      setEditingResultKey(null)
+                    }}
+                  />
+                )}
+                {round.results.map((result, resultIndex) => {
+                  const resultKey = getResultKey(round.id, resultIndex)
+                  const isExpanded = expandedResultKey === resultKey
+
+                  return (
+                    <CompareResultCard
+                      key={resultKey}
+                      result={result}
+                      round={round}
+                      resultIndex={resultIndex}
+                      resultKey={resultKey}
+                      isExpanded={isExpanded}
+                      isEditing={editingResultKey === resultKey}
+                      editText={editText}
+                      isComparing={isComparing}
+                      onEditTextChange={setEditText}
+                      onToggleExpanded={() => {
+                        setExpandedResultKey((current) =>
+                          current === resultKey ? null : resultKey
+                        )
+                        setEditingResultKey(null)
+                      }}
+                      onStartEdit={(content) => {
+                        setExpandedResultKey(resultKey)
+                        setEditingResultKey(resultKey)
+                        setEditText(content)
+                      }}
+                      onCancelEdit={() => setEditingResultKey(null)}
+                      onSaveEdit={() =>
+                        saveCompareResultEdit(round.id, resultIndex)
+                      }
+                      onDelete={() =>
+                        deleteCompareResult(round.id, resultIndex)
+                      }
+                      onRegenerate={() => regenerateCompareRound(round)}
+                    />
+                  )
+                })}
               </div>
             </section>
           ))}
@@ -448,9 +623,7 @@ export function ComparePanel({
         </div>
       </div>
 
-      <div className='mx-auto w-full max-w-4xl shrink-0'>
-        {renderInputBar()}
-      </div>
+      <div className='mx-auto w-full max-w-4xl'>{renderInputBar()}</div>
 
       <Dialog open={selectorOpen} onOpenChange={setSelectorOpen}>
         <DialogContent className='sm:max-w-4xl'>
@@ -475,51 +648,227 @@ export function ComparePanel({
   )
 }
 
-function CompareResultCard({ result }: { result: CompareResult }) {
+function CompareResultCard({
+  result,
+  round,
+  resultIndex,
+  resultKey,
+  isExpanded,
+  isEditing,
+  editText,
+  isComparing,
+  onEditTextChange,
+  onToggleExpanded,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onDelete,
+  onRegenerate,
+}: {
+  result: CompareResult
+  round: CompareRound
+  resultIndex: number
+  resultKey: string
+  isExpanded: boolean
+  isEditing: boolean
+  editText: string
+  isComparing: boolean
+  onEditTextChange: (value: string) => void
+  onToggleExpanded: () => void
+  onStartEdit: (content: string) => void
+  onCancelEdit: () => void
+  onSaveEdit: () => void
+  onDelete: () => void
+  onRegenerate: () => void
+}) {
   const { t } = useTranslation()
+  const { copiedText, copyToClipboard } = useCopyToClipboard()
   const parsed = parseThinkTags(result.content)
   const reasoning = result.reasoning || parsed.reasoning
   const visibleContent = parsed.visibleContent || result.content
+  const ExpandIcon = isExpanded ? Minimize2Icon : Maximize2Icon
+  const copyContent = visibleContent || result.content
+  const isCopied = copiedText === copyContent
+  const canSaveEdit = editText.trim().length > 0 && editText !== result.content
+  const contentRef = useRef<HTMLDivElement>(null)
+  const expandedOriginClass =
+    resultIndex === 0
+      ? 'origin-left'
+      : resultIndex === 2
+        ? 'origin-right'
+        : 'origin-center'
+
+  useEffect(() => {
+    if (result.status !== 'loading' && result.status !== 'streaming') return
+    const content = contentRef.current
+    if (!content) return
+
+    content.scrollTop = content.scrollHeight
+  }, [visibleContent, reasoning, result.status])
 
   return (
-    <article className='bg-card flex min-h-64 max-h-[min(34rem,65vh)] flex-col overflow-hidden rounded-lg border'>
-      <header className='flex items-center justify-between gap-2 border-b p-3'>
-        <div className='min-w-0'>
-          <p className='truncate text-sm font-semibold'>{result.modelName}</p>
-          <p className='text-muted-foreground truncate text-xs'>
-            {result.modelId}
-          </p>
-        </div>
-        {(result.status === 'loading' || result.status === 'streaming') && (
-          <Loader2Icon className='text-muted-foreground size-4 animate-spin' />
+    <div className='h-[min(34rem,65vh)] min-h-64 w-full max-w-[32rem] justify-self-center'>
+      <article
+        id={`compare-expanded-${resultKey}`}
+        className={cn(
+          'bg-card group/compare-result flex h-full w-full cursor-default flex-col overflow-hidden rounded-lg border shadow-xs transition-[background-color,border-color,box-shadow,transform,width,max-width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] outline-none',
+          'motion-reduce:transform-none motion-reduce:transition-colors',
+          isExpanded
+            ? cn(
+                'border-primary/50 shadow-primary/15 ring-primary/15 absolute top-0 left-1/2 z-30 w-[min(calc(100%_-_2rem),48rem)] max-w-[48rem] -translate-x-1/2 shadow-2xl ring-2',
+                'animate-in zoom-in-95 duration-300',
+                expandedOriginClass
+              )
+            : 'relative hover:border-primary/40 hover:ring-primary/15 hover:shadow-primary/10 hover:-translate-y-1 hover:shadow-lg hover:ring-2'
         )}
-      </header>
-      <div className='min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3'>
-        {reasoning && (
-          <Reasoning
-            defaultOpen={false}
-            isStreaming={result.status === 'streaming'}
-          >
-            <ReasoningTrigger />
-            <ReasoningContent>{reasoning}</ReasoningContent>
-          </Reasoning>
-        )}
-        {result.status === 'error' ? (
-          <p className='text-destructive text-sm'>
-            {result.errorMessage || t('Request failed')}
-          </p>
-        ) : visibleContent ? (
-          <div className='prose prose-sm dark:prose-invert max-w-none'>
-            <Response>{visibleContent}</Response>
+      >
+        <header
+          className={cn(
+            'flex justify-between gap-2 border-b p-3',
+            isExpanded ? 'items-start' : 'items-center'
+          )}
+        >
+          <div className='min-w-0'>
+            <p
+              className={cn(
+                'truncate font-semibold',
+                isExpanded ? 'text-base' : 'text-sm'
+              )}
+            >
+              {result.modelName}
+            </p>
+            <p className='text-muted-foreground truncate text-xs'>
+              {result.modelId}
+            </p>
+            {isExpanded && (
+              <p className='text-muted-foreground mt-1 line-clamp-1 text-xs'>
+                {round.prompt}
+              </p>
+            )}
           </div>
-        ) : (
-          <p className='text-muted-foreground text-sm'>{t('Waiting...')}</p>
-        )}
-      </div>
-      <div className='border-t p-3'>
-        <ResponseMetrics metrics={result.metrics} />
-      </div>
-    </article>
+          <div className='flex shrink-0 items-center gap-2'>
+            {(result.status === 'loading' || result.status === 'streaming') && (
+              <Loader2Icon className='text-muted-foreground size-4 animate-spin' />
+            )}
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon-xs'
+              aria-expanded={isExpanded}
+              aria-controls={`compare-expanded-${resultKey}`}
+              aria-label={`${t(isExpanded ? 'Collapse' : 'Expand')} ${result.modelName}`}
+              onClick={(event) => {
+                event.stopPropagation()
+                onToggleExpanded()
+              }}
+              className='text-muted-foreground group-hover/compare-result:text-primary transition-colors duration-200'
+            >
+              <ExpandIcon aria-hidden='true' />
+            </Button>
+          </div>
+        </header>
+        <div
+          ref={contentRef}
+          className={cn(
+            'min-h-0 flex-1 overflow-y-auto overscroll-contain',
+            isExpanded ? 'p-4' : 'space-y-3 p-3'
+          )}
+        >
+          {isEditing ? (
+            <div className='space-y-3'>
+              <Textarea
+                value={editText}
+                onChange={(event) => onEditTextChange(event.target.value)}
+                className='min-h-72 font-mono text-sm'
+              />
+              <div className='flex justify-end gap-2'>
+                <Button size='sm' variant='outline' onClick={onCancelEdit}>
+                  {t('Cancel')}
+                </Button>
+                <Button size='sm' onClick={onSaveEdit} disabled={!canSaveEdit}>
+                  {t('Save')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className='space-y-3'>
+              {reasoning && (
+                <Reasoning
+                  defaultOpen={false}
+                  isStreaming={result.status === 'streaming'}
+                >
+                  <ReasoningTrigger />
+                  <ReasoningContent>{reasoning}</ReasoningContent>
+                </Reasoning>
+              )}
+              {result.status === 'error' ? (
+                <p className='text-destructive text-sm'>
+                  {result.errorMessage || t('Request failed')}
+                </p>
+              ) : visibleContent ? (
+                <div className='prose prose-sm dark:prose-invert max-w-none'>
+                  <Response>{visibleContent}</Response>
+                </div>
+              ) : (
+                <p className='text-muted-foreground text-sm'>
+                  {t('Waiting...')}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+        <footer
+          className={cn(
+            'border-t p-3',
+            isExpanded &&
+              'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'
+          )}
+        >
+          <ResponseMetrics metrics={result.metrics} />
+          {isExpanded && (
+            <TooltipProvider delay={300}>
+              <div className='flex shrink-0 items-center justify-end gap-0.5'>
+                <MessageActionButton
+                  icon={isCopied ? Check : Copy}
+                  label={
+                    isCopied
+                      ? MESSAGE_ACTION_LABELS.COPIED
+                      : MESSAGE_ACTION_LABELS.COPY
+                  }
+                  onClick={() => {
+                    if (!copyContent) {
+                      toast.warning(MESSAGE_ACTION_LABELS.NO_CONTENT)
+                      return
+                    }
+                    copyToClipboard(copyContent)
+                  }}
+                  className={isCopied ? 'text-green-600' : ''}
+                />
+                <MessageActionButton
+                  icon={RefreshCw}
+                  label={MESSAGE_ACTION_LABELS.REGENERATE}
+                  onClick={onRegenerate}
+                  disabled={isComparing || round.results.length !== 3}
+                />
+                <MessageActionButton
+                  icon={Edit}
+                  label={MESSAGE_ACTION_LABELS.EDIT}
+                  onClick={() => onStartEdit(result.content)}
+                  disabled={isComparing}
+                />
+                <MessageActionButton
+                  icon={Trash2}
+                  label={MESSAGE_ACTION_LABELS.DELETE}
+                  onClick={onDelete}
+                  disabled={isComparing}
+                  variant='destructive'
+                />
+              </div>
+            </TooltipProvider>
+          )}
+        </footer>
+      </article>
+    </div>
   )
 }
 
@@ -555,7 +904,7 @@ function CompareSubmitButton({
   return (
     <Button
       type='submit'
-      className='text-foreground border bg-secondary font-medium hover:bg-secondary/85 shadow-none'
+      className='text-foreground bg-secondary hover:bg-secondary/85 border font-medium shadow-none'
       disabled={disabled || !hasContent}
     >
       <SendIcon size={16} />

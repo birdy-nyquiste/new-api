@@ -26,11 +26,11 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
-import { getUserModels, getUserGroups } from './api'
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
+import { getUserModels, getUserGroups } from './api'
 import { ComparePanel } from './components/compare-panel'
 import { PlaygroundChat } from './components/playground-chat'
 import { PlaygroundInput } from './components/playground-input'
@@ -317,93 +317,81 @@ export function Playground() {
       />
 
       <div
-        className={cn(
-          'flex min-w-0 flex-1 flex-col overflow-hidden relative',
-          !sidebarOpen && 'md:pt-16'
-        )}
+        className={cn('relative flex min-w-0 flex-1 flex-col overflow-hidden')}
       >
         {!sidebarOpen && (
           <Button
             aria-label={t('Expand sidebar')}
             size='icon'
             variant='ghost'
-            className='absolute top-4 left-4 z-10 hidden size-9 rounded-lg border bg-background shadow-sm hover:bg-accent md:flex'
+            className='bg-background/95 hover:bg-accent absolute top-3 left-2 z-10 flex size-8 rounded-md border shadow-sm'
             onClick={toggleSidebar}
           >
-            <PanelLeft className='size-5' />
+            <PanelLeft className='size-4' />
           </Button>
         )}
 
-        <header className='flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4 md:hidden'>
-          <div className='flex min-w-0 items-center gap-3'>
-            {!sidebarOpen && (
-              <Button
-                aria-label={t('Expand sidebar')}
-                size='icon'
-                variant='ghost'
-                className='size-9 shrink-0'
-                onClick={toggleSidebar}
-              >
-                <PanelLeft className='size-5' />
-              </Button>
-            )}
-            {sidebarOpen && (
-              <div className='bg-muted hidden size-9 items-center justify-center rounded-lg sm:flex'>
-                <FlaskConicalIcon className='size-4' />
-              </div>
-            )}
-            <div className='min-w-0'>
-              <h1 className='truncate text-base leading-tight font-semibold'>
-                {t('Model Lab')}
-              </h1>
-              <p className='text-muted-foreground mt-0.5 truncate text-xs leading-none'>
-                {t('Chat with models and compare responses side by side.')}
-              </p>
-            </div>
-          </div>
-
-          <div className='flex flex-wrap items-center gap-2'>
-            <select
-              className='border-input bg-background h-8 max-w-44 rounded-md border px-2 text-sm md:hidden'
-              value={activeSessionId}
-              onChange={(event) => switchSession(event.target.value)}
-            >
-              {sessions
-                .filter(
-                  (s) =>
-                    s.messages.length > 0 ||
-                    s.compareRounds.length > 0 ||
-                    s.id === activeSessionId
-                )
-                .map((session) => (
-                  <option key={session.id} value={session.id}>
-                    {session.title}
-                  </option>
-                ))}
-            </select>
-            <Button
-              className='md:hidden'
-              size='sm'
-              variant='outline'
-              onClick={() => createSession(mode)}
-            >
-              {t('New')}
-            </Button>
-            <div className='bg-muted text-muted-foreground flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium select-none'>
-              {mode === 'compare' ? (
-                <>
-                  <Columns2 className='size-4' />
-                  {t('Compare')}
-                </>
-              ) : (
-                <>
-                  <MessagesSquareIcon className='size-4' />
-                  {t('Chat')}
-                </>
+        {sidebarOpen && (
+          <header className='flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4 md:hidden'>
+            <div className='flex min-w-0 items-center gap-3'>
+              {sidebarOpen && (
+                <div className='bg-muted hidden size-9 items-center justify-center rounded-lg sm:flex'>
+                  <FlaskConicalIcon className='size-4' />
+                </div>
               )}
+              <div className='min-w-0'>
+                <h1 className='truncate text-base leading-tight font-semibold'>
+                  {t('Model Lab')}
+                </h1>
+                <p className='text-muted-foreground mt-0.5 truncate text-xs leading-none'>
+                  {t('Chat with models and compare responses side by side.')}
+                </p>
+              </div>
             </div>
-          </div>
-        </header>
+
+            <div className='flex flex-wrap items-center gap-2'>
+              <select
+                className='border-input bg-background h-8 max-w-44 rounded-md border px-2 text-sm md:hidden'
+                value={activeSessionId}
+                onChange={(event) => switchSession(event.target.value)}
+              >
+                {sessions
+                  .filter(
+                    (s) =>
+                      s.messages.length > 0 ||
+                      s.compareRounds.length > 0 ||
+                      s.id === activeSessionId
+                  )
+                  .map((session) => (
+                    <option key={session.id} value={session.id}>
+                      {session.title}
+                    </option>
+                  ))}
+              </select>
+              <Button
+                className='md:hidden'
+                size='sm'
+                variant='outline'
+                onClick={() => createSession(mode)}
+              >
+                {t('New')}
+              </Button>
+              <div className='bg-muted text-muted-foreground flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium select-none'>
+                {mode === 'compare' ? (
+                  <>
+                    <Columns2 className='size-4' />
+                    {t('Compare')}
+                  </>
+                ) : (
+                  <>
+                    <MessagesSquareIcon className='size-4' />
+                    {t('Chat')}
+                  </>
+                )}
+              </div>
+            </div>
+          </header>
+        )}
 
         {mode === 'compare' ? (
           <ComparePanel
@@ -414,6 +402,7 @@ export function Playground() {
             onGroupChange={(value) => updateConfig('group', value)}
             compareConfig={compareConfig}
             onCompareConfigChange={updateCompareConfig}
+            onRoundsChange={updateCompareRounds}
             isComparing={isComparing}
             onSend={sendCompare}
             onStop={stopCompare}
@@ -423,14 +412,16 @@ export function Playground() {
             onWebSearchToggle={toggleWebSearch}
           />
         ) : isSessionEmpty ? (
-          <div className='flex flex-1 flex-col items-center justify-center p-4 md:p-8 relative min-h-0 overflow-y-auto'>
+          <div className='relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8'>
             {/* Brand Logo & Title */}
-            <div className='flex flex-col items-center gap-2 mb-6 text-center select-none'>
+            <div className='mb-6 flex flex-col items-center gap-2 text-center select-none'>
               <div className='bg-muted flex size-12 items-center justify-center rounded-2xl'>
-                <FlaskConicalIcon className='size-6 text-foreground' />
+                <FlaskConicalIcon className='text-foreground size-6' />
               </div>
-              <h2 className='text-2xl font-bold tracking-tight mt-2'>{t('Model Lab')}</h2>
-              <p className='text-muted-foreground text-sm max-w-sm'>
+              <h2 className='mt-2 text-2xl font-bold tracking-tight'>
+                {t('Model Lab')}
+              </h2>
+              <p className='text-muted-foreground max-w-sm text-sm'>
                 {t('Chat with models and compare responses side by side.')}
               </p>
             </div>
@@ -438,13 +429,19 @@ export function Playground() {
             {/* Chat/Compare Toggle */}
             <div className='mb-6'>
               <Tabs value={mode} onValueChange={handleModeChange}>
-                <TabsList className='grid grid-cols-2 w-60 h-9 p-1 bg-muted rounded-lg'>
-                  <TabsTrigger value='chat' className='w-full text-xs font-medium'>
-                    <MessagesSquareIcon className='size-3.5 mr-1.5' />
+                <TabsList className='bg-muted grid h-9 w-60 grid-cols-2 rounded-lg p-1'>
+                  <TabsTrigger
+                    value='chat'
+                    className='w-full text-xs font-medium'
+                  >
+                    <MessagesSquareIcon className='mr-1.5 size-3.5' />
                     {t('Chat')}
                   </TabsTrigger>
-                  <TabsTrigger value='compare' className='w-full text-xs font-medium'>
-                    <Columns2 className='size-3.5 mr-1.5' />
+                  <TabsTrigger
+                    value='compare'
+                    className='w-full text-xs font-medium'
+                  >
+                    <Columns2 className='mr-1.5 size-3.5' />
                     {t('Compare')}
                   </TabsTrigger>
                 </TabsList>
