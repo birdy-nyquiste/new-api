@@ -4739,6 +4739,15 @@
     "Zero retention": "Aucune rétention",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V4",
-    "Zoom": "Zoom"
+    "Zoom": "Zoom",
+    "Evaluate": "Evaluate",
+    "Evaluation": "Evaluation",
+    "Evaluate the latest round of responses": "Evaluate the latest round of responses",
+    "Enable compare evaluation": "Enable compare evaluation",
+    "Lets users ask a judge model to evaluate the responses of a compare round. The evaluation is billed to the user.": "Lets users ask a judge model to evaluate the responses of a compare round. The evaluation is billed to the user.",
+    "Judge model": "Judge model",
+    "Model used to evaluate compare responses. It must be available to the requesting user.": "Model used to evaluate compare responses. It must be available to the requesting user.",
+    "Evaluation prompt": "Evaluation prompt",
+    "System prompt for the judge model. The responses are sent blind, labeled Response 1/2/3. Leave blank to use the built-in default prompt. This prompt is never shown to users.": "System prompt for the judge model. The responses are sent blind, labeled Response 1/2/3. Leave blank to use the built-in default prompt. This prompt is never shown to users."
   }
 }

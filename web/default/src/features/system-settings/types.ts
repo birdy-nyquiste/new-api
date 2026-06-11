@@ -135,6 +135,9 @@ export type ContentSettings = {
   DataExportDefaultTime: string
   DataExportInterval: number
   Chats: string
+  'model_lab_setting.evaluation_enabled': boolean
+  'model_lab_setting.evaluation_model': string
+  'model_lab_setting.evaluation_prompt': string
   DrawingEnabled: boolean
   MjNotifyEnabled: boolean
   MjAccountFilterEnabled: boolean

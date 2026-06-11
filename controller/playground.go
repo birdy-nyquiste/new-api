@@ -12,6 +12,14 @@ import (
 )
 
 func Playground(c *gin.Context) {
+	playgroundRelay(c, "Model Lab")
+}
+
+func PlaygroundEvaluate(c *gin.Context) {
+	playgroundRelay(c, "Model Lab Evaluation")
+}
+
+func playgroundRelay(c *gin.Context, tokenName string) {
 	var newAPIError *types.NewAPIError
 
 	defer func() {
@@ -46,7 +54,7 @@ func Playground(c *gin.Context) {
 
 	tempToken := &model.Token{
 		UserId: userId,
-		Name:   "Model Lab",
+		Name:   tokenName,
 		Group:  relayInfo.UsingGroup,
 	}
 	_ = middleware.SetupContextForToken(c, tempToken)

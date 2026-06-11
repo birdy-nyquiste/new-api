@@ -37,6 +37,7 @@ import {
   Maximize2Icon,
   Minimize2Icon,
   RefreshCw,
+  ScaleIcon,
   Trash2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -88,6 +89,7 @@ import {
 } from '../lib/web-search-support'
 import type {
   CompareConfig,
+  CompareEvaluation,
   CompareRound,
   CompareResult,
   GroupOption,
@@ -144,6 +146,11 @@ interface ComparePanelProps {
   onModeChange?: (mode: PlaygroundMode) => void
   webSearchEnabled?: boolean
   onWebSearchToggle?: () => void
+  evaluationEnabled?: boolean
+  canEvaluate?: boolean
+  isEvaluating?: boolean
+  onEvaluate?: () => void
+  onStopEvaluation?: () => void
 }
 
 export function ComparePanel({
@@ -162,6 +169,11 @@ export function ComparePanel({
   onModeChange,
   webSearchEnabled = false,
   onWebSearchToggle,
+  evaluationEnabled = false,
+  canEvaluate = false,
+  isEvaluating = false,
+  onEvaluate,
+  onStopEvaluation,
 }: ComparePanelProps) {
   const { t } = useTranslation()
   const [prompt, setPrompt] = useState('')
@@ -421,6 +433,11 @@ export function ComparePanel({
             initialView={rounds.length === 0}
             webSearchEnabled={webSearchEnabled}
             onWebSearchToggle={onWebSearchToggle}
+            evaluationEnabled={evaluationEnabled}
+            canEvaluate={canEvaluate}
+            isEvaluating={isEvaluating}
+            onEvaluate={onEvaluate}
+            onStopEvaluation={onStopEvaluation}
           />
         </PromptInput>
         <Suggestions>
@@ -617,6 +634,17 @@ export function ComparePanel({
                   )
                 })}
               </div>
+              {round.evaluation && (
+                <>
+                  <div className='flex flex-col items-end gap-1.5'>
+                    <div className='bg-primary text-primary-foreground flex max-w-[88%] items-center gap-1.5 rounded-lg px-4 py-2 text-sm'>
+                      <ScaleIcon className='size-3.5' />
+                      {t('Evaluation')}
+                    </div>
+                  </div>
+                  <CompareEvaluationCard evaluation={round.evaluation} />
+                </>
+              )}
             </section>
           ))}
           <div ref={bottomRef} />
@@ -872,6 +900,57 @@ function CompareResultCard({
   )
 }
 
+function CompareEvaluationCard({
+  evaluation,
+}: {
+  evaluation: CompareEvaluation
+}) {
+  const { t } = useTranslation()
+  const parsed = parseThinkTags(evaluation.content)
+  const reasoning = evaluation.reasoning || parsed.reasoning
+  const visibleContent = parsed.visibleContent || evaluation.content
+
+  return (
+    <article className='bg-card flex w-full flex-col overflow-hidden rounded-lg border shadow-xs'>
+      <header className='flex items-center justify-between gap-2 border-b p-3'>
+        <div className='flex min-w-0 items-center gap-2'>
+          <ScaleIcon className='text-muted-foreground size-4 shrink-0' />
+          <p className='truncate text-sm font-semibold'>{t('Evaluation')}</p>
+        </div>
+        {(evaluation.status === 'loading' ||
+          evaluation.status === 'streaming') && (
+          <Loader2Icon className='text-muted-foreground size-4 shrink-0 animate-spin' />
+        )}
+      </header>
+      <div className='space-y-3 p-3'>
+        {reasoning && (
+          <Reasoning
+            defaultOpen={false}
+            isStreaming={evaluation.status === 'streaming'}
+          >
+            <ReasoningTrigger />
+            <ReasoningContent>{reasoning}</ReasoningContent>
+          </Reasoning>
+        )}
+        {evaluation.status === 'error' ? (
+          <p className='text-destructive text-sm'>
+            {evaluation.errorMessage || t('Request failed')}
+          </p>
+        ) : visibleContent ? (
+          <div className='prose prose-sm dark:prose-invert max-w-none'>
+            <Response>{visibleContent}</Response>
+          </div>
+        ) : (
+          <p className='text-muted-foreground text-sm'>{t('Waiting...')}</p>
+        )}
+      </div>
+      <footer className='border-t p-3'>
+        <ResponseMetrics metrics={evaluation.metrics} />
+      </footer>
+    </article>
+  )
+}
+
 function CompareSubmitButton({
   disabled,
   text,
@@ -932,6 +1011,11 @@ interface CompareInputInnerProps {
   initialView?: boolean
   webSearchEnabled?: boolean
   onWebSearchToggle?: () => void
+  evaluationEnabled?: boolean
+  canEvaluate?: boolean
+  isEvaluating?: boolean
+  onEvaluate?: () => void
+  onStopEvaluation?: () => void
 }
 
 function CompareInputInner({
@@ -949,6 +1033,11 @@ function CompareInputInner({
   initialView = false,
   webSearchEnabled = false,
   onWebSearchToggle,
+  evaluationEnabled = false,
+  canEvaluate = false,
+  isEvaluating = false,
+  onEvaluate,
+  onStopEvaluation,
 }: CompareInputInnerProps) {
   const { t } = useTranslation()
   const attachments = usePromptInputAttachments()
@@ -1062,6 +1151,30 @@ function CompareInputInner({
             <span className='hidden sm:inline'>{t('Use context')}</span>
             <span className='sr-only sm:hidden'>{t('Context')}</span>
           </label>
+
+          {evaluationEnabled && onEvaluate && (
+            <Button
+              type='button'
+              variant='outline'
+              size='sm'
+              disabled={isEvaluating ? false : !canEvaluate || isComparing}
+              onClick={isEvaluating ? onStopEvaluation : onEvaluate}
+              className='flex h-8 items-center gap-2 border px-3 text-xs font-medium shadow-none'
+              title={t('Evaluate the latest round of responses')}
+            >
+              {isEvaluating ? (
+                <Loader2Icon className='size-4 animate-spin' />
+              ) : (
+                <ScaleIcon className='text-muted-foreground size-4' />
+              )}
+              <span className='hidden sm:inline'>
+                {isEvaluating ? t('Stop') : t('Evaluate')}
+              </span>
+              <span className='sr-only sm:hidden'>
+                {isEvaluating ? t('Stop') : t('Evaluate')}
+              </span>
+            </Button>
+          )}
 
           <CompareSubmitButton
             disabled={isComparing || selectedModels.length !== 3}

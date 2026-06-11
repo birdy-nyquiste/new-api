@@ -18,6 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useSystemConfig } from '@/hooks/use-system-config'
 import {
   Columns2,
   FlaskConicalIcon,
@@ -35,7 +36,12 @@ import { ComparePanel } from './components/compare-panel'
 import { PlaygroundChat } from './components/playground-chat'
 import { PlaygroundInput } from './components/playground-input'
 import { SessionHistory } from './components/session-history'
-import { usePlaygroundState, useChatHandler, useCompareHandler } from './hooks'
+import {
+  usePlaygroundState,
+  useChatHandler,
+  useCompareHandler,
+  useCompareEvaluation,
+} from './hooks'
 import {
   createUserMessage,
   createLoadingAssistantMessage,
@@ -97,6 +103,25 @@ export function Playground() {
     includeContext: compareConfig.includeContext,
     onRoundsUpdate: updateCompareRounds,
   })
+
+  const { playgroundEvaluationEnabled } = useSystemConfig()
+  const { evaluateRound, stopEvaluation, isEvaluating } = useCompareEvaluation({
+    group: config.group,
+    onRoundsUpdate: updateCompareRounds,
+  })
+
+  // Evaluation targets the latest round; it must be complete with 3 responses.
+  const latestRound = compareRounds[compareRounds.length - 1]
+  const canEvaluate =
+    !!latestRound &&
+    latestRound.results.length === 3 &&
+    latestRound.results.every(
+      (result) => result.status === 'done' && result.content.trim()
+    )
+  const handleEvaluate = useCallback(() => {
+    const round = compareRounds[compareRounds.length - 1]
+    if (round) evaluateRound(round)
+  }, [compareRounds, evaluateRound])
 
   // Sidebar collapsible state
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -410,6 +435,11 @@ export function Playground() {
             onModeChange={handleModeChange}
             webSearchEnabled={config.web_search}
             onWebSearchToggle={toggleWebSearch}
+            evaluationEnabled={!!playgroundEvaluationEnabled}
+            canEvaluate={canEvaluate}
+            isEvaluating={isEvaluating}
+            onEvaluate={handleEvaluate}
+            onStopEvaluation={stopEvaluation}
           />
         ) : isSessionEmpty ? (
           <div className='relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8'>

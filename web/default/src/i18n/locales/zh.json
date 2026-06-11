@@ -4739,6 +4739,15 @@
     "Zero retention": "零数据保留",
     "Zhipu": "智谱",
     "Zhipu V4": "智谱 V4",
-    "Zoom": "缩放"
+    "Zoom": "缩放",
+    "Evaluate": "评估",
+    "Evaluation": "评估",
+    "Evaluate the latest round of responses": "评估最近一轮的回复",
+    "Enable compare evaluation": "启用对比评估",
+    "Lets users ask a judge model to evaluate the responses of a compare round. The evaluation is billed to the user.": "允许用户使用评审模型评估对比轮次中的回复。评估费用由用户承担。",
+    "Judge model": "评审模型",
+    "Model used to evaluate compare responses. It must be available to the requesting user.": "用于评估对比回复的模型，发起请求的用户必须有权使用该模型。",
+    "Evaluation prompt": "评估提示词",
+    "System prompt for the judge model. The responses are sent blind, labeled Response 1/2/3. Leave blank to use the built-in default prompt. This prompt is never shown to users.": "评审模型的系统提示词。回复以匿名方式发送，标记为 Response 1/2/3。留空则使用内置默认提示词。该提示词不会展示给用户。"
   }
 }
