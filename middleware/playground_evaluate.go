@@ -46,11 +46,13 @@ func PlaygroundEvaluateAdapter() gin.HandlerFunc {
 		}
 
 		var sb strings.Builder
-		sb.WriteString("[Question]\n")
+		sb.WriteString("<question>\n")
 		sb.WriteString(evaluateRequest.Question)
+		sb.WriteString("\n</question>")
 		for i, response := range evaluateRequest.Responses {
-			sb.WriteString(fmt.Sprintf("\n\n[Response %d]\n", i+1))
+			sb.WriteString(fmt.Sprintf("\n\n<response_%d>\n", i+1))
 			sb.WriteString(response)
+			sb.WriteString(fmt.Sprintf("\n</response_%d>", i+1))
 		}
 
 		chatRequest := map[string]any{
