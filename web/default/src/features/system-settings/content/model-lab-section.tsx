@@ -16,13 +16,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { getUserModels } from '@/lib/api'
+import { getUserModels } from '@/features/playground/api'
 import {
   Form,
   FormControl,
@@ -32,7 +32,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { ComboboxInput } from '@/components/ui/combobox-input'
+import { ModelSelector } from '@/components/model-group-selector'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -91,15 +91,11 @@ function toOptionEntries(values: ModelLabFormValues): ModelLabSettingValues {
 export function ModelLabSection({ defaultValues }: ModelLabSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
-  const { data: modelsData } = useQuery({
-    queryKey: ['user-models'],
+  const { data: modelOptions } = useQuery({
+    queryKey: ['playground-models'],
     queryFn: getUserModels,
     staleTime: 5 * 60 * 1000,
   })
-  const modelOptions = useMemo(
-    () => (modelsData?.data ?? []).map((m) => ({ value: m, label: m })),
-    [modelsData?.data]
-  )
   const form = useForm<ModelLabFormValues>({
     resolver: zodResolver(modelLabSchema),
     defaultValues: toFormValues(defaultValues),
@@ -161,14 +157,13 @@ export function ModelLabSection({ defaultValues }: ModelLabSectionProps) {
               <FormItem>
                 <FormLabel>{t('Judge model')}</FormLabel>
                 <FormControl>
-                  <ComboboxInput
-                    options={modelOptions}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    placeholder={t('Select or enter model name')}
-                    emptyText={t('No models found')}
-                    allowCustomValue
-                  />
+                  <div>
+                    <ModelSelector
+                      selectedModel={field.value}
+                      models={modelOptions ?? []}
+                      onModelChange={field.onChange}
+                    />
+                  </div>
                 </FormControl>
                 <FormDescription>
                   {t(
