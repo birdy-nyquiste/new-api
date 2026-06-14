@@ -45,14 +45,31 @@ func PlaygroundEvaluateAdapter() gin.HandlerFunc {
 			}
 		}
 
+		// 为每个响应确定一个展示用的模型名：优先使用客户端传入的模型名，
+		// 缺失时回退到 "Response N"；重名时追加序号以保证评审能够区分。
+		seen := make(map[string]int, len(evaluateRequest.Responses))
+		labels := make([]string, len(evaluateRequest.Responses))
+		for i := range evaluateRequest.Responses {
+			name := fmt.Sprintf("Response %d", i+1)
+			if i < len(evaluateRequest.Models) && strings.TrimSpace(evaluateRequest.Models[i]) != "" {
+				name = strings.TrimSpace(evaluateRequest.Models[i])
+			}
+			seen[name]++
+			if seen[name] > 1 {
+				name = fmt.Sprintf("%s (#%d)", name, seen[name])
+			}
+			// 模型名作为 XML 属性值，转义双引号避免破坏标签结构
+			labels[i] = strings.ReplaceAll(name, `"`, `'`)
+		}
+
 		var sb strings.Builder
 		sb.WriteString("<question>\n")
 		sb.WriteString(evaluateRequest.Question)
 		sb.WriteString("\n</question>")
 		for i, response := range evaluateRequest.Responses {
-			sb.WriteString(fmt.Sprintf("\n\n<response_%d>\n", i+1))
+			sb.WriteString(fmt.Sprintf("\n\n<response model=\"%s\">\n", labels[i]))
 			sb.WriteString(response)
-			sb.WriteString(fmt.Sprintf("\n</response_%d>", i+1))
+			sb.WriteString("\n</response>")
 		}
 
 		chatRequest := map[string]any{

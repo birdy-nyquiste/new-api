@@ -36,8 +36,9 @@ interface UseCompareEvaluationOptions {
 }
 
 // The evaluation prompt is assembled server-side from the admin-configured
-// judge model and prompt; the client only sends the round's question and
-// the three responses (in column order).
+// judge model and prompt; the client only sends the round's question, the
+// three responses (in column order), and the model name that produced each
+// so the judge can refer to models by name in its verdict.
 export function useCompareEvaluation({
   group,
   onRoundsUpdate,
@@ -85,6 +86,7 @@ export function useCompareEvaluation({
         group,
         question: round.prompt,
         responses: round.results.map((result) => result.content),
+        models: round.results.map((result) => result.modelName),
       }
       const startedAt = Date.now()
       const metrics: ResponseMetrics = {}

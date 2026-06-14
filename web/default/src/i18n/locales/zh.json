@@ -4748,6 +4748,6 @@
     "Judge model": "评审模型",
     "Model used to evaluate compare responses. It must be available to the requesting user.": "用于评估对比回复的模型，发起请求的用户必须有权使用该模型。",
     "Evaluation prompt": "评估提示词",
-    "System prompt for the judge model. The responses are sent blind, labeled Response 1/2/3. Leave blank to use the built-in default prompt. This prompt is never shown to users.": "评审模型的系统提示词。回复以匿名方式发送，标记为 Response 1/2/3。留空则使用内置默认提示词。该提示词不会展示给用户。"
+    "System prompt for the judge model. Each response is labeled with the model that produced it, so the judge can refer to models by name. Use Reset to default to restore the built-in prompt. This prompt is never shown to users.": "评审模型的系统提示词。每条回复都会标注产生它的模型，因此评审可以直接按模型名称进行评价。点击「重置为默认」可恢复内置默认提示词。该提示词不会展示给用户。"
   }
 }

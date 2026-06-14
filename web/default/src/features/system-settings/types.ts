@@ -138,6 +138,9 @@ export type ContentSettings = {
   'model_lab_setting.evaluation_enabled': boolean
   'model_lab_setting.evaluation_model': string
   'model_lab_setting.evaluation_prompt': string
+  // Read-only: built-in default prompt, surfaced by the backend so the admin
+  // panel can show it as a placeholder when no custom prompt is set.
+  'model_lab_setting.default_evaluation_prompt': string
   DrawingEnabled: boolean
   MjNotifyEnabled: boolean
   MjAccountFilterEnabled: boolean
