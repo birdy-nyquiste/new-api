@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
@@ -33,6 +33,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { ModelSelector } from '@/components/model-group-selector'
+import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -65,14 +66,23 @@ type ModelLabSettingValues = {
 
 type ModelLabSectionProps = {
   defaultValues: ModelLabSettingValues
+  // Built-in default prompt, shown as a placeholder when no custom prompt is
+  // set. Read-only — never submitted back to the server.
+  defaultPrompt: string
 }
 
-function toFormValues(defaults: ModelLabSettingValues): ModelLabFormValues {
+function toFormValues(
+  defaults: ModelLabSettingValues,
+  defaultPrompt: string
+): ModelLabFormValues {
+  const savedPrompt = defaults['model_lab_setting.evaluation_prompt'] ?? ''
   return {
     model_lab_setting: {
       evaluation_enabled: defaults['model_lab_setting.evaluation_enabled'],
       evaluation_model: defaults['model_lab_setting.evaluation_model'] ?? '',
-      evaluation_prompt: defaults['model_lab_setting.evaluation_prompt'] ?? '',
+      // Always show the current prompt in the box; when none has been saved
+      // yet, fall back to the built-in default so it's never blank.
+      evaluation_prompt: savedPrompt || defaultPrompt,
     },
   }
 }
@@ -88,7 +98,10 @@ function toOptionEntries(values: ModelLabFormValues): ModelLabSettingValues {
   }
 }
 
-export function ModelLabSection({ defaultValues }: ModelLabSectionProps) {
+export function ModelLabSection({
+  defaultValues,
+  defaultPrompt,
+}: ModelLabSectionProps) {
   const { t } = useTranslation()
   const updateOption = useUpdateOption()
   const { data: modelOptions } = useQuery({
@@ -96,19 +109,26 @@ export function ModelLabSection({ defaultValues }: ModelLabSectionProps) {
     queryFn: getUserModels,
     staleTime: 5 * 60 * 1000,
   })
+  const initialValues = useMemo(
+    () => toFormValues(defaultValues, defaultPrompt),
+    [defaultValues, defaultPrompt]
+  )
   const form = useForm<ModelLabFormValues>({
     resolver: zodResolver(modelLabSchema),
-    defaultValues: toFormValues(defaultValues),
+    defaultValues: initialValues,
   })
 
   useEffect(() => {
-    form.reset(toFormValues(defaultValues))
-  }, [defaultValues, form])
+    form.reset(initialValues)
+  }, [initialValues, form])
 
   const onSubmit = async (values: ModelLabFormValues) => {
+    // Diff against the displayed initial values (not the raw stored values) so
+    // that simply opening the page and saving — without editing the prompt —
+    // does not persist the default-fallback text.
+    const baseline = toOptionEntries(initialValues)
     const updates = Object.entries(toOptionEntries(values)).filter(
-      ([key, value]) =>
-        value !== defaultValues[key as keyof ModelLabSettingValues]
+      ([key, value]) => value !== baseline[key as keyof ModelLabSettingValues]
     )
 
     for (const [key, value] of updates) {
@@ -180,13 +200,26 @@ export function ModelLabSection({ defaultValues }: ModelLabSectionProps) {
             name='model_lab_setting.evaluation_prompt'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('Evaluation prompt')}</FormLabel>
+                <div className='flex items-center justify-between gap-2'>
+                  <FormLabel>{t('Evaluation prompt')}</FormLabel>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    disabled={field.value === defaultPrompt}
+                    onClick={() =>
+                      field.onChange(defaultPrompt)
+                    }
+                  >
+                    {t('Reset to default')}
+                  </Button>
+                </div>
                 <FormControl>
                   <Textarea rows={10} {...field} />
                 </FormControl>
                 <FormDescription>
                   {t(
-                    'System prompt for the judge model. The responses are sent blind, labeled Response 1/2/3. Leave blank to use the built-in default prompt. This prompt is never shown to users.'
+                    'System prompt for the judge model. Each response is labeled with the model that produced it, so the judge can refer to models by name. Use Reset to default to restore the built-in prompt. This prompt is never shown to users.'
                   )}
                 </FormDescription>
                 <FormMessage />

@@ -105,6 +105,12 @@ func GetOptions(c *gin.Context) {
 		Key:   "CompletionRatioMeta",
 		Value: buildCompletionRatioMetaValue(optionValues),
 	})
+	// 暴露内置评估提示词供管理后台展示（作为占位提示），该接口仅管理员可访问，
+	// 不会泄露给普通用户。它是只读的，前端不会回写此键。
+	options = append(options, &model.Option{
+		Key:   "model_lab_setting.default_evaluation_prompt",
+		Value: operation_setting.DefaultEvaluationPrompt,
+	})
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "",

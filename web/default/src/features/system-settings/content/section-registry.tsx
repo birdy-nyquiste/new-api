@@ -114,6 +114,7 @@ const CONTENT_SECTIONS = [
           'model_lab_setting.evaluation_prompt':
             settings['model_lab_setting.evaluation_prompt'],
         }}
+        defaultPrompt={settings['model_lab_setting.default_evaluation_prompt']}
       />
     ),
   },

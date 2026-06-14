@@ -40,6 +40,7 @@ const defaultContentSettings: ContentSettings = {
   'model_lab_setting.evaluation_enabled': false,
   'model_lab_setting.evaluation_model': '',
   'model_lab_setting.evaluation_prompt': '',
+  'model_lab_setting.default_evaluation_prompt': '',
   DrawingEnabled: false,
   MjNotifyEnabled: false,
   MjAccountFilterEnabled: false,
