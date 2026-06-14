@@ -33,22 +33,27 @@ import { StatusContext } from '../../../context/Status';
 
 const { Text } = Typography;
 
+const defaultHeaderNavModules = {
+  home: true,
+  console: true,
+  modelLab: true,
+  pricing: {
+    enabled: true,
+    requireAuth: false,
+  },
+  docs: true,
+  about: true,
+};
+
 export default function SettingsHeaderNavModules(props) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [statusState, statusDispatch] = useContext(StatusContext);
 
   // 顶栏模块管理状态
-  const [headerNavModules, setHeaderNavModules] = useState({
-    home: true,
-    console: true,
-    pricing: {
-      enabled: true,
-      requireAuth: false, // 默认不需要登录鉴权
-    },
-    docs: true,
-    about: true,
-  });
+  const [headerNavModules, setHeaderNavModules] = useState(
+    defaultHeaderNavModules,
+  );
 
   // 处理顶栏模块配置变更
   function handleHeaderNavModuleChange(moduleKey) {
@@ -79,17 +84,7 @@ export default function SettingsHeaderNavModules(props) {
 
   // 重置顶栏模块为默认配置
   function resetHeaderNavModules() {
-    const defaultModules = {
-      home: true,
-      console: true,
-      pricing: {
-        enabled: true,
-        requireAuth: false,
-      },
-      docs: true,
-      about: true,
-    };
-    setHeaderNavModules(defaultModules);
+    setHeaderNavModules(defaultHeaderNavModules);
     showSuccess(t('已重置为默认配置'));
   }
 
@@ -142,20 +137,17 @@ export default function SettingsHeaderNavModules(props) {
           };
         }
 
-        setHeaderNavModules(modules);
+        setHeaderNavModules({
+          ...defaultHeaderNavModules,
+          ...modules,
+          pricing: {
+            ...defaultHeaderNavModules.pricing,
+            ...(typeof modules.pricing === 'object' ? modules.pricing : {}),
+          },
+        });
       } catch (error) {
         // 使用默认配置
-        const defaultModules = {
-          home: true,
-          console: true,
-          pricing: {
-            enabled: true,
-            requireAuth: false,
-          },
-          docs: true,
-          about: true,
-        };
-        setHeaderNavModules(defaultModules);
+        setHeaderNavModules(defaultHeaderNavModules);
       }
     }
   }, [props.options]);
@@ -171,6 +163,11 @@ export default function SettingsHeaderNavModules(props) {
       key: 'console',
       title: t('控制台'),
       description: t('用户控制面板，管理账户'),
+    },
+    {
+      key: 'modelLab',
+      title: t('操练场'),
+      description: t('操练场和聊天功能'),
     },
     {
       key: 'pricing',

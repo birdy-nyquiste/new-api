@@ -49,6 +49,7 @@ import {
 const headerNavSchema = z.object({
   home: z.boolean(),
   console: z.boolean(),
+  modelLab: z.boolean(),
   pricingEnabled: z.boolean(),
   pricingRequireAuth: z.boolean(),
   rankingsEnabled: z.boolean(),
@@ -74,6 +75,10 @@ const toFormValues = (config: HeaderNavModulesConfig): HeaderNavFormValues => ({
     config.console === undefined
       ? HEADER_NAV_DEFAULT.console
       : Boolean(config.console),
+  modelLab:
+    config.modelLab === undefined
+      ? HEADER_NAV_DEFAULT.modelLab
+      : Boolean(config.modelLab),
   pricingEnabled:
     config.pricing?.enabled === undefined
       ? HEADER_NAV_DEFAULT.pricing.enabled
@@ -132,6 +137,7 @@ export function HeaderNavigationSection({
       ...config,
       home: values.home,
       console: values.console,
+      modelLab: values.modelLab,
       docs: values.docs,
       about: values.about,
       search: values.search,
@@ -178,6 +184,11 @@ export function HeaderNavigationSection({
       key: 'console',
       title: t('Console'),
       description: t('User dashboard and quota controls.'),
+    },
+    {
+      key: 'modelLab',
+      title: t('Model Lab'),
+      description: t('Model Lab experiments and live conversations.'),
     },
     {
       key: 'docs',

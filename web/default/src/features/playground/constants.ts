@@ -61,7 +61,6 @@ export const DEFAULT_CONFIG: PlaygroundConfig = {
 
 export const DEFAULT_COMPARE_CONFIG: CompareConfig = {
   selectedModelIds: [],
-  includeContext: true,
 }
 
 export const DEFAULT_PARAMETER_ENABLED: ParameterEnabled = {

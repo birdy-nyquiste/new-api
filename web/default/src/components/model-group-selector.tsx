@@ -91,9 +91,9 @@ const ModelTriggerButton = React.forwardRef<
     size='sm'
     disabled={isDisabled}
     className={cn(
-      'flex h-8 items-center gap-2 border px-3 font-medium',
+      'flex h-10 items-center gap-2 border px-3 font-medium sm:h-8',
       'justify-center p-0 sm:w-auto sm:justify-start sm:px-3',
-      'w-8',
+      'w-10',
       'bg-background text-foreground',
       'hover:bg-accent transition-colors',
       'focus:!ring-0 focus:!outline-none',
@@ -127,9 +127,9 @@ const GroupTriggerButton = React.forwardRef<
     size='sm'
     disabled={isDisabled}
     className={cn(
-      'flex h-8 items-center gap-2 border px-3 font-medium',
+      'flex h-10 items-center gap-2 border px-3 font-medium sm:h-8',
       'justify-center p-0 sm:w-auto sm:justify-start sm:px-3',
-      'w-8',
+      'w-10',
       'bg-background text-foreground',
       'hover:bg-accent transition-colors',
       'focus:!ring-0 focus:!outline-none',

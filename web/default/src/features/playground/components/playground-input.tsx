@@ -161,27 +161,25 @@ function PlaygroundSubmitButton({
   if (isGenerating && onStop) {
     return (
       <PromptInputButton
-        className='text-foreground font-medium'
+        aria-label={t('Stop')}
+        className='text-foreground size-10 sm:size-8'
         onClick={onStop}
         variant='secondary'
       >
         <SquareIcon className='fill-current' size={16} />
-        <span className='hidden sm:inline'>{t('Stop')}</span>
-        <span className='sr-only sm:hidden'>{t('Stop')}</span>
       </PromptInputButton>
     )
   }
 
   return (
     <PromptInputButton
-      className='text-foreground font-medium'
+      aria-label={t('Send')}
+      className='text-foreground size-10 sm:size-8'
       disabled={disabled || !hasContent}
       type='submit'
       variant='secondary'
     >
       <SendIcon size={16} />
-      <span className='hidden sm:inline'>{t('Send')}</span>
-      <span className='sr-only sm:hidden'>{t('Send')}</span>
     </PromptInputButton>
   )
 }
@@ -239,7 +237,7 @@ function PlaygroundInputInner({
             <DropdownMenuTrigger
               render={
                 <PromptInputButton
-                  className='border font-medium'
+                  className='size-10 border font-medium sm:size-8'
                   disabled={disabled}
                   variant='outline'
                 />

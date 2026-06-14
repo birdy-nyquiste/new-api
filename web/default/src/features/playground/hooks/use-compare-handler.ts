@@ -39,7 +39,6 @@ interface UseCompareHandlerOptions {
   config: PlaygroundConfig
   parameterEnabled: ParameterEnabled
   rounds: CompareRound[]
-  includeContext: boolean
   onRoundsUpdate: (
     updater: CompareRound[] | ((prev: CompareRound[]) => CompareRound[])
   ) => void
@@ -83,13 +82,8 @@ function buildContextMessages(
   rounds: CompareRound[],
   modelId: string,
   prompt: string,
-  includeContext: boolean,
   currentFiles?: any[]
 ): ChatCompletionMessage[] {
-  if (!includeContext) {
-    return [formatComparePromptMessage(prompt, currentFiles)]
-  }
-
   const messages: ChatCompletionMessage[] = []
   rounds.forEach((round) => {
     const result = round.results.find((item) => item.modelId === modelId)
@@ -148,7 +142,6 @@ export function useCompareHandler({
   config,
   parameterEnabled,
   rounds,
-  includeContext,
   onRoundsUpdate,
 }: UseCompareHandlerOptions) {
   const streamsRef = useRef<Map<string, SSE>>(new Map())
@@ -209,7 +202,7 @@ export function useCompareHandler({
         const resultId = `${roundId}-${model.value}`
         const payload = buildPayload(
           model,
-          buildContextMessages(rounds, model.value, trimmed, includeContext, files),
+          buildContextMessages(rounds, model.value, trimmed, files),
           config,
           parameterEnabled
         )
@@ -327,7 +320,6 @@ export function useCompareHandler({
     [
       config,
       finishStream,
-      includeContext,
       onRoundsUpdate,
       parameterEnabled,
       patchResult,

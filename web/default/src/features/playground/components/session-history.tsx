@@ -122,8 +122,11 @@ export function SessionHistory({
   return (
     <aside
       className={cn(
-        'bg-background hidden h-full shrink-0 flex-col border-r transition-all duration-200 ease-in-out md:flex',
-        sidebarOpen ? 'w-64' : 'w-0 overflow-hidden border-r-0'
+        // Off-canvas overlay drawer on phones; in-flow push sidebar at md+.
+        'bg-background absolute inset-y-0 left-0 z-50 flex h-full w-64 shrink-0 flex-col border-r transition-all duration-200 ease-in-out md:relative md:z-auto md:translate-x-0',
+        sidebarOpen
+          ? 'translate-x-0 md:w-64'
+          : '-translate-x-full md:w-0 md:translate-x-0 md:overflow-hidden md:border-r-0'
       )}
     >
       <div className='flex h-full w-64 shrink-0 flex-col'>
