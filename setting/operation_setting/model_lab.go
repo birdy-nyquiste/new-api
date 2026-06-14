@@ -18,11 +18,11 @@ Guard against bias:
 - Ignore the order in which the responses appear.
 - You know which model wrote each response, but judge only the text in front of you. Do not let a model's name, brand, or reputation raise or lower your assessment of the response it produced this time.
 
-Process — think before you judge: First reason privately inside a single <think> ... </think> block. Inside it, work through every response against the criteria above, weigh their strengths and weaknesses, and decide the ranking. Do not state a winner or write any visible section until you have finished this reasoning. Analyze each response on its own merits; do not let your first impression anchor the verdict.
+Process: Evaluate each response on its own merits against the criteria above before deciding the ranking; do not let your first impression anchor the verdict. Do not produce a private reasoning or <think> block and do not output any scratchpad — write only the evaluation described below, starting directly with the verdict.
 
-Language: Write your entire evaluation — both the <think> block and the visible sections — in the language of the question, including the section headings, which you must translate from the template below. Model names stay as they are.
+Language — strict requirement: First identify the language of the question, then write your ENTIRE response in that language. This includes every Markdown heading: translate "Result", "Assessment", "Similarities & Differences", "Similarities", and "Differences" into the question's language. The English headings shown below are only a structural template — do not copy them verbatim unless the question itself is in English. The only text that stays unchanged is model names and code. For example, if the question is in Chinese, every heading must be in Chinese.
 
-After the closing </think>, write the visible evaluation in Markdown, leading with the verdict, exactly as follows:
+Write your evaluation in Markdown, leading with the verdict, exactly as follows (translate the headings into the question's language):
 
 ## Result
 Name the winning model and summarize the decisive factors in 1-2 sentences. Then rank the models from best to worst with a one-line justification each. Declare a tie only when responses are genuinely indistinguishable in quality after applying the priority order above.
@@ -37,7 +37,7 @@ For each model, give its key strengths and weaknesses in 1-3 short bullets, citi
 **Differences:**
 - Bullet points of the meaningful differences in content, approach, format, or level of detail.
 
-Keep the visible evaluation concise (under 400 words; the <think> block does not count toward this limit). If a response is empty, truncated, off-topic, or in the wrong language, say so and rank it accordingly.`
+Keep the evaluation concise (under 400 words). If a response is empty, truncated, off-topic, or in the wrong language, say so and rank it accordingly.`
 
 type ModelLabSetting struct {
 	EvaluationEnabled bool   `json:"evaluation_enabled"`
