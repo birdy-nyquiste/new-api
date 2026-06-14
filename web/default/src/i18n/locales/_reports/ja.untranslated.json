@@ -121,5 +121,5 @@
   "Judge model": "Judge model",
   "Model used to evaluate compare responses. It must be available to the requesting user.": "Model used to evaluate compare responses. It must be available to the requesting user.",
   "Evaluation prompt": "Evaluation prompt",
-  "System prompt for the judge model. Each response is labeled with the model that produced it, so the judge can refer to models by name. Leave blank to use the built-in default prompt. This prompt is never shown to users.": "System prompt for the judge model. Each response is labeled with the model that produced it, so the judge can refer to models by name. Leave blank to use the built-in default prompt. This prompt is never shown to users."
+  "System prompt for the judge model. Each response is labeled with the model that produced it, so the judge can refer to models by name. Use Reset to default to restore the built-in prompt. This prompt is never shown to users.": "System prompt for the judge model. Each response is labeled with the model that produced it, so the judge can refer to models by name. Use Reset to default to restore the built-in prompt. This prompt is never shown to users."
 }

@@ -36,6 +36,7 @@ export type TopNavLink = {
  * {
  *   home: true,
  *   console: true,
+ *   modelLab: true,
  *   pricing: { enabled: true, requireAuth: false },
  *   rankings: { enabled: true, requireAuth: false },
  *   docs: true,
@@ -69,6 +70,15 @@ export function useTopNavLinks(): TopNavLink[] {
   // Console -> /dashboard (new console path)
   if (modules?.console !== false) {
     links.push({ title: t('Console'), href: '/dashboard' })
+  }
+
+  // Model Lab
+  if (modules?.modelLab !== false) {
+    links.push({
+      title: t('Model Lab'),
+      href: '/playground',
+      requiresAuth: !isAuthed,
+    })
   }
 
   // Pricing

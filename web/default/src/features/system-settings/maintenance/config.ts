@@ -24,6 +24,7 @@ export type HeaderNavAccessConfig = {
 export type HeaderNavModulesConfig = {
   home: boolean
   console: boolean
+  modelLab: boolean
   pricing: HeaderNavAccessConfig
   rankings: HeaderNavAccessConfig
   docs: boolean
@@ -68,6 +69,7 @@ export type ProfileModulesAdminConfig = {
 export const HEADER_NAV_DEFAULT: HeaderNavModulesConfig = {
   home: true,
   console: true,
+  modelLab: true,
   pricing: {
     enabled: true,
     requireAuth: false,

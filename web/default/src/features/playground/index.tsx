@@ -47,7 +47,7 @@ import {
   createLoadingAssistantMessage,
   getWebSearchSupport,
 } from './lib'
-import type { Message as MessageType } from './types'
+import type { Message as MessageType, PlaygroundMode } from './types'
 
 export function Playground() {
   const { t } = useTranslation()
@@ -100,7 +100,6 @@ export function Playground() {
     config,
     parameterEnabled,
     rounds: compareRounds,
-    includeContext: compareConfig.includeContext,
     onRoundsUpdate: updateCompareRounds,
   })
 
@@ -123,8 +122,16 @@ export function Playground() {
     if (round) evaluateRound(round)
   }, [compareRounds, evaluateRound])
 
-  // Sidebar collapsible state
+  // Sidebar collapsible state. On phones the sidebar is an overlay drawer, so
+  // default it closed to avoid covering content on load; desktop keeps the
+  // saved preference.
   const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 767px)').matches
+    ) {
+      return false
+    }
     const saved = localStorage.getItem('model_lab_sidebar_open')
     return saved !== 'false'
   })
@@ -136,6 +143,30 @@ export function Playground() {
       return next
     })
   }, [])
+
+  // The drawer overlays content on phones, so dismiss it after picking or
+  // creating a session there.
+  const closeSidebarOnMobile = useCallback(() => {
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setSidebarOpen(false)
+    }
+  }, [])
+
+  const handleSwitchSession = useCallback(
+    (sessionId: string) => {
+      switchSession(sessionId)
+      closeSidebarOnMobile()
+    },
+    [switchSession, closeSidebarOnMobile]
+  )
+
+  const handleCreateSession = useCallback(
+    (sessionMode?: PlaygroundMode) => {
+      createSession(sessionMode)
+      closeSidebarOnMobile()
+    },
+    [createSession, closeSidebarOnMobile]
+  )
 
   // Edit dialog state
   const [editingMessageKey, setEditingMessageKey] = useState<string | null>(
@@ -332,14 +363,23 @@ export function Playground() {
       <SessionHistory
         sessions={sessions}
         activeSessionId={activeSessionId}
-        onCreateSession={createSession}
-        onSwitchSession={switchSession}
+        onCreateSession={handleCreateSession}
+        onSwitchSession={handleSwitchSession}
         onRenameSession={renameSession}
         onDeleteSession={deleteSession}
         onClearSessions={clearSessions}
         sidebarOpen={sidebarOpen}
         onToggleSidebar={toggleSidebar}
       />
+
+      {sidebarOpen && (
+        <button
+          type='button'
+          aria-label={t('Close sidebar')}
+          className='absolute inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden'
+          onClick={toggleSidebar}
+        />
+      )}
 
       <div
         className={cn('relative flex min-w-0 flex-1 flex-col overflow-hidden')}
@@ -354,68 +394,6 @@ export function Playground() {
           >
             <PanelLeft className='size-4' />
           </Button>
-        )}
-
-        {sidebarOpen && (
-          <header className='flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4 md:hidden'>
-            <div className='flex min-w-0 items-center gap-3'>
-              {sidebarOpen && (
-                <div className='bg-muted hidden size-9 items-center justify-center rounded-lg sm:flex'>
-                  <FlaskConicalIcon className='size-4' />
-                </div>
-              )}
-              <div className='min-w-0'>
-                <h1 className='truncate text-base leading-tight font-semibold'>
-                  {t('Model Lab')}
-                </h1>
-                <p className='text-muted-foreground mt-0.5 truncate text-xs leading-none'>
-                  {t('Chat with models and compare responses side by side.')}
-                </p>
-              </div>
-            </div>
-
-            <div className='flex flex-wrap items-center gap-2'>
-              <select
-                className='border-input bg-background h-8 max-w-44 rounded-md border px-2 text-sm md:hidden'
-                value={activeSessionId}
-                onChange={(event) => switchSession(event.target.value)}
-              >
-                {sessions
-                  .filter(
-                    (s) =>
-                      s.messages.length > 0 ||
-                      s.compareRounds.length > 0 ||
-                      s.id === activeSessionId
-                  )
-                  .map((session) => (
-                    <option key={session.id} value={session.id}>
-                      {session.title}
-                    </option>
-                  ))}
-              </select>
-              <Button
-                className='md:hidden'
-                size='sm'
-                variant='outline'
-                onClick={() => createSession(mode)}
-              >
-                {t('New')}
-              </Button>
-              <div className='bg-muted text-muted-foreground flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium select-none'>
-                {mode === 'compare' ? (
-                  <>
-                    <Columns2 className='size-4' />
-                    {t('Compare')}
-                  </>
-                ) : (
-                  <>
-                    <MessagesSquareIcon className='size-4' />
-                    {t('Chat')}
-                  </>
-                )}
-              </div>
-            </div>
-          </header>
         )}
 
         {mode === 'compare' ? (

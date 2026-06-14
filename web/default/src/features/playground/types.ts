@@ -164,7 +164,6 @@ export type PlaygroundMode = 'chat' | 'compare'
 
 export interface CompareConfig {
   selectedModelIds: string[]
-  includeContext: boolean
 }
 
 export type CompareResultStatus = 'loading' | 'streaming' | 'done' | 'error'

@@ -16,17 +16,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { Link } from '@tanstack/react-router'
 import {
-  Zap,
-  Shield,
-  Globe,
   Code,
-  Gauge,
+  Columns2Icon,
   DollarSign,
-  Users,
+  FlaskConicalIcon,
+  Gauge,
+  Globe,
   HeartHandshake,
+  MessageSquareTextIcon,
+  Shield,
+  Users,
+  Zap,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
 
 interface FeaturesProps {
@@ -38,8 +43,60 @@ export function Features(_props: FeaturesProps) {
 
   const features = [
     {
-      id: 'fast',
+      id: 'model-lab',
       num: '01',
+      title: t('Model Lab'),
+      desc: t(
+        'Test prompts, compare model outputs, and verify routing before you ship.'
+      ),
+      span: 'md:col-span-3',
+      icon: <FlaskConicalIcon className='size-4 text-blue-400' />,
+      visual: (
+        <div className='mt-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+          <div className='grid flex-1 gap-2 sm:grid-cols-2'>
+            {[
+              {
+                icon: MessageSquareTextIcon,
+                label: t('Chat'),
+                text: t('Live prompts with files and web search'),
+              },
+              {
+                icon: Columns2Icon,
+                label: t('Compare'),
+                text: t('Side-by-side results with latency and token details'),
+              },
+            ].map((item) => {
+              const Icon = item.icon
+              return (
+                <div
+                  key={item.label}
+                  className='border-border/30 bg-muted/20 flex items-start gap-3 rounded-lg border px-3 py-3'
+                >
+                  <Icon className='mt-0.5 size-4 shrink-0 text-blue-400' />
+                  <div>
+                    <div className='text-xs font-semibold'>{item.label}</div>
+                    <div className='text-muted-foreground mt-1 text-xs leading-relaxed'>
+                      {item.text}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <Button
+            variant='outline'
+            size='sm'
+            className='border-border/50 hover:border-border hover:bg-muted/50 w-fit rounded-lg'
+            render={<Link to='/playground' />}
+          >
+            {t('Open Model Lab')}
+          </Button>
+        </div>
+      ),
+    },
+    {
+      id: 'fast',
+      num: '02',
       title: t('Lightning Fast'),
       desc: t(
         'Optimized network architecture ensures millisecond response times'
@@ -63,7 +120,7 @@ export function Features(_props: FeaturesProps) {
     },
     {
       id: 'secure',
-      num: '02',
+      num: '03',
       title: t('Secure & Reliable'),
       desc: t(
         'Enterprise-grade security with comprehensive permission management'
@@ -100,7 +157,7 @@ export function Features(_props: FeaturesProps) {
     },
     {
       id: 'global',
-      num: '03',
+      num: '04',
       title: t('Global Coverage'),
       desc: t('Multi-region deployment for stable global access'),
       span: 'md:col-span-1',
@@ -129,7 +186,7 @@ export function Features(_props: FeaturesProps) {
     },
     {
       id: 'developer',
-      num: '04',
+      num: '05',
       title: t('Developer Friendly'),
       desc: t('Compatible API routes for common AI application workflows'),
       span: 'md:col-span-2',
@@ -179,7 +236,7 @@ export function Features(_props: FeaturesProps) {
   ]
 
   return (
-    <section className='relative z-10 px-6 py-24 md:py-32'>
+    <section className='relative z-10 px-6 pt-10 pb-24 md:pt-12 md:pb-32'>
       <div className='mx-auto max-w-6xl'>
         <AnimateInView className='mb-16 max-w-lg'>
           <p className='text-muted-foreground mb-3 text-xs font-medium tracking-widest uppercase'>

@@ -60,7 +60,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -274,9 +273,6 @@ export function ComparePanel({
     }, 0)
   }
 
-  const getResultKey = (roundId: string, resultIndex: number) =>
-    `${roundId}:${resultIndex}`
-
   const getRoundModels = (round: CompareRound) =>
     round.results
       .map((result) => {
@@ -428,8 +424,6 @@ export function ComparePanel({
             groupValue={groupValue}
             onGroupChange={onGroupChange}
             setSelectorOpen={setSelectorOpen}
-            compareConfig={compareConfig}
-            onCompareConfigChange={onCompareConfigChange}
             initialView={rounds.length === 0}
             webSearchEnabled={webSearchEnabled}
             onWebSearchToggle={onWebSearchToggle}
@@ -583,57 +577,37 @@ export function ComparePanel({
                   </div>
                 )}
               </div>
-              <div className='relative grid min-h-[min(34rem,65vh)] gap-3 lg:grid-cols-3'>
-                {expandedResultKey?.startsWith(`${round.id}:`) && (
-                  <button
-                    type='button'
-                    aria-label={t('Collapse')}
-                    className='absolute inset-0 z-20 cursor-default'
-                    onClick={() => {
-                      setExpandedResultKey(null)
-                      setEditingResultKey(null)
-                    }}
-                  />
-                )}
-                {round.results.map((result, resultIndex) => {
-                  const resultKey = getResultKey(round.id, resultIndex)
-                  const isExpanded = expandedResultKey === resultKey
-
-                  return (
-                    <CompareResultCard
-                      key={resultKey}
-                      result={result}
-                      round={round}
-                      resultIndex={resultIndex}
-                      resultKey={resultKey}
-                      isExpanded={isExpanded}
-                      isEditing={editingResultKey === resultKey}
-                      editText={editText}
-                      isComparing={isComparing}
-                      onEditTextChange={setEditText}
-                      onToggleExpanded={() => {
-                        setExpandedResultKey((current) =>
-                          current === resultKey ? null : resultKey
-                        )
-                        setEditingResultKey(null)
-                      }}
-                      onStartEdit={(content) => {
-                        setExpandedResultKey(resultKey)
-                        setEditingResultKey(resultKey)
-                        setEditText(content)
-                      }}
-                      onCancelEdit={() => setEditingResultKey(null)}
-                      onSaveEdit={() =>
-                        saveCompareResultEdit(round.id, resultIndex)
-                      }
-                      onDelete={() =>
-                        deleteCompareResult(round.id, resultIndex)
-                      }
-                      onRegenerate={() => regenerateCompareRound(round)}
-                    />
+              <CompareRoundResults
+                round={round}
+                expandedResultKey={expandedResultKey}
+                editingResultKey={editingResultKey}
+                editText={editText}
+                isComparing={isComparing}
+                onEditTextChange={setEditText}
+                onToggleExpanded={(resultKey) => {
+                  setExpandedResultKey((current) =>
+                    current === resultKey ? null : resultKey
                   )
-                })}
-              </div>
+                  setEditingResultKey(null)
+                }}
+                onStartEdit={(resultKey, content) => {
+                  setExpandedResultKey(resultKey)
+                  setEditingResultKey(resultKey)
+                  setEditText(content)
+                }}
+                onCancelEdit={() => setEditingResultKey(null)}
+                onSaveEdit={(resultIndex) =>
+                  saveCompareResultEdit(round.id, resultIndex)
+                }
+                onDelete={(resultIndex) =>
+                  deleteCompareResult(round.id, resultIndex)
+                }
+                onRegenerate={() => regenerateCompareRound(round)}
+                onCollapse={() => {
+                  setExpandedResultKey(null)
+                  setEditingResultKey(null)
+                }}
+              />
               {round.evaluation && (
                 <>
                   <div className='flex flex-col items-end gap-1.5'>
@@ -672,6 +646,118 @@ export function ComparePanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function CompareRoundResults({
+  round,
+  expandedResultKey,
+  editingResultKey,
+  editText,
+  isComparing,
+  onEditTextChange,
+  onToggleExpanded,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onDelete,
+  onRegenerate,
+  onCollapse,
+}: {
+  round: CompareRound
+  expandedResultKey: string | null
+  editingResultKey: string | null
+  editText: string
+  isComparing: boolean
+  onEditTextChange: (value: string) => void
+  onToggleExpanded: (resultKey: string) => void
+  onStartEdit: (resultKey: string, content: string) => void
+  onCancelEdit: () => void
+  onSaveEdit: (resultIndex: number) => void
+  onDelete: (resultIndex: number) => void
+  onRegenerate: () => void
+  onCollapse: () => void
+}) {
+  const { t } = useTranslation()
+  const scrollerRef = useRef<HTMLDivElement>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const isAnyExpanded = expandedResultKey?.startsWith(`${round.id}:`) ?? false
+
+  // Track which card is centered in the mobile carousel for the dot indicator.
+  const handleScroll = () => {
+    const el = scrollerRef.current
+    if (!el) return
+    const center = el.scrollLeft + el.clientWidth / 2
+    let best = 0
+    let bestDist = Infinity
+    Array.from(el.children).forEach((child, index) => {
+      const node = child as HTMLElement
+      const nodeCenter = node.offsetLeft + node.offsetWidth / 2
+      const dist = Math.abs(nodeCenter - center)
+      if (dist < bestDist) {
+        bestDist = dist
+        best = index
+      }
+    })
+    setActiveIndex((prev) => (prev === best ? prev : best))
+  }
+
+  return (
+    <div className='relative'>
+      {isAnyExpanded && (
+        <button
+          type='button'
+          aria-label={t('Collapse')}
+          className='fixed inset-0 z-40 cursor-default bg-black/40 backdrop-blur-sm lg:absolute lg:z-20 lg:bg-transparent lg:backdrop-blur-none'
+          onClick={onCollapse}
+        />
+      )}
+      <div
+        ref={scrollerRef}
+        onScroll={handleScroll}
+        className='-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:grid lg:min-h-[min(34rem,65vh)] lg:snap-none lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden'
+      >
+        {round.results.map((result, resultIndex) => {
+          const resultKey = `${round.id}:${resultIndex}`
+          const isExpanded = expandedResultKey === resultKey
+
+          return (
+            <CompareResultCard
+              key={resultKey}
+              result={result}
+              round={round}
+              resultIndex={resultIndex}
+              resultKey={resultKey}
+              isExpanded={isExpanded}
+              isEditing={editingResultKey === resultKey}
+              editText={editText}
+              isComparing={isComparing}
+              onEditTextChange={onEditTextChange}
+              onToggleExpanded={() => onToggleExpanded(resultKey)}
+              onStartEdit={(content) => onStartEdit(resultKey, content)}
+              onCancelEdit={onCancelEdit}
+              onSaveEdit={() => onSaveEdit(resultIndex)}
+              onDelete={() => onDelete(resultIndex)}
+              onRegenerate={onRegenerate}
+            />
+          )
+        })}
+      </div>
+      {round.results.length > 1 && (
+        <div className='mt-2.5 flex justify-center gap-1.5 lg:hidden'>
+          {round.results.map((_, index) => (
+            <span
+              key={`${round.id}:dot:${index}`}
+              aria-hidden='true'
+              className={cn(
+                'size-1.5 rounded-full transition-colors duration-200',
+                index === activeIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+              )}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -735,19 +821,21 @@ function CompareResultCard({
   }, [visibleContent, reasoning, result.status])
 
   return (
-    <div className='h-[min(34rem,65vh)] min-h-64 w-full max-w-[32rem] justify-self-center'>
+    <div className='h-[min(34rem,65vh)] min-h-64 shrink-0 basis-[88%] snap-center sm:basis-[48%] lg:w-full lg:max-w-[32rem] lg:shrink lg:basis-auto lg:justify-self-center'>
       <article
         id={`compare-expanded-${resultKey}`}
         className={cn(
-          'bg-card group/compare-result flex h-full w-full cursor-default flex-col overflow-hidden rounded-lg border shadow-xs transition-[background-color,border-color,box-shadow,transform,width,max-width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] outline-none',
+          'bg-card group/compare-result flex cursor-default flex-col overflow-hidden rounded-lg border shadow-xs transition-[background-color,border-color,box-shadow,transform,width,max-width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] outline-none',
           'motion-reduce:transform-none motion-reduce:transition-colors',
           isExpanded
             ? cn(
-                'border-primary/50 shadow-primary/15 ring-primary/15 absolute top-0 left-1/2 z-30 w-[min(calc(100%_-_2rem),48rem)] max-w-[48rem] -translate-x-1/2 shadow-2xl ring-2',
+                'border-primary/50 shadow-primary/15 ring-primary/15 shadow-2xl ring-2',
+                'fixed inset-2 z-50',
+                'lg:absolute lg:inset-auto lg:top-0 lg:left-1/2 lg:z-30 lg:h-[min(34rem,65vh)] lg:w-[min(calc(100%_-_2rem),48rem)] lg:max-w-[48rem] lg:-translate-x-1/2',
                 'animate-in zoom-in-95 duration-300',
                 expandedOriginClass
               )
-            : 'relative hover:border-primary/40 hover:ring-primary/15 hover:shadow-primary/10 hover:-translate-y-1 hover:shadow-lg hover:ring-2'
+            : 'relative h-full w-full hover:border-primary/40 hover:ring-primary/15 hover:shadow-primary/10 hover:-translate-y-1 hover:shadow-lg hover:ring-2'
         )}
       >
         <header
@@ -847,53 +935,55 @@ function CompareResultCard({
         </div>
         <footer
           className={cn(
-            'border-t p-3',
-            isExpanded &&
-              'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'
+            'flex flex-col gap-3 border-t p-3 sm:flex-row sm:items-center sm:justify-between',
+            !isExpanded && 'lg:block'
           )}
         >
           <ResponseMetrics metrics={result.metrics} />
-          {isExpanded && (
-            <TooltipProvider delay={300}>
-              <div className='flex shrink-0 items-center justify-end gap-0.5'>
-                <MessageActionButton
-                  icon={isCopied ? Check : Copy}
-                  label={
-                    isCopied
-                      ? MESSAGE_ACTION_LABELS.COPIED
-                      : MESSAGE_ACTION_LABELS.COPY
+          <TooltipProvider delay={300}>
+            <div
+              className={cn(
+                'flex shrink-0 items-center justify-end gap-0.5',
+                !isExpanded && 'lg:hidden'
+              )}
+            >
+              <MessageActionButton
+                icon={isCopied ? Check : Copy}
+                label={
+                  isCopied
+                    ? MESSAGE_ACTION_LABELS.COPIED
+                    : MESSAGE_ACTION_LABELS.COPY
+                }
+                onClick={() => {
+                  if (!copyContent) {
+                    toast.warning(MESSAGE_ACTION_LABELS.NO_CONTENT)
+                    return
                   }
-                  onClick={() => {
-                    if (!copyContent) {
-                      toast.warning(MESSAGE_ACTION_LABELS.NO_CONTENT)
-                      return
-                    }
-                    copyToClipboard(copyContent)
-                  }}
-                  className={isCopied ? 'text-green-600' : ''}
-                />
-                <MessageActionButton
-                  icon={RefreshCw}
-                  label={MESSAGE_ACTION_LABELS.REGENERATE}
-                  onClick={onRegenerate}
-                  disabled={isComparing || round.results.length !== 3}
-                />
-                <MessageActionButton
-                  icon={Edit}
-                  label={MESSAGE_ACTION_LABELS.EDIT}
-                  onClick={() => onStartEdit(result.content)}
-                  disabled={isComparing}
-                />
-                <MessageActionButton
-                  icon={Trash2}
-                  label={MESSAGE_ACTION_LABELS.DELETE}
-                  onClick={onDelete}
-                  disabled={isComparing}
-                  variant='destructive'
-                />
-              </div>
-            </TooltipProvider>
-          )}
+                  copyToClipboard(copyContent)
+                }}
+                className={isCopied ? 'text-green-600' : ''}
+              />
+              <MessageActionButton
+                icon={RefreshCw}
+                label={MESSAGE_ACTION_LABELS.REGENERATE}
+                onClick={onRegenerate}
+                disabled={isComparing || round.results.length !== 3}
+              />
+              <MessageActionButton
+                icon={Edit}
+                label={MESSAGE_ACTION_LABELS.EDIT}
+                onClick={() => onStartEdit(result.content)}
+                disabled={isComparing}
+              />
+              <MessageActionButton
+                icon={Trash2}
+                label={MESSAGE_ACTION_LABELS.DELETE}
+                onClick={onDelete}
+                disabled={isComparing}
+                variant='destructive'
+              />
+            </div>
+          </TooltipProvider>
         </footer>
       </article>
     </div>
@@ -969,27 +1059,26 @@ function CompareSubmitButton({
   if (isComparing && onStop) {
     return (
       <PromptInputButton
-        className='text-foreground font-medium'
+        aria-label={t('Stop')}
+        className='text-foreground size-10 sm:size-8'
         onClick={onStop}
         variant='secondary'
       >
         <SquareIcon className='fill-current' size={16} />
-        <span className='hidden sm:inline'>{t('Stop')}</span>
-        <span className='sr-only sm:hidden'>{t('Stop')}</span>
       </PromptInputButton>
     )
   }
 
   return (
-    <Button
-      type='submit'
-      className='text-foreground bg-secondary hover:bg-secondary/85 border font-medium shadow-none'
+    <PromptInputButton
+      aria-label={t('Send')}
+      className='text-foreground size-10 sm:size-8'
       disabled={disabled || !hasContent}
+      type='submit'
+      variant='secondary'
     >
       <SendIcon size={16} />
-      <span className='hidden sm:inline'>{t('Compare')}</span>
-      <span className='sr-only sm:hidden'>{t('Compare')}</span>
-    </Button>
+    </PromptInputButton>
   )
 }
 
@@ -1003,11 +1092,6 @@ interface CompareInputInnerProps {
   groupValue: string
   onGroupChange: (value: string) => void
   setSelectorOpen: (open: boolean) => void
-  compareConfig: CompareConfig
-  onCompareConfigChange: <K extends keyof CompareConfig>(
-    key: K,
-    value: CompareConfig[K]
-  ) => void
   initialView?: boolean
   webSearchEnabled?: boolean
   onWebSearchToggle?: () => void
@@ -1028,8 +1112,6 @@ function CompareInputInner({
   groupValue,
   onGroupChange,
   setSelectorOpen,
-  compareConfig,
-  onCompareConfigChange,
   initialView = false,
   webSearchEnabled = false,
   onWebSearchToggle,
@@ -1077,7 +1159,7 @@ function CompareInputInner({
             <DropdownMenuTrigger
               render={
                 <PromptInputButton
-                  className='border font-medium'
+                  className='size-10 border font-medium sm:size-8'
                   disabled={isComparing}
                   variant='outline'
                 />
@@ -1107,7 +1189,7 @@ function CompareInputInner({
           />
         </PromptInputTools>
 
-        <div className='flex items-center gap-1.5 md:gap-2'>
+        <div className='flex flex-wrap items-center justify-end gap-2'>
           <GroupSelector
             selectedGroup={groupValue}
             groups={groups}
@@ -1121,36 +1203,18 @@ function CompareInputInner({
             disabled={isComparing}
             onClick={() => setSelectorOpen(true)}
             className={cn(
-              'flex h-8 items-center gap-2 border px-3 font-medium',
-              'justify-center p-0 sm:w-auto sm:justify-start sm:px-3',
-              'w-8 sm:w-auto',
+              'flex h-10 w-10 items-center justify-center gap-2 border p-0 font-medium sm:h-8 sm:w-auto sm:justify-start sm:px-3',
               'bg-background text-foreground',
               'hover:bg-accent transition-colors',
               'focus:!ring-0 focus:!outline-none',
-              'text-xs shadow-none'
+              'text-sm shadow-none sm:text-xs'
             )}
           >
             <CpuIcon className='text-muted-foreground size-4' />
             <span className='hidden sm:inline-block'>
               {t('Models')} ({selectedModels.length}/3)
             </span>
-            <span className='inline-block text-xs sm:hidden'>
-              {selectedModels.length}
-            </span>
           </Button>
-
-          <label className='bg-background hover:bg-accent flex h-8 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-xs transition-colors select-none'>
-            <Switch
-              checked={compareConfig.includeContext}
-              onCheckedChange={(checked) =>
-                onCompareConfigChange('includeContext', checked)
-              }
-              size='sm'
-              className='origin-left scale-90'
-            />
-            <span className='hidden sm:inline'>{t('Use context')}</span>
-            <span className='sr-only sm:hidden'>{t('Context')}</span>
-          </label>
 
           {evaluationEnabled && onEvaluate && (
             <Button
@@ -1159,7 +1223,7 @@ function CompareInputInner({
               size='sm'
               disabled={isEvaluating ? false : !canEvaluate || isComparing}
               onClick={isEvaluating ? onStopEvaluation : onEvaluate}
-              className='flex h-8 items-center gap-2 border px-3 text-xs font-medium shadow-none'
+              className='flex h-10 items-center gap-2 border px-3 text-sm font-medium shadow-none sm:h-8 sm:text-xs'
               title={t('Evaluate the latest round of responses')}
             >
               {isEvaluating ? (
@@ -1167,12 +1231,7 @@ function CompareInputInner({
               ) : (
                 <ScaleIcon className='text-muted-foreground size-4' />
               )}
-              <span className='hidden sm:inline'>
-                {isEvaluating ? t('Stop') : t('Evaluate')}
-              </span>
-              <span className='sr-only sm:hidden'>
-                {isEvaluating ? t('Stop') : t('Evaluate')}
-              </span>
+              <span>{isEvaluating ? t('Stop') : t('Evaluate')}</span>
             </Button>
           )}
 
