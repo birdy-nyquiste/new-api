@@ -36,7 +36,7 @@ Individual professionals — people who want AI to just work, not a technical au
 ### 3.2 Visual Direction
 **Clean & Confident** — light backgrounds, near-black typography, generous whitespace. Equal first-class support for dark mode using the existing OKLch CSS variable system. No gradient text. No glow effects.
 
-**Typography:** Plus Jakarta Sans (headings + body) + Lora italic (editorial accent on headline second lines). Both loaded from Google Fonts; existing Public Sans remains for non-landing UI.
+**Typography:** Plus Jakarta Sans (headings + body) + Lora italic (editorial accent on headline second lines). Plus Jakarta Sans is new — add via `<link>` in `web/default/index.html`. Lora is already present in the project's `--font-serif` stack (`theme.css`). Existing Public Sans remains for non-landing UI.
 
 **Color:** Existing OKLch tokens, lightly extended. All neutrals carry a subtle blue tint (`oklch(xx% 0.01 250)`) for subconscious brand cohesion. Accent: `oklch(52% 0.14 248)` light / `oklch(68% 0.14 248)` dark.
 
@@ -183,7 +183,7 @@ Each card: wordmark (800 weight typography) + plan badge (accent-surface) + mode
 
 ### Footer
 
-Minimal. Two columns: `"© 2025 Nyquiste · 全球 AI 全家桶"` left, `Privacy · Terms · Contact` links right.
+Minimal. Two columns: `"© 2026 Nyquiste · 全球 AI 全家桶"` left, `Privacy · Terms · Contact` links right.
 
 ---
 
@@ -209,10 +209,10 @@ features/home/
 
 ### Styling
 - Uses existing Tailwind CSS 4 + OKLch CSS variable system from `theme.css`
-- Plus Jakarta Sans loaded via `<link>` in `index.html` (or via `@import` in CSS)
-- Lora already available in the project's font stack (`web/default/src/styles/`)
+- Plus Jakarta Sans: add `<link>` preconnect + stylesheet in `web/default/index.html`
+- Lora: already in `--font-serif` in `theme.css` — no action needed
 - All `dark:` variants mirror the light layout with inverted CSS variable values
-- No new dependencies required
+- No new npm dependencies required
 
 ### i18n
 - All user-visible strings wrapped in `t('...')` via `useTranslation()`
