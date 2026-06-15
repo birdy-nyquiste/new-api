@@ -17,10 +17,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
-import { FlaskConicalIcon, LayoutDashboardIcon } from 'lucide-react'
+import { LayoutDashboardIcon, ArrowRightIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { HeroTerminalDemo } from '../hero-terminal-demo'
+import { SuitePreview } from '../suite-preview'
 
 interface HeroProps {
   className?: string
@@ -52,23 +52,21 @@ export function Hero(_props: HeroProps) {
 
       <div className='mx-auto grid max-w-6xl grid-cols-1 items-start gap-12 lg:grid-cols-12 lg:gap-8'>
         {/* Left Column: Title and description */}
-        <div className='flex flex-col items-start text-left lg:col-span-6'>
+        <div className='flex min-w-0 flex-col items-start text-left lg:col-span-6'>
           <h1
-            className='landing-animate-fade-up text-[clamp(2.25rem,4.5vw,3.25rem)] leading-[1.15] font-bold tracking-tight'
+            className='landing-animate-fade-up text-[clamp(2.25rem,4.5vw,3.25rem)] leading-[1.15] font-bold tracking-tight break-words'
             style={{ animationDelay: '60ms' }}
           >
-            {t('Unified API Gateway for')}
-            <br />
             <span className='bg-gradient-to-r from-blue-400 via-violet-400 to-purple-500 bg-clip-text text-transparent'>
-              {t('Vast Range of AI Models')}
+              {t('Nyquiste Global AI Suite')}
             </span>
           </h1>
           <p
-            className='landing-animate-fade-up text-muted-foreground/80 mt-5 max-w-xl text-base leading-relaxed opacity-0 md:text-[15px]'
+            className='landing-animate-fade-up text-muted-foreground/80 mt-5 max-w-xl text-base leading-relaxed break-words opacity-0 md:text-[15px]'
             style={{ animationDelay: '120ms' }}
           >
             {t(
-              'Access a vast selection of models via a standard, unified API protocol. Power AI applications, manage digital assets, and connect the Future.'
+              'No need to hassle with overseas accounts, subscription payments, phone verification, or network setups. Start using global mainstream AI tools with a single payment.'
             )}
           </p>
 
@@ -80,26 +78,29 @@ export function Hero(_props: HeroProps) {
               className='group h-11 rounded-lg px-5 text-sm font-medium'
               render={<Link to='/dashboard' />}
             >
-              <LayoutDashboardIcon className='mr-1.5 size-4' />
+              <LayoutDashboardIcon data-icon='inline-start' />
               {t('Console')}
             </Button>
             <Button
               variant='outline'
               className='border-border/50 hover:border-border hover:bg-muted/50 h-11 rounded-lg px-5 text-sm font-medium'
-              render={<Link to='/playground' />}
+              render={<Link to='/sign-up' />}
             >
-              <FlaskConicalIcon className='mr-1.5 size-4' />
-              {t('Model Lab')}
+              {t('Get Started')}
+              <ArrowRightIcon
+                data-icon='inline-end'
+                className='transition-transform duration-200 group-hover:translate-x-0.5'
+              />
             </Button>
           </div>
         </div>
 
-        {/* Right Column: Hero Terminal API Demo */}
+        {/* Right Column: Interactive Suite Preview */}
         <div
-          className='landing-animate-fade-up flex w-full justify-center opacity-0 lg:col-span-6'
+          className='landing-animate-fade-up flex w-full min-w-0 justify-center opacity-0 lg:col-span-6'
           style={{ animationDelay: '320ms' }}
         >
-          <HeroTerminalDemo className='mt-8 lg:mt-0' />
+          <SuitePreview className='mt-8 lg:mt-0' />
         </div>
       </div>
     </section>

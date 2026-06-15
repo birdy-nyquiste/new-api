@@ -16,22 +16,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Link } from '@tanstack/react-router'
 import {
-  Code,
-  Columns2Icon,
-  DollarSign,
-  FlaskConicalIcon,
-  Gauge,
-  Globe,
-  HeartHandshake,
-  MessageSquareTextIcon,
-  Shield,
-  Users,
+  ShieldCheck,
+  CheckCircle2,
+  XCircle,
+  Cpu,
+  Wifi,
+  CreditCard,
   Zap,
+  Lock,
+  Sparkles,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { AnimateInView } from '@/components/animate-in-view'
 
 interface FeaturesProps {
@@ -43,170 +40,160 @@ export function Features(_props: FeaturesProps) {
 
   const features = [
     {
-      id: 'model-lab',
+      id: 'pain-points',
       num: '01',
-      title: t('Model Lab'),
+      title: t('Solve Your Core Pain Points'),
       desc: t(
-        'Test prompts, compare model outputs, and verify routing before you ship.'
+        'No need to hassle with overseas accounts, subscription payments, phone verification, or network setups. Start using global mainstream AI tools with a single payment.'
       ),
       span: 'md:col-span-3',
-      icon: <FlaskConicalIcon className='size-4 text-blue-400' />,
+      icon: <ShieldCheck className='text-success size-4' />,
       visual: (
-        <div className='mt-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
-          <div className='grid flex-1 gap-2 sm:grid-cols-2'>
-            {[
-              {
-                icon: MessageSquareTextIcon,
-                label: t('Chat'),
-                text: t('Live prompts with files and web search'),
-              },
-              {
-                icon: Columns2Icon,
-                label: t('Compare'),
-                text: t('Side-by-side results with latency and token details'),
-              },
-            ].map((item) => {
-              const Icon = item.icon
-              return (
-                <div
-                  key={item.label}
-                  className='border-border/30 bg-muted/20 flex items-start gap-3 rounded-lg border px-3 py-3'
-                >
-                  <Icon className='mt-0.5 size-4 shrink-0 text-blue-400' />
-                  <div>
-                    <div className='text-xs font-semibold'>{item.label}</div>
-                    <div className='text-muted-foreground mt-1 text-xs leading-relaxed'>
-                      {item.text}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+        <div className='mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2'>
+          <div className='border-destructive/15 bg-destructive/5 min-w-0 rounded-lg border p-4'>
+            <div className='text-destructive mb-3 flex items-center gap-1.5 text-xs font-bold'>
+              <XCircle className='size-4 shrink-0' />
+              <span className='min-w-0 break-words'>
+                {t('Traditional complex setup')}
+              </span>
+            </div>
+            <ul className='text-muted-foreground flex flex-col gap-2 text-xs'>
+              <li className='flex min-w-0 items-start gap-2'>
+                <span className='bg-destructive mt-1.5 size-1.5 shrink-0 rounded-full' />
+                <span className='min-w-0 break-words'>
+                  {t('Register overseas email accounts')}
+                </span>
+              </li>
+              <li className='flex min-w-0 items-start gap-2'>
+                <span className='bg-destructive mt-1.5 size-1.5 shrink-0 rounded-full' />
+                <span className='min-w-0 break-words'>
+                  {t('Foreign credit cards & phone verification')}
+                </span>
+              </li>
+              <li className='flex min-w-0 items-start gap-2'>
+                <span className='bg-destructive mt-1.5 size-1.5 shrink-0 rounded-full' />
+                <span className='min-w-0 break-words'>
+                  {t('Unstable, risky network routes')}
+                </span>
+              </li>
+            </ul>
           </div>
-          <Button
-            variant='outline'
-            size='sm'
-            className='border-border/50 hover:border-border hover:bg-muted/50 w-fit rounded-lg'
-            render={<Link to='/playground' />}
-          >
-            {t('Open Model Lab')}
-          </Button>
+          <div className='border-success/20 bg-success/5 min-w-0 rounded-lg border p-4'>
+            <div className='text-success mb-3 flex items-center gap-1.5 text-xs font-bold'>
+              <CheckCircle2 className='size-4 shrink-0' />
+              <span className='min-w-0 break-words'>
+                {t('Nyquiste AI Suite solution')}
+              </span>
+            </div>
+            <ul className='text-muted-foreground flex flex-col gap-2 text-xs'>
+              <li className='text-foreground flex min-w-0 items-start gap-2 font-medium'>
+                <span className='bg-success mt-1.5 size-1.5 shrink-0 rounded-full' />
+                <span className='min-w-0 break-words'>
+                  {t('Single subscription, instant activation')}
+                </span>
+              </li>
+              <li className='text-foreground flex min-w-0 items-start gap-2 font-medium'>
+                <span className='bg-success mt-1.5 size-1.5 shrink-0 rounded-full' />
+                <span className='min-w-0 break-words'>
+                  {t('Compliant and secure network routing')}
+                </span>
+              </li>
+              <li className='text-foreground flex min-w-0 items-start gap-2 font-medium'>
+                <span className='bg-success mt-1.5 size-1.5 shrink-0 rounded-full' />
+                <span className='min-w-0 break-words'>
+                  {t('Pre-configured global AI models')}
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
       ),
     },
     {
-      id: 'fast',
+      id: 'global-models',
       num: '02',
-      title: t('Lightning Fast'),
+      title: t('Covering Global Mainstream AI Vendors'),
       desc: t(
-        'Optimized network architecture ensures millisecond response times'
+        'OpenAI (ChatGPT), Anthropic (Claude), Google (Gemini), and other global AI services configured on demand.'
       ),
-      span: 'md:col-span-2',
-      icon: <Zap className='size-4 text-blue-400' />,
+      span: 'md:col-span-1',
+      icon: <Cpu className='text-info size-4' />,
       visual: (
-        <div className='mt-4 grid grid-cols-3 gap-2'>
-          {['OpenAI', 'Claude', 'Gemini', 'DeepSeek', 'Qwen', 'Llama'].map(
-            (name) => (
-              <div
-                key={name}
-                className='border-border/30 bg-muted/20 text-muted-foreground flex items-center justify-center rounded-lg border px-3 py-2 text-xs transition-colors duration-300 hover:border-blue-500/30 hover:bg-blue-500/5'
-              >
-                {name}
-              </div>
-            )
-          )}
+        <div className='mt-4 flex flex-col gap-2'>
+          {[
+            { name: 'OpenAI ChatGPT', label: 'GPT-4o / O3-Mini' },
+            { name: 'Anthropic Claude', label: 'Claude 3.5 Sonnet' },
+            { name: 'Google Gemini', label: 'Gemini 2.0 Flash' },
+          ].map((item) => (
+            <div
+              key={item.name}
+              className='border-border/40 bg-muted/20 flex min-w-0 flex-col gap-1 rounded-lg border px-3 py-2 text-xs sm:flex-row sm:items-center sm:justify-between'
+            >
+              <span className='text-foreground min-w-0 font-medium break-words'>
+                {item.name}
+              </span>
+              <span className='text-muted-foreground min-w-0 text-[10px] break-words'>
+                {item.label}
+              </span>
+            </div>
+          ))}
         </div>
       ),
     },
     {
-      id: 'secure',
+      id: 'enterprise-sub',
       num: '03',
-      title: t('Secure & Reliable'),
+      title: t('Enterprise-Grade Annual Subscription'),
       desc: t(
-        'Enterprise-grade security with comprehensive permission management'
+        'Safe, stable, and compliant service. Flexible configuration of Plus, Pro, or Max subscriptions and quotas.'
       ),
       span: 'md:col-span-1',
-      icon: <Shield className='size-4 text-emerald-400' />,
+      icon: <CreditCard className='text-primary size-4' />,
       visual: (
-        <div className='mt-4 flex items-center justify-center'>
-          <div className='relative'>
-            <div className='flex size-16 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/5'>
-              <Shield
-                className='size-7 text-emerald-500/70'
-                strokeWidth={1.5}
-              />
+        <div className='mt-4 flex flex-col gap-1.5'>
+          {['Plus', 'Pro', 'Max'].map((tier) => (
+            <div
+              key={tier}
+              className={cn(
+                'flex min-w-0 items-center justify-between gap-3 rounded-lg border px-3 py-1.5 text-xs',
+                tier === 'Pro'
+                  ? 'border-primary/30 bg-primary/5 text-primary font-semibold'
+                  : 'border-border/40 bg-muted/10 text-muted-foreground'
+              )}
+            >
+              <span className='min-w-0 break-words'>
+                {tier} {t('Plan')}
+              </span>
+              {tier === 'Pro' && (
+                <span className='shrink-0 text-[10px]'>{t('Recommended')}</span>
+              )}
             </div>
-            <div className='absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-emerald-500'>
-              <svg
-                className='size-2.5 text-white'
-                fill='none'
-                viewBox='0 0 24 24'
-                stroke='currentColor'
-                strokeWidth={3}
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  d='m4.5 12.75 6 6 9-13.5'
-                />
-              </svg>
-            </div>
-          </div>
+          ))}
         </div>
       ),
     },
     {
-      id: 'global',
+      id: 'sim-traffic',
       num: '04',
-      title: t('Global Coverage'),
-      desc: t('Multi-region deployment for stable global access'),
-      span: 'md:col-span-1',
-      icon: <Globe className='size-4 text-violet-400' />,
-      visual: (
-        <div className='mt-4 space-y-2'>
-          {[t('Load Balancing'), t('Rate Limiting'), t('Cost Tracking')].map(
-            (step, i) => (
-              <div key={step} className='flex items-center gap-2'>
-                <div
-                  className={`flex size-6 items-center justify-center rounded-full text-[10px] font-bold ${
-                    i === 1
-                      ? 'border border-blue-500/30 bg-blue-500/20 text-blue-500'
-                      : 'border-border/40 bg-muted text-muted-foreground border'
-                  }`}
-                >
-                  {i + 1}
-                </div>
-                <div className='bg-border/40 h-px flex-1' />
-                <span className='text-muted-foreground text-xs'>{step}</span>
-              </div>
-            )
-          )}
-        </div>
+      title: t('SIM Card Global Traffic'),
+      desc: t(
+        'Compliant and stable international network connectivity powered by China Telecom (Hong Kong). Pay-as-you-go.'
       ),
-    },
-    {
-      id: 'developer',
-      num: '05',
-      title: t('Developer Friendly'),
-      desc: t('Compatible API routes for common AI application workflows'),
-      span: 'md:col-span-2',
-      icon: <Code className='size-4 text-amber-400' />,
+      span: 'md:col-span-1',
+      icon: <Wifi className='text-warning size-4' />,
       visual: (
-        <div className='mt-4 flex items-center gap-3'>
-          <div className='flex -space-x-2'>
-            {['API', 'SDK', 'CLI', 'Docs'].map((n) => (
-              <div
-                key={n}
-                className='border-background from-muted to-muted/60 text-muted-foreground flex size-8 items-center justify-center rounded-full border-2 bg-gradient-to-br text-[9px] font-bold'
-              >
-                {n}
-              </div>
-            ))}
+        <div className='border-info/20 bg-info/5 mt-4 min-w-0 rounded-lg border p-3'>
+          <div className='text-info flex items-center justify-between gap-3 text-[11px] font-bold'>
+            <span className='min-w-0 break-words'>
+              {t('China Telecom (Hong Kong)')}
+            </span>
+            <Wifi className='size-3.5 shrink-0 motion-safe:animate-pulse' />
           </div>
-          <div className='text-muted-foreground flex items-center gap-1.5 text-xs'>
-            <Code className='size-3.5 text-blue-500' />
-            {t('Multi-protocol Compatible')}
-          </div>
+          <p className='text-muted-foreground mt-1.5 text-[10px] leading-relaxed break-words'>
+            {t(
+              'Compliant and stable international network. Pay-as-you-go cellular traffic.'
+            )}
+          </p>
         </div>
       ),
     },
@@ -214,24 +201,25 @@ export function Features(_props: FeaturesProps) {
 
   const additionalFeatures = [
     {
-      icon: <Gauge className='size-5' strokeWidth={1.5} />,
-      title: t('High Performance'),
-      desc: t('Support for high concurrency with automatic load balancing'),
+      icon: <Lock className='size-5' strokeWidth={1.5} />,
+      title: t('Compliant Route'),
+      desc: t(
+        'Stable access through compliant international network channels'
+      ),
     },
     {
-      icon: <DollarSign className='size-5' strokeWidth={1.5} />,
-      title: t('Transparent Billing'),
-      desc: t('Pay-as-you-go with real-time usage monitoring'),
+      icon: <Zap className='size-5' strokeWidth={1.5} />,
+      title: t('Annual Subscription'),
+      desc: t(
+        'One annual plan keeps premium AI accounts configured and ready to use'
+      ),
     },
     {
-      icon: <Users className='size-5' strokeWidth={1.5} />,
-      title: t('Team Collaboration'),
-      desc: t('Multi-user management with flexible permission allocation'),
-    },
-    {
-      icon: <HeartHandshake className='size-5' strokeWidth={1.5} />,
-      title: t('Open Source'),
-      desc: t('Community driven, self-hosted, and extensible'),
+      icon: <Sparkles className='size-5' strokeWidth={1.5} />,
+      title: t('Continuous Updates'),
+      desc: t(
+        'Instant access to newly released global models as soon as they deploy'
+      ),
     },
   ]
 
@@ -240,12 +228,12 @@ export function Features(_props: FeaturesProps) {
       <div className='mx-auto max-w-6xl'>
         <AnimateInView className='mb-16 max-w-lg'>
           <p className='text-muted-foreground mb-3 text-xs font-medium tracking-widest uppercase'>
-            {t('Core Features')}
+            {t('Core capabilities')}
           </p>
           <h2 className='text-2xl leading-tight font-bold tracking-tight md:text-3xl'>
-            {t('Built for developers,')}
+            {t('Global AI configuration')}
             <br />
-            {t('designed for scale')}
+            {t('tailored for Chinese users')}
           </h2>
         </AnimateInView>
 
@@ -256,15 +244,21 @@ export function Features(_props: FeaturesProps) {
               key={f.id}
               delay={i * 100}
               animation='scale-in'
-              className={`bg-background group hover:bg-muted/20 p-7 transition-colors duration-300 md:p-8 ${f.span}`}
+              className={cn(
+                'group bg-background hover:bg-muted/20 min-w-0 p-7 transition-colors duration-300 md:p-8',
+                f.span
+              )}
             >
-              <div className='mb-3 flex items-center gap-3'>
-                <span className='border-border/40 bg-muted text-muted-foreground flex size-7 items-center justify-center rounded-md border text-[10px] font-semibold tabular-nums'>
+              <div className='mb-3 flex min-w-0 items-start gap-3'>
+                <span className='border-border/40 bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-md border text-[10px] font-semibold tabular-nums'>
                   {f.num}
                 </span>
-                <h3 className='text-sm font-semibold'>{f.title}</h3>
+                <h3 className='flex min-w-0 items-start gap-2 text-sm font-semibold break-words'>
+                  {f.icon}
+                  <span className='min-w-0'>{f.title}</span>
+                </h3>
               </div>
-              <p className='text-muted-foreground text-sm leading-relaxed'>
+              <p className='text-muted-foreground text-sm leading-relaxed break-words'>
                 {f.desc}
               </p>
               {f.visual}
@@ -273,19 +267,21 @@ export function Features(_props: FeaturesProps) {
         </div>
 
         {/* Additional features row */}
-        <div className='mt-12 grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12'>
+        <div className='mt-12 grid grid-cols-1 gap-8 sm:grid-cols-3 md:gap-12'>
           {additionalFeatures.map((f, i) => (
             <AnimateInView
               key={f.title}
               delay={i * 100}
               animation='fade-up'
-              className='flex flex-col items-center text-center'
+              className='flex min-w-0 flex-col items-center text-center'
             >
               <div className='text-muted-foreground border-border/50 bg-muted/30 group-hover:text-foreground mb-3 flex size-12 items-center justify-center rounded-xl border transition-colors'>
                 {f.icon}
               </div>
-              <h3 className='mb-1.5 text-sm font-semibold'>{f.title}</h3>
-              <p className='text-muted-foreground max-w-[200px] text-xs leading-relaxed'>
+              <h3 className='mb-1.5 text-sm font-semibold break-words'>
+                {f.title}
+              </h3>
+              <p className='text-muted-foreground max-w-[200px] text-xs leading-relaxed break-words'>
                 {f.desc}
               </p>
             </AnimateInView>
