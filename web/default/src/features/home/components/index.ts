@@ -16,7 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export { CTA } from './sections/cta'
-export { Features } from './sections/features'
+export { FinalCTA } from './sections/final-cta'
 export { Hero } from './sections/hero'
-export { HowItWorks } from './sections/how-it-works'
+export { ModelCoverage } from './sections/model-coverage'
+export { ModelLabSpotlight } from './sections/model-lab-spotlight'
+export { PainVsSolution } from './sections/pain-solution'
+export { PricingTeaser } from './sections/pricing-teaser'

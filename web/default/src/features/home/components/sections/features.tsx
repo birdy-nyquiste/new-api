@@ -82,7 +82,7 @@ export function Features(_props: FeaturesProps) {
             <div className='text-success mb-3 flex items-center gap-1.5 text-xs font-bold'>
               <CheckCircle2 className='size-4 shrink-0' />
               <span className='min-w-0 break-words'>
-                {t('Nyquiste AI Suite solution')}
+                  {t('Nyquiste Router AI Suite solution')}
               </span>
             </div>
             <ul className='text-muted-foreground flex flex-col gap-2 text-xs'>

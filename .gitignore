@@ -26,6 +26,8 @@ tiktoken_cache
 .gomodcache/
 .cache
 plans
+!docs/superpowers/plans/
+!docs/superpowers/plans/**
 .claude
 .cursor
 

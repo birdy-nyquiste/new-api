@@ -55,7 +55,14 @@ export function AnimateInView(props: AnimateInViewProps) {
         if (entry.isIntersecting) {
           el.classList.remove('opacity-0')
           el.classList.add(`landing-animate-${animation}`)
-          if (once) observer.unobserve(el)
+          if (once) {
+            observer.unobserve(el)
+            el.addEventListener(
+              'animationend',
+              () => el.classList.remove('will-change-[transform,opacity]'),
+              { once: true }
+            )
+          }
         } else if (!once) {
           el.classList.add('opacity-0')
           el.classList.remove(`landing-animate-${animation}`)

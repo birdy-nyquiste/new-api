@@ -34,6 +34,9 @@ export interface HomePageContentResponse {
  */
 export interface HomePageContentResult {
   content: string
+  error: string | null
   isLoaded: boolean
+  isRefreshing: boolean
   isUrl: boolean
+  reload: () => Promise<void>
 }

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing + CTA v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: oklch(14% 0.01 250);
+    --ink-2: oklch(38% 0.01 250);
+    --ink-3: oklch(58% 0.01 250);
+    --surface: oklch(99% 0.005 250);
+    --surface-2: oklch(96% 0.008 250);
+    --surface-3: oklch(92% 0.01 250);
+    --border: oklch(88% 0.01 250);
+    --accent: oklch(52% 0.14 248);
+    --accent-surface: oklch(95% 0.05 248);
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-serif: 'Lora', Georgia, serif;
+  }
+  body { font-family: var(--font-sans); background: #e4e4e4; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .panel-label { font-size: 11px; font-weight: 700; color: #fff; background: #333; display: inline-block; padding: 3px 10px; border-radius: 4px; margin-bottom: 10px; }
+  .frame { border-radius: 16px; overflow: hidden; box-shadow: 0 2px 24px oklch(0% 0 0 / 8%); background: var(--surface); }
+
+  .pricing-section { padding: 72px 40px 0; max-width: 960px; margin: 0 auto; width: 100%; }
+  .eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+  .section-title { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 800; line-height: 1.15; letter-spacing: -1px; color: var(--ink); margin-bottom: 8px; }
+  .section-title em { font-family: var(--font-serif); font-style: italic; font-weight: 500; color: var(--ink-2); }
+  .section-sub { font-size: 13px; color: var(--ink-3); line-height: 1.7; max-width: 44ch; margin-bottom: 44px; }
+
+  /* Plans — subrow-aligned grid approach */
+  .plans {
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  /* Header row — plan names & prices */
+  .plans-header {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1.5px solid var(--border);
+  }
+  .plan-header {
+    background: var(--surface);
+    padding: 28px 24px 22px;
+  }
+  .plan-header.recommended { background: var(--ink); }
+
+  .plan-name { font-size: 14px; font-weight: 800; color: var(--ink); letter-spacing: -0.4px; margin-bottom: 4px; }
+  .plan-header.recommended .plan-name { color: oklch(97% 0.005 250); }
+
+  .plan-desc { font-size: 10px; color: var(--ink-3); line-height: 1.6; margin-bottom: 16px; min-height: 32px; }
+  .plan-header.recommended .plan-desc { color: oklch(50% 0.01 250); }
+
+  .plan-price { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -1.2px; }
+  .plan-header.recommended .plan-price { color: oklch(97% 0.005 250); }
+  .plan-price span { font-size: 12px; font-weight: 500; letter-spacing: 0; color: var(--ink-3); }
+  .plan-header.recommended .plan-price span { color: oklch(48% 0.01 250); }
+
+  .plan-billing { font-size: 9px; color: var(--ink-3); margin-top: 3px; line-height: 1.5; }
+  .plan-header.recommended .plan-billing { color: oklch(42% 0.01 250); }
+
+  /* Feature rows — aligned across all three columns */
+  .feature-section-label {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-top: 1.5px solid var(--border);
+  }
+  .feature-label-cell {
+    background: var(--surface-2);
+    padding: 8px 24px;
+  }
+  .feature-label-cell.recommended { background: oklch(11% 0.01 250); }
+  .feature-label-text {
+    font-size: 8px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .feature-label-cell.recommended .feature-label-text { color: oklch(35% 0.01 250); }
+
+  .feature-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+  .feature-cell {
+    background: var(--surface);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--ink-2);
+    min-height: 38px;
+  }
+  .feature-cell.recommended { background: var(--ink); color: oklch(62% 0.01 250); }
+  .feature-cell.empty { color: var(--ink-3); font-style: italic; font-size: 10px; }
+  .feature-cell.recommended.empty { color: oklch(32% 0.01 250); }
+
+  .check {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent-surface); border: 1px solid oklch(78% 0.12 248);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: var(--accent);
+  }
+  .feature-cell.recommended .check {
+    background: oklch(22% 0.05 248); border-color: oklch(35% 0.1 248);
+    color: oklch(65% 0.14 248);
+  }
+  .dash { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--border); font-size: 14px; line-height: 1; }
+
+  /* CTA row */
+  .plans-cta-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-top: 1.5px solid var(--border);
+  }
+  .plan-cta-cell {
+    background: var(--surface);
+    padding: 18px 24px;
+  }
+  .plan-cta-cell.recommended { background: var(--ink); }
+  .plan-cta-btn {
+    width: 100%; font-size: 11px; font-weight: 700; padding: 9px 0; border-radius: 7px;
+    cursor: pointer; border: 1.5px solid var(--border); background: transparent;
+    color: var(--ink); font-family: var(--font-sans);
+  }
+  .plan-cta-cell.recommended .plan-cta-btn {
+    background: oklch(97% 0.005 250); color: oklch(14% 0.01 250); border-color: transparent;
+  }
+  .plan-cta-cell:last-child .plan-cta-btn {
+    border-color: var(--border);
+    color: var(--ink-2);
+  }
+
+  /* Final CTA */
+  .cta-section {
+    padding: 64px 40px 72px;
+    max-width: 960px; margin: 0 auto; width: 100%;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    margin-top: 56px;
+  }
+  .cta-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; line-height: 1.1; letter-spacing: -1.2px; color: var(--ink); margin-bottom: 12px; }
+  .cta-title em { font-family: var(--font-serif); font-style: italic; font-weight: 500; color: var(--ink-2); }
+  .cta-sub { font-size: 13px; color: var(--ink-3); line-height: 1.7; max-width: 40ch; margin: 0 auto 32px; }
+  .cta-buttons { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .btn-primary { background: var(--ink); color: var(--surface); font-size: 13px; font-weight: 800; padding: 13px 28px; border-radius: 8px; cursor: pointer; border: none; font-family: var(--font-sans); letter-spacing: -0.3px; }
+  .btn-secondary { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 13px 22px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; background: transparent; font-family: var(--font-sans); }
+
+  /* Footer */
+  .page-footer { padding: 24px 40px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--ink-3); }
+  .footer-links { display: flex; gap: 20px; }
+
+  /* Dark */
+  .dark {
+    --ink: oklch(95% 0.005 250); --ink-2: oklch(68% 0.01 250); --ink-3: oklch(48% 0.01 250);
+    --surface: oklch(14% 0.01 250); --surface-2: oklch(18% 0.012 250); --surface-3: oklch(23% 0.012 250);
+    --border: oklch(27% 0.01 250); --accent: oklch(68% 0.14 248); --accent-surface: oklch(20% 0.06 248);
+    box-shadow: 0 2px 40px oklch(0% 0 0 / 50%);
+  }
+  .dark .plan-header.recommended { background: oklch(97% 0.005 250); }
+  .dark .plan-header.recommended .plan-name,
+  .dark .plan-header.recommended .plan-price { color: oklch(14% 0.01 250); }
+  .dark .plan-header.recommended .plan-desc,
+  .dark .plan-header.recommended .plan-billing,
+  .dark .plan-header.recommended .plan-price span { color: oklch(42% 0.01 250); }
+
+  .dark .feature-label-cell.recommended { background: oklch(94% 0.005 250); }
+  .dark .feature-label-cell.recommended .feature-label-text { color: oklch(50% 0.01 250); }
+
+  .dark .feature-cell.recommended { background: oklch(97% 0.005 250); color: oklch(38% 0.01 250); }
+  .dark .feature-cell.recommended .check { background: oklch(90% 0.04 248); border-color: oklch(75% 0.1 248); color: oklch(44% 0.14 248); }
+  .dark .feature-cell.recommended.empty { color: oklch(65% 0.01 250); }
+
+  .dark .plan-cta-cell.recommended { background: oklch(97% 0.005 250); }
+  .dark .plan-cta-cell.recommended .plan-cta-btn { background: oklch(14% 0.01 250); color: oklch(97% 0.005 250); border-color: transparent; }
+</style>
+</head>
+<body>
+
+<div style="font-size: 13px; font-weight: 700; text-align: center; color: #555; font-family: sans-serif; margin-bottom: 4px;">Pricing · v2 — Pro / Ultra / Custom · No badge · Aligned rows</div>
+
+<!-- LIGHT -->
+<div class="panel-label">☀ Light</div>
+<div class="frame">
+  <div class="pricing-section">
+    <div class="eyebrow">Pricing</div>
+    <h2 class="section-title">Simple, <em>transparent</em> plans.</h2>
+    <p class="section-sub">All plans include Nyquiste Router credit and Model Lab access. Billed annually.</p>
+
+    <div class="plans">
+      <!-- Header row -->
+      <div class="plans-header">
+        <div class="plan-header">
+          <div class="plan-name">Pro</div>
+          <div class="plan-desc">One AI account and reliable connectivity to get started.</div>
+          <div class="plan-price">¥XXX <span>/ yr</span></div>
+          <div class="plan-billing">Annual · Stripe · 微信 / 支付宝 / Card</div>
+        </div>
+        <div class="plan-header recommended">
+          <div class="plan-name">Ultra</div>
+          <div class="plan-desc">All three AI accounts, SIM data, and full API access — the complete bundle.</div>
+          <div class="plan-price">¥XXX <span>/ yr</span></div>
+          <div class="plan-billing">Annual · Stripe · 微信 / 支付宝 / Card</div>
+        </div>
+        <div class="plan-header">
+          <div class="plan-name">Custom</div>
+          <div class="plan-desc">Other providers, multiple seats, or tailored quotas. Talk to us.</div>
+          <div class="plan-price">Contact <span>us</span></div>
+          <div class="plan-billing">Flexible billing</div>
+        </div>
+      </div>
+
+      <!-- AI Accounts section -->
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">AI Accounts</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">AI Accounts</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">AI Accounts</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>1 account (your choice)</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>OpenAI + Claude + Gemini</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Any provider, on request</div>
+      </div>
+
+      <!-- Connectivity section -->
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">Connectivity</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">Connectivity</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">Connectivity</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell empty"><div class="dash">–</div>SIM / eSIM add-on</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>SIM / eSIM included</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>SIM / eSIM included</div>
+      </div>
+
+      <!-- API section -->
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">API Router</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">API Router</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">API Router</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Router credit included</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Router credit included</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Custom quota</div>
+      </div>
+
+      <!-- Support section -->
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">Support</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">Support</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">Support</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Standard support</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Priority support</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Dedicated support</div>
+      </div>
+
+      <!-- CTA row -->
+      <div class="plans-cta-row">
+        <div class="plan-cta-cell"><button class="plan-cta-btn">Get Pro</button></div>
+        <div class="plan-cta-cell recommended"><button class="plan-cta-btn">Get Ultra</button></div>
+        <div class="plan-cta-cell"><button class="plan-cta-btn">Contact us</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <h2 class="cta-title">Global AI, <em>starting today.</em></h2>
+    <p class="cta-sub">Create your account, get free credits, and try Model Lab before committing to a plan.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary">Get started free →</button>
+      <button class="btn-secondary">View pricing</button>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>© 2025 Nyquiste · 全球 AI 全家桶</span>
+    <div class="footer-links"><span>Privacy</span><span>Terms</span><span>Contact</span></div>
+  </div>
+</div>
+
+<!-- DARK -->
+<div class="panel-label" style="margin-top:8px;">● Dark</div>
+<div class="frame dark">
+  <div class="pricing-section">
+    <div class="eyebrow">Pricing</div>
+    <h2 class="section-title">Simple, <em>transparent</em> plans.</h2>
+    <p class="section-sub">All plans include Nyquiste Router credit and Model Lab access. Billed annually.</p>
+    <div class="plans">
+      <div class="plans-header">
+        <div class="plan-header">
+          <div class="plan-name">Pro</div>
+          <div class="plan-desc">One AI account and reliable connectivity to get started.</div>
+          <div class="plan-price">¥XXX <span>/ yr</span></div>
+          <div class="plan-billing">Annual · Stripe · 微信 / 支付宝 / Card</div>
+        </div>
+        <div class="plan-header recommended">
+          <div class="plan-name">Ultra</div>
+          <div class="plan-desc">All three AI accounts, SIM data, and full API access — the complete bundle.</div>
+          <div class="plan-price">¥XXX <span>/ yr</span></div>
+          <div class="plan-billing">Annual · Stripe · 微信 / 支付宝 / Card</div>
+        </div>
+        <div class="plan-header">
+          <div class="plan-name">Custom</div>
+          <div class="plan-desc">Other providers, multiple seats, or tailored quotas. Talk to us.</div>
+          <div class="plan-price">Contact <span>us</span></div>
+          <div class="plan-billing">Flexible billing</div>
+        </div>
+      </div>
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">AI Accounts</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">AI Accounts</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">AI Accounts</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>1 account (your choice)</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>OpenAI + Claude + Gemini</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Any provider, on request</div>
+      </div>
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">Connectivity</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">Connectivity</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">Connectivity</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell empty"><div class="dash">–</div>SIM / eSIM add-on</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>SIM / eSIM included</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>SIM / eSIM included</div>
+      </div>
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">API Router</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">API Router</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">API Router</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Router credit included</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Router credit included</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Custom quota</div>
+      </div>
+      <div class="feature-section-label">
+        <div class="feature-label-cell"><div class="feature-label-text">Support</div></div>
+        <div class="feature-label-cell recommended"><div class="feature-label-text">Support</div></div>
+        <div class="feature-label-cell"><div class="feature-label-text">Support</div></div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Standard support</div>
+        <div class="feature-cell recommended"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Priority support</div>
+        <div class="feature-cell"><div class="check"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Dedicated support</div>
+      </div>
+      <div class="plans-cta-row">
+        <div class="plan-cta-cell"><button class="plan-cta-btn">Get Pro</button></div>
+        <div class="plan-cta-cell recommended"><button class="plan-cta-btn">Get Ultra</button></div>
+        <div class="plan-cta-cell"><button class="plan-cta-btn">Contact us</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-section">
+    <h2 class="cta-title">Global AI, <em>starting today.</em></h2>
+    <p class="cta-sub">Create your account, get free credits, and try Model Lab before committing to a plan.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary">Get started free →</button>
+      <button class="btn-secondary">View pricing</button>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>© 2025 Nyquiste · 全球 AI 全家桶</span>
+    <div class="footer-links"><span>Privacy</span><span>Terms</span><span>Contact</span></div>
+  </div>
+</div>
+
+</body>
+</html>

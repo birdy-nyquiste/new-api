@@ -16,7 +16,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import axios from 'axios'
 import i18next from 'i18next'
 import { toast } from 'sonner'
 import { getHomePageContent } from '../api'
@@ -24,64 +25,103 @@ import type { HomePageContentResult } from '../types'
 
 const STORAGE_KEY = 'home_page_content'
 
+function readCachedContent() {
+  try {
+    return localStorage.getItem(STORAGE_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function cacheContent(content: string) {
+  try {
+    if (content) {
+      localStorage.setItem(STORAGE_KEY, content)
+    } else {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  } catch {
+    /* Storage can be unavailable in private browsing or locked-down contexts. */
+  }
+}
+
 /**
  * Hook to load and manage custom home page content
  * Supports both Markdown/HTML content and iframe URLs
  */
 export function useHomePageContent(): HomePageContentResult {
-  const [content, setContent] = useState<string>('')
+  const [content, setContent] = useState<string>(() => readCachedContent())
+  const [error, setError] = useState<string | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const loadContent = useCallback(
+    async (signal?: AbortSignal, options?: { showToast?: boolean }) => {
+      try {
+        const response = await getHomePageContent({ signal })
+        const { success, data, message } = response
+
+        if (signal?.aborted) return
+
+        if (success) {
+          const nextContent = typeof data === 'string' ? data : ''
+          setContent(nextContent)
+          setError(null)
+          cacheContent(nextContent)
+          return
+        }
+
+        const nextError =
+          message || i18next.t('Failed to load home page content')
+        setError(nextError)
+        if (options?.showToast) {
+          toast.error(nextError)
+        }
+      } catch (loadError) {
+        if (signal?.aborted || axios.isCancel(loadError)) return
+
+        const nextError = i18next.t('Failed to load home page content')
+        setError(nextError)
+        if (options?.showToast) {
+          toast.error(nextError)
+        }
+        // eslint-disable-next-line no-console
+        console.error('Failed to load home page content:', loadError)
+      } finally {
+        if (!signal?.aborted) {
+          setIsLoaded(true)
+          setIsRefreshing(false)
+        }
+      }
+    },
+    []
+  )
 
   useEffect(() => {
-    let mounted = true
+    const controller = new AbortController()
 
-    const loadContent = async () => {
-      // Load from localStorage first for immediate display
-      const cached = localStorage.getItem(STORAGE_KEY)
-      if (cached && mounted) {
-        setContent(cached)
-      }
-
-      try {
-        const response = await getHomePageContent()
-        const { success, data } = response
-
-        if (!mounted) return
-
-        if (success && data) {
-          setContent(data)
-          localStorage.setItem(STORAGE_KEY, data)
-        } else {
-          // Clear content if API returns empty
-          setContent('')
-          localStorage.removeItem(STORAGE_KEY)
-        }
-      } catch (error) {
-        if (!mounted) return
-        // eslint-disable-next-line no-console
-        console.error('Failed to load home page content:', error)
-        toast.error(i18next.t('Failed to load home page content'))
-      } finally {
-        if (mounted) {
-          setIsLoaded(true)
-        }
-      }
-    }
-
-    loadContent()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadContent(controller.signal)
 
     return () => {
-      mounted = false
+      controller.abort()
     }
-  }, [])
+  }, [loadContent])
 
-  let isUrl = false
-  try {
-    const url = new URL(content)
-    isUrl = url.protocol === 'http:' || url.protocol === 'https:'
-  } catch {
-    // not a URL
-  }
+  const isUrl = useMemo(() => {
+    try {
+      const url = new URL(content.trim())
+      return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+      return false
+    }
+  }, [content])
 
-  return { content, isLoaded, isUrl }
+  const reload = useCallback(async () => {
+    setIsRefreshing(true)
+    setError(null)
+    await loadContent(undefined, { showToast: true })
+  }, [loadContent])
+
+  return { content, error, isLoaded, isRefreshing, isUrl, reload }
 }
