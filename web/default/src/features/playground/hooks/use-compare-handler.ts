@@ -51,7 +51,10 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-function formatComparePromptMessage(prompt: string, files?: any[]): ChatCompletionMessage {
+function formatComparePromptMessage(
+  prompt: string,
+  files?: any[]
+): ChatCompletionMessage {
   if (files && files.length > 0) {
     const parts: ContentPart[] = []
     if (prompt) {
@@ -61,15 +64,15 @@ function formatComparePromptMessage(prompt: string, files?: any[]): ChatCompleti
       if (file.mediaType?.startsWith('image/')) {
         parts.push({
           type: 'image_url',
-          image_url: { url: file.url }
+          image_url: { url: file.url },
         })
       } else {
         parts.push({
           type: 'file',
           file: {
             filename: file.filename || '',
-            file_data: file.url
-          }
+            file_data: file.url,
+          },
         })
       }
     })
@@ -178,7 +181,11 @@ export function useCompareHandler({
     (prompt: string, selectedModels: ModelOption[], files?: any[]) => {
       const trimmed = prompt.trim()
       const hasAttachments = files && files.length > 0
-      if ((!trimmed && !hasAttachments) || selectedModels.length !== 3 || streamsRef.current.size > 0) {
+      if (
+        (!trimmed && !hasAttachments) ||
+        selectedModels.length !== 3 ||
+        streamsRef.current.size > 0
+      ) {
         return
       }
 
@@ -195,7 +202,13 @@ export function useCompareHandler({
 
       onRoundsUpdate((prev) => [
         ...prev,
-        { id: roundId, prompt: trimmed, results: initialResults, createdAt, files },
+        {
+          id: roundId,
+          prompt: trimmed,
+          results: initialResults,
+          createdAt,
+          files,
+        },
       ])
 
       selectedModels.forEach((model) => {
@@ -214,8 +227,46 @@ export function useCompareHandler({
           method: 'POST',
           payload: JSON.stringify(payload),
         })
+        let streamDone = false
+        let streamClosed = false
+        let pendingContent = ''
+        let pendingReasoning = ''
+        let pendingMetrics = false
+        let pendingFrame: number | null = null
+
+        const flushPending = () => {
+          pendingFrame = null
+          if (!pendingContent && !pendingReasoning && !pendingMetrics) return
+
+          const content = pendingContent
+          const reasoning = pendingReasoning
+          pendingContent = ''
+          pendingReasoning = ''
+          pendingMetrics = false
+
+          patchResult(roundId, resultId, (result) => ({
+            ...result,
+            status: 'streaming',
+            content: result.content + content,
+            reasoning:
+              reasoning || result.reasoning
+                ? `${result.reasoning || ''}${reasoning}`
+                : undefined,
+            metrics: { ...result.metrics, ...metrics },
+          }))
+        }
+
+        const schedulePendingFlush = () => {
+          if (pendingFrame !== null) return
+          pendingFrame = window.requestAnimationFrame(flushPending)
+        }
 
         const close = () => {
+          streamClosed = true
+          if (pendingFrame !== null) {
+            window.cancelAnimationFrame(pendingFrame)
+            pendingFrame = null
+          }
           source.close()
           finishStream(resultId)
         }
@@ -239,6 +290,8 @@ export function useCompareHandler({
 
         source.addEventListener('message', (event: MessageEvent) => {
           if (event.data === '[DONE]') {
+            streamDone = true
+            flushPending()
             metrics.responseTimeMs = Date.now() - startedAt
             patchResult(roundId, resultId, (result) => ({
               ...result,
@@ -265,21 +318,15 @@ export function useCompareHandler({
               metrics.promptTokens = chunk.usage.prompt_tokens
               metrics.completionTokens = chunk.usage.completion_tokens
               metrics.totalTokens = chunk.usage.total_tokens
+              pendingMetrics = true
             }
             if (!delta?.content && !delta?.reasoning_content && !chunk.usage) {
               return
             }
 
-            patchResult(roundId, resultId, (result) => ({
-              ...result,
-              status: 'streaming',
-              content: result.content + (delta?.content || ''),
-              reasoning:
-                delta?.reasoning_content || result.reasoning
-                  ? `${result.reasoning || ''}${delta?.reasoning_content || ''}`
-                  : undefined,
-              metrics: { ...result.metrics, ...metrics },
-            }))
+            pendingContent += delta?.content || ''
+            pendingReasoning += delta?.reasoning_content || ''
+            schedulePendingFlush()
           } catch {
             patchResult(roundId, resultId, (result) => ({
               ...result,
@@ -291,6 +338,14 @@ export function useCompareHandler({
         })
 
         source.addEventListener('error', (event: Event & { data?: string }) => {
+          if (
+            streamDone ||
+            streamClosed ||
+            (source as unknown as { readyState?: number }).readyState === 2
+          ) {
+            return
+          }
+
           let errorMessage = event.data || ERROR_MESSAGES.API_REQUEST_ERROR
           try {
             const parsed = event.data

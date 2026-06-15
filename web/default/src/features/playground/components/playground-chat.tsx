@@ -120,7 +120,14 @@ export function PlaygroundChat({
                       from={message.from}
                       key={`${message.key}-${version.id}-${versionIndex}`}
                     >
-                      <div className='w-full min-w-0 flex-1 basis-full py-1'>
+                      <div
+                        className={cn(
+                          'min-w-0 flex-1 basis-full py-1',
+                          message.from === MESSAGE_ROLES.USER
+                            ? 'flex flex-col items-end'
+                            : 'w-full'
+                        )}
+                      >
                         {isEditing(message.key) ? (
                           <div className='space-y-2'>
                             <Textarea
@@ -266,42 +273,60 @@ export function PlaygroundChat({
                                             getMessageContentStyles()
                                           )}
                                         >
-                                          {message.files && message.files.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mb-3 mt-1">
-                                              {message.files.map((file, idx) => {
-                                                const isImage = file.mediaType?.startsWith('image/')
-                                                return (
-                                                  <div
-                                                    key={idx}
-                                                    className="flex items-center gap-2 rounded-lg border bg-muted/40 p-2 text-sm max-w-xs"
-                                                  >
-                                                    {isImage ? (
-                                                      <img
-                                                        src={file.url}
-                                                        alt={file.filename || 'uploaded image'}
-                                                        className="size-10 rounded object-cover"
-                                                      />
-                                                    ) : (
-                                                      <div className="flex size-10 items-center justify-center rounded bg-primary/10 text-primary">
-                                                        <FileIcon size={20} />
+                                          {message.files &&
+                                            message.files.length > 0 && (
+                                              <div className='mt-1 mb-3 flex flex-wrap gap-2'>
+                                                {message.files.map(
+                                                  (file, idx) => {
+                                                    const isImage =
+                                                      file.mediaType?.startsWith(
+                                                        'image/'
+                                                      )
+                                                    return (
+                                                      <div
+                                                        key={idx}
+                                                        className='bg-muted/40 flex max-w-xs items-center gap-2 rounded-lg border p-2 text-sm'
+                                                      >
+                                                        {isImage ? (
+                                                          <img
+                                                            src={file.url}
+                                                            alt={
+                                                              file.filename ||
+                                                              'uploaded image'
+                                                            }
+                                                            className='size-10 rounded object-cover'
+                                                          />
+                                                        ) : (
+                                                          <div className='bg-primary/10 text-primary flex size-10 items-center justify-center rounded'>
+                                                            <FileIcon
+                                                              size={20}
+                                                            />
+                                                          </div>
+                                                        )}
+                                                        <div className='flex min-w-0 flex-col pr-2'>
+                                                          <span className='truncate text-xs font-medium'>
+                                                            {file.filename ||
+                                                              (isImage
+                                                                ? 'Image'
+                                                                : 'Attachment')}
+                                                          </span>
+                                                          {file.mediaType && (
+                                                            <span className='text-muted-foreground truncate font-mono text-[10px]'>
+                                                              {file.mediaType}
+                                                            </span>
+                                                          )}
+                                                        </div>
                                                       </div>
-                                                    )}
-                                                    <div className="flex flex-col min-w-0 pr-2">
-                                                      <span className="truncate font-medium text-xs">
-                                                        {file.filename || (isImage ? 'Image' : 'Attachment')}
-                                                      </span>
-                                                      {file.mediaType && (
-                                                        <span className="text-[10px] text-muted-foreground truncate font-mono">
-                                                          {file.mediaType}
-                                                        </span>
-                                                      )}
-                                                    </div>
-                                                  </div>
-                                                )
-                                              })}
-                                            </div>
+                                                    )
+                                                  }
+                                                )}
+                                              </div>
+                                            )}
+                                          {displayContent && (
+                                            <Response>
+                                              {displayContent}
+                                            </Response>
                                           )}
-                                          {displayContent && <Response>{displayContent}</Response>}
                                         </MessageContent>
                                         {isAssistant && (
                                           <ResponseMetrics
