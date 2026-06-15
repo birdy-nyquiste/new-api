@@ -37,7 +37,7 @@ export function Home() {
   const { t } = useTranslation()
   const { auth } = useAuthStore()
   const isAuthenticated = !!auth.user
-  const { content, error, isLoaded, isRefreshing, isUrl, reload } =
+  const { content, error, isRefreshing, isUrl, reload } =
     useHomePageContent()
 
   const defaultHome = (
@@ -73,21 +73,6 @@ export function Home() {
       <Footer />
     </>
   )
-
-  if (!isLoaded && !content) {
-    return (
-      <PublicLayout showMainContainer={false}>
-        <main
-          aria-busy='true'
-          className='flex min-h-screen items-center justify-center px-6'
-        >
-          <div className='border-border bg-card text-muted-foreground max-w-full rounded-lg border px-4 py-3 text-center text-sm [overflow-wrap:anywhere] shadow-sm'>
-            {t('Loading...')}
-          </div>
-        </main>
-      </PublicLayout>
-    )
-  }
 
   if (content) {
     return (

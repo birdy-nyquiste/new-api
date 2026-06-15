@@ -16,7 +16,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
@@ -27,20 +26,20 @@ export function PricingTeaser() {
   const rows = [
     {
       label: t('Description'),
-      pro: t('One AI account and connectivity to get started'),
-      ultra: t('All three accounts, SIM data, and full API access'),
-      custom: t('Other providers, multiple seats, or tailored quotas'),
+      pro: t('1 AI account (choose one of 3) + annual base plan'),
+      ultra: t('3 mainstream AI accounts + annual base plan'),
+      custom: t('Choose your own providers and subscription plans'),
     },
     {
       label: t('Price'),
-      pro: t('¥XXX / year'),
-      ultra: t('¥XXX / year'),
+      pro: `¥2,888 / ${t('yr')}`,
+      ultra: `¥8,888 / ${t('yr')}`,
       custom: t('Contact us'),
     },
     {
       label: t('Billing'),
-      pro: t('Annual · WeChat / Alipay / Card'),
-      ultra: t('Annual · WeChat / Alipay / Card'),
+      pro: t('Annual'),
+      ultra: t('Annual'),
       custom: t('Flexible'),
     },
     {
@@ -52,20 +51,14 @@ export function PricingTeaser() {
     {
       label: t('SIM / eSIM'),
       pro: t('Add-on available'),
-      ultra: t('Included'),
-      custom: t('Included'),
+      ultra: t('50 GB global data (add-on available)'),
+      custom: t('50 GB global data (add-on available)'),
     },
     {
-      label: t('Router credit'),
-      pro: t('Included'),
-      ultra: t('Included'),
-      custom: t('Custom quota'),
-    },
-    {
-      label: t('Model Lab'),
-      pro: t('Included'),
-      ultra: t('Included'),
-      custom: t('Included'),
+      label: t('API Credit'),
+      pro: '$50',
+      ultra: '$150',
+      custom: t('Add-on available'),
     },
     {
       label: t('Support'),
@@ -75,35 +68,23 @@ export function PricingTeaser() {
     },
   ]
 
-  const ctaHrefs = {
-    pro: '/sign-up?plan=pro',
-    ultra: '/sign-up?plan=ultra',
-    custom: 'mailto:support@quantumnous.com',
-  }
-
   return (
     <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
-      <div className='mx-auto max-w-4xl'>
+      <div className='mx-auto max-w-5xl'>
 
         {/* Header */}
         <AnimateInView className='mb-10 text-center' animation='fade-up'>
-          <p className='mb-3 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
-            {t('Pricing')}
-          </p>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
-            {t('Simple,')}&nbsp;
+            {t('All-in-one bundles,')}&nbsp;
             <span
               className='italic font-normal text-muted-foreground'
               style={{ fontFamily: 'var(--font-serif)' }}
             >
-              {t('transparent')}
+              {t('your choice.')}
             </span>
-            &nbsp;{t('plans.')}
           </h2>
           <p className='mx-auto mt-4 max-w-lg text-sm leading-relaxed text-muted-foreground'>
-            {t(
-              'All plans include Nyquiste Router credit and Model Lab access. Billed annually.'
-            )}
+            {t('All plans are billed annually.')}
           </p>
         </AnimateInView>
 
@@ -145,16 +126,13 @@ export function PricingTeaser() {
                     <Button
                       variant='outline'
                       className='min-h-[44px] w-full rounded-lg text-xs'
-                      render={<Link to={ctaHrefs.pro} />}
                     >
                       {t('Get Pro')}
                     </Button>
                   </td>
                   <td className='px-4 py-4'>
                     <Button
-                      variant='outline'
                       className='min-h-[44px] w-full rounded-lg text-xs'
-                      render={<Link to={ctaHrefs.ultra} />}
                     >
                       {t('Get Ultra')}
                     </Button>
@@ -163,7 +141,6 @@ export function PricingTeaser() {
                     <Button
                       variant='outline'
                       className='min-h-[44px] w-full rounded-lg text-xs'
-                      render={<a href={ctaHrefs.custom} />}
                     >
                       {t('Contact us')}
                     </Button>

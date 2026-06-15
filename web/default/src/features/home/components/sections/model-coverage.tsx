@@ -28,37 +28,36 @@ export function ModelCoverage() {
       name: 'OpenAI',
       plan: 'ChatGPT Plus / Pro',
       models: [
-        { name: 'GPT-4o', category: t('Flagship') },
-        { name: 'o3 / o4-mini', category: t('Reasoning') },
-        { name: 'GPT-4.1', category: t('Latest') },
-        { name: 'DALL·E 3 · Sora', category: t('Image / Video') },
+        { name: 'GPT-5.5 Pro', category: t('Most capable') },
+        { name: 'GPT-5.5', category: t('Flagship') },
+        { name: 'GPT-5.4', category: t('Fast') },
       ],
       description: t(
-        'The most widely used AI platform — ideal for writing, coding, and multimodal tasks.'
+        "OpenAI's smartest models — GPT-5.5 Pro leads on reasoning and agentic tasks. Includes Deep Research, Sora, and Codex."
       ),
     },
     {
       name: 'Anthropic',
-      plan: 'Claude Pro',
+      plan: 'Claude Pro / Max',
       models: [
-        { name: 'Claude Opus 4', category: t('Most capable') },
+        { name: 'Claude Fable 5', category: t('Most capable') },
+        { name: 'Claude Opus 4.8', category: t('Complex tasks') },
         { name: 'Claude Sonnet 4.6', category: t('Balanced') },
-        { name: 'Claude Haiku 4.5', category: t('Fast') },
       ],
       description: t(
-        'Exceptional at nuanced reasoning, long documents, and safety-focused tasks.'
+        "Anthropic's model family — from Fable 5's frontier reasoning to Sonnet 4.6's near-Opus performance with a 1M-token context window."
       ),
     },
     {
       name: 'Google',
-      plan: 'Gemini Advanced',
+      plan: 'Google AI Pro / Ultra',
       models: [
-        { name: 'Gemini 2.5 Pro', category: t('Flagship') },
-        { name: 'Gemini 2.0 Flash', category: t('Fast') },
-        { name: 'NotebookLM Plus', category: t('Research') },
+        { name: 'Gemini 3.5 Pro', category: t('Flagship') },
+        { name: 'Gemini 3.5 Flash', category: t('Fast') },
+        { name: 'Gemini 3.5 Thinking', category: t('Reasoning') },
       ],
       description: t(
-        'Deep integration with Google Search and a 1M-token context window for large-scale research.'
+        'Gemini 3.5 delivers frontier performance with 1M-token context. Flash outperforms older Pro models on coding and agentic tasks at 4× the speed.'
       ),
     },
   ]
@@ -67,13 +66,10 @@ export function ModelCoverage() {
 
   return (
     <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
-      <div className='mx-auto max-w-4xl'>
+      <div className='mx-auto max-w-5xl'>
 
         {/* Header */}
         <AnimateInView className='mb-10 text-center' animation='fade-up'>
-          <p className='mb-3 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
-            {t('What we support')}
-          </p>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
             {t("The world's leading AI,")}&nbsp;
             <span

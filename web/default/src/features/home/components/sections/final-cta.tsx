@@ -33,7 +33,7 @@ export function FinalCTA({ isAuthenticated }: FinalCTAProps) {
   }
 
   return (
-    <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
+    <section className='font-landing border-t border-border/50 px-6 py-24 md:py-32 lg:py-40'>
       <AnimateInView className='mx-auto max-w-2xl text-center' animation='scale-in'>
         <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
           {t('Global AI,')}&nbsp;

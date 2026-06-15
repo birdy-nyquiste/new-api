@@ -25,41 +25,28 @@ export function ModelLabSpotlight() {
   const { t } = useTranslation()
 
   const features = [
-    t('Side-by-side responses in real time'),
-    t('Switch models without retyping your prompt'),
-    t('Token count and response time for each model'),
+    t('One prompt, real-time side-by-side comparison across models'),
+    t('Bring in a judge model to evaluate response quality'),
+    t('Chat with any model interactively'),
   ]
 
   return (
-    <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
-      <div className='mx-auto max-w-4xl'>
+    <section className='font-landing border-t border-border/50 px-6 py-12 md:py-16 lg:py-20'>
+      <div className='mx-auto max-w-5xl'>
         <AnimateInView animation='fade-up'>
-          <div className='grid grid-cols-1 items-center gap-8 rounded-2xl border border-border p-8 md:grid-cols-[1fr_auto] md:gap-12 md:p-12'>
+          <div className='grid grid-cols-1 items-start gap-8 rounded-2xl border border-border p-8 md:grid-cols-[1fr_auto] md:gap-12 md:p-12'>
 
             {/* Left: copy */}
             <div>
-              <p className='mb-3 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
-                {t('Model Lab')}
-              </p>
               <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
-                {t('Compare every model,')}&nbsp;
-                <span
-                  className='italic font-normal text-muted-foreground'
-                  style={{ fontFamily: 'var(--font-serif)' }}
-                >
-                  {t('with one prompt.')}
-                </span>
+                {t('Model Lab')}
               </h2>
-              <p className='mt-4 max-w-[46ch] text-sm leading-relaxed text-muted-foreground'>
-                {t(
-                  'Send the same message to GPT-4o, Claude, and Gemini simultaneously. See how each model thinks, writes, and reasons — then decide which fits your workflow.'
-                )}
-              </p>
+
               <ul className='mt-5 space-y-2'>
                 {features.map((feature) => (
                   <li
                     key={feature}
-                    className='flex items-center gap-2.5 text-sm text-muted-foreground'
+                    className='flex items-center gap-2.5 text-base text-muted-foreground'
                   >
                     <span
                       className='h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary'
@@ -74,7 +61,7 @@ export function ModelLabSpotlight() {
             {/* Right: CTA */}
             <div className='flex flex-col items-center gap-3 md:min-w-[180px]'>
               <span className='rounded-full border border-border px-3 py-1.5 text-center text-[10px] font-semibold text-muted-foreground'>
-                {t('New accounts get free credits')}
+                {t('No subscription needed to try')}
               </span>
               <Button
                 className='min-h-[44px] w-full rounded-lg'

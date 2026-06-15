@@ -60,14 +60,11 @@ export function PainVsSolution() {
   ]
 
   return (
-    <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
+    <section className='font-landing border-t border-border/50 px-6 py-12 md:py-16 lg:py-20'>
       <div className='mx-auto max-w-4xl'>
 
         {/* Header */}
-        <AnimateInView className='mb-12 text-center' animation='fade-up'>
-          <p className='mb-3 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
-            {t('Why Nyquiste Router')}
-          </p>
+        <AnimateInView className='mb-10 text-center' animation='fade-up'>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground break-words'>
             {t('Getting global AI')}&nbsp;
             <span
@@ -81,14 +78,67 @@ export function PainVsSolution() {
           </h2>
         </AnimateInView>
 
-        {/* Three-column grid */}
-        <div className='grid grid-cols-1 gap-8 md:grid-cols-[1fr_auto_1fr] md:gap-0'>
+        {/* ── Desktop: 3-column flex, no table lines ── */}
+        <AnimateInView animation='fade-up' className='hidden md:flex items-stretch' delay={100}>
 
-          {/* Before */}
-          <AnimateInView
-            className='md:border-r md:border-border md:pr-8'
-            animation='fade-right'
-          >
+          {/* Left: pain list */}
+          <div className='flex-1 pr-8'>
+            <p className='mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground'>
+              <span className='h-px w-4 bg-muted-foreground/40' aria-hidden />
+              {t('Without Nyquiste Router')}
+            </p>
+            <ol className='space-y-5'>
+              {painItems.map((item, i) => (
+                <li key={i} className='flex items-start gap-2.5 text-sm text-muted-foreground line-through decoration-muted-foreground/40'>
+                  <span className='mt-0.5 flex-shrink-0 text-xs font-bold text-muted-foreground/40'>{i + 1}.</span>
+                  {item}
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Center: arrow, vertically centered */}
+          <div className='flex items-center justify-center px-8'>
+            <div className='flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground/50'>
+              <ArrowRight size={14} />
+            </div>
+          </div>
+
+          {/* Right: solution list */}
+          <div className='flex-1 pl-8'>
+            <p className='mb-6 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
+              <span className='h-px w-4 bg-primary/50' aria-hidden />
+              {t('With Nyquiste Router')}
+            </p>
+            <ol className='space-y-5'>
+              {solutionItems.map((item, i) => (
+                <li key={i} className='text-sm'>
+                  <p className='font-semibold text-foreground'>{item.title}</p>
+                  {item.body && (
+                    <p className='mt-0.5 text-muted-foreground'>{item.body}</p>
+                  )}
+                  {item.chips && (
+                    <div className='mt-1.5 flex flex-wrap gap-1.5'>
+                      {item.chips.map((chip) => (
+                        <span
+                          key={chip}
+                          className='rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground'
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </AnimateInView>
+
+        {/* ── Mobile: stacked list → arrow → list ── */}
+        <div className='grid grid-cols-1 gap-6 md:hidden'>
+
+          <AnimateInView animation='fade-right'>
             <p className='mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground'>
               <span className='h-px w-4 bg-muted-foreground/40' aria-hidden />
               {t('Without Nyquiste Router')}
@@ -108,15 +158,13 @@ export function PainVsSolution() {
             </ol>
           </AnimateInView>
 
-          {/* Arrow divider */}
-          <div className='flex items-center justify-center md:px-6'>
+          <div className='flex justify-center'>
             <div className='flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground/50'>
-              <ArrowRight size={14} />
+              <ArrowRight size={14} className='rotate-90' />
             </div>
           </div>
 
-          {/* After */}
-          <AnimateInView className='md:pl-8' animation='fade-left'>
+          <AnimateInView animation='fade-left'>
             <p className='mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
               <span className='h-px w-4 bg-primary/50' aria-hidden />
               {t('With Nyquiste Router')}
@@ -145,6 +193,7 @@ export function PainVsSolution() {
             </ol>
           </AnimateInView>
         </div>
+
       </div>
     </section>
   )

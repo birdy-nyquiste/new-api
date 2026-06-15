@@ -41,7 +41,7 @@ export function ManifestRow({
           <span className='text-foreground min-w-0 text-sm font-semibold tracking-tight'>
             {title}
           </span>
-          <span className='border-border text-muted-foreground/70 max-w-full rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest break-words uppercase'>
+          <span className='text-muted-foreground/50 text-[10px] font-semibold uppercase tracking-widest'>
             {tag}
           </span>
         </div>

@@ -30,7 +30,7 @@ export function Hero({ isAuthenticated }: HeroProps) {
   const { t } = useTranslation()
 
   return (
-    <section className='font-landing overflow-hidden px-6 py-16 md:py-24 lg:py-28'>
+    <section className='font-landing overflow-hidden px-6 py-16 md:py-24 lg:py-32'>
       <div className='mx-auto max-w-5xl'>
         <div className='grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_400px] lg:gap-12'>
 
@@ -97,7 +97,7 @@ export function Hero({ isAuthenticated }: HeroProps) {
           {/* Right column: bundle manifest panel */}
           <div
             className='landing-animate-fade-up rounded-xl border border-border bg-muted/40 p-5'
-            style={{ animationDelay: '80ms' }}
+            style={{ animationDelay: '220ms' }}
           >
             <p className='mb-3 text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground/60'>
               {t("What's in the package")}
@@ -126,11 +126,6 @@ export function Hero({ isAuthenticated }: HeroProps) {
               )}
               tag={t('Included')}
             />
-            <p className='mt-3 border-t border-border pt-3 text-[11px] leading-relaxed text-muted-foreground/60'>
-              {t(
-                'Sign up to explore Model Lab free — compare models side by side, then choose a plan.'
-              )}
-            </p>
           </div>
         </div>
       </div>

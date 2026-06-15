@@ -44,7 +44,7 @@ export function ProviderCard({
           {plan}
         </span>
       </div>
-      <div className='mb-4 flex-1 space-y-1.5'>
+      <div className='mb-4 space-y-1.5'>
         {models.map((model) => (
           <div
             key={model.name}
@@ -59,7 +59,7 @@ export function ProviderCard({
           </div>
         ))}
       </div>
-      <p className='border-border text-muted-foreground/70 border-t pt-3 text-[11px] leading-relaxed break-words italic'>
+      <p className='flex-1 border-border text-muted-foreground/70 border-t pt-3 text-[11px] leading-relaxed break-words italic'>
         {description}
       </p>
     </div>
