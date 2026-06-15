@@ -36,7 +36,7 @@ Individual professionals — people who want AI to just work, not a technical au
 ### 3.2 Visual Direction
 **Clean & Confident** — light backgrounds, near-black typography, generous whitespace. Equal first-class support for dark mode using the existing OKLch CSS variable system. No gradient text. No glow effects.
 
-**Typography:** Plus Jakarta Sans (headings + body) + Lora italic (editorial accent on headline second lines). Plus Jakarta Sans is new — add via `<link>` in `web/default/index.html`. Lora is already present in the project's `--font-serif` stack (`theme.css`). Existing Public Sans remains for non-landing UI.
+**Typography:** Plus Jakarta Sans (headings + body) + Lora italic (editorial accent on headline second lines). Plus Jakarta Sans requires a new dependency: `bun add @fontsource-variable/plus-jakarta-sans` from `web/default/`, then import in `index.css`. Lora is already present — `@fontsource-variable/lora` is already installed and imported in `web/default/src/styles/index.css`, and `--font-serif: 'Lora Variable', 'Lora', ...` is already set in `theme.css`. Existing Public Sans remains for non-landing UI.
 
 **Color:** Existing OKLch tokens, lightly extended. All neutrals carry a subtle blue tint (`oklch(xx% 0.01 250)`) for subconscious brand cohesion. Accent: `oklch(52% 0.14 248)` light / `oklch(68% 0.14 248)` dark.
 
@@ -209,18 +209,43 @@ features/home/
 
 ### Styling
 - Uses existing Tailwind CSS 4 + OKLch CSS variable system from `theme.css`
-- Plus Jakarta Sans: add `<link>` preconnect + stylesheet in `web/default/index.html`
-- Lora: already in `--font-serif` in `theme.css` — no action needed
+- **Plus Jakarta Sans** (new dependency): run `bun add @fontsource-variable/plus-jakarta-sans` from `web/default/`, then add `@import '@fontsource-variable/plus-jakarta-sans'` in `web/default/src/styles/index.css`
+- **Lora** (already available): `@fontsource-variable/lora` is already in `package.json` and imported in `index.css`; `--font-serif` is already set in `theme.css` — no action needed
 - All `dark:` variants mirror the light layout with inverted CSS variable values
-- No new npm dependencies required
+
+### Integration with Current Implementation
+The home page entry point at `web/default/src/features/home/index.tsx` is **preserved unchanged** — it handles:
+1. `useHomePageContent()` hook — checks for a custom Markdown/iframe home page from the backend; if set, renders that instead of the default landing page. This check stays.
+2. Renders `<PublicLayout showMainContainer={false}>` — sections are full-width with no container padding imposed by the layout wrapper. Each new section component controls its own max-width and padding.
+3. Props: `isAuthenticated: boolean` is passed down to sections that gate content (Hero, Final CTA, free credits badge).
+
+**What changes:** The section components rendered inside `<PublicLayout>` are replaced. Old components (`Hero`, `Features`, `HowItWorks`, `CTA`) are swapped for the new ones. The existing `<Footer>` import from `@/components/layout/components/footer` remains at the bottom.
+
+**Public header** (`public-header.tsx`) is not modified — it already includes nav links, language switcher, theme switch, and auth buttons.
 
 ### i18n
-- All user-visible strings wrapped in `t('...')` via `useTranslation()`
-- New keys added to `web/default/src/i18n/locales/en.json`
-- Run `bun run i18n:sync` from `web/default/` after adding keys to generate stubs in zh/fr/ru/ja/vi
-- Brand name `"Nyquiste 全球 AI 全家桶"` is not a translation key — rendered as a literal string
-- Model names (GPT-4o, Claude Sonnet, etc.) are not translated
-- Payment method names (微信支付, 支付宝, 银行卡) are not translated
+
+**Ground truth language is Chinese.** All home page copy is written in Chinese first. Other locales (en, fr, ru, ja, vi) are translated from Chinese.
+
+**Key convention:** i18n keys follow the existing project pattern — English-readable developer identifiers (e.g., `"Global AI, without the setup."`). The zh.json value is the canonical Chinese copy authored by the product owner. en.json and other locales contain translations derived from the Chinese.
+
+| Locale | Role |
+|--------|------|
+| zh | Canonical copy — written first, authoritative |
+| en | Translated from zh |
+| fr, ru, ja, vi | Translated from zh |
+
+**Workflow for new strings:**
+1. Write the Chinese copy in `zh.json` under the English key
+2. Write the English translation in `en.json`
+3. Run `bun run i18n:sync` from `web/default/` to generate stubs in fr/ru/ja/vi
+4. Fill in remaining locale stubs manually or via translation tooling
+
+**Brand name rules:**
+- `"Nyquiste"` — company name, **never translated**, never in a `t()` key, rendered as a literal string everywhere
+- `"全球 AI 全家桶"` — product tagline, **translatable**, wrapped in `t()`, zh.json value is the canonical form
+- Model names (GPT-4o, Claude Sonnet, Gemini 2.5 Pro, etc.) — not translated, rendered as literals
+- Payment method names (微信支付, 支付宝, 银行卡) — not translated, rendered as literals in all locales
 
 ### Animations
 - Existing `AnimateInView` component used for scroll-triggered fade-up on section headers and cards
@@ -228,11 +253,30 @@ features/home/
 - No new animation primitives needed
 
 ### Responsive
-- Hero: stacks to single column below `lg` breakpoint (manifest panel moves below headline)
-- Pain vs Solution: stacks to vertical on mobile (before → arrow → after, top to bottom)
-- Model Coverage: 3-column → 1-column stack on mobile
-- Pricing table: horizontal scroll on mobile (or simplified card stack — TBD at implementation)
-- Model Lab callout: stacks to single column on mobile
+
+All sections are implemented **mobile-first** — base styles target `≥375px`, breakpoints widen at `sm` (640px), `md` (768px), `lg` (1024px).
+
+**Touch targets:** All interactive elements (buttons, links, chips) must be at least `44×44px` touch target on mobile (use `min-h-[44px]` + sufficient padding).
+
+**Section-by-section breakdown:**
+
+| Section | Mobile (< md) | Tablet (md–lg) | Desktop (≥ lg) |
+|---------|--------------|----------------|----------------|
+| **Hero** | Single column; manifest panel stacks below headline; CTAs full-width | Single column; manifest panel below | Two-column asymmetric |
+| **Pain vs Solution** | Vertical stack: before-block → arrow → after-block; no side-by-side columns | Vertical stack | Three-column (before / arrow / after) |
+| **Model Coverage** | Single column; each provider card full-width | Two-column grid (1 card full-width below) | Asymmetric 3-column |
+| **Model Lab** | Single column; CTA stack below copy | Single column | Two-column (copy left, CTA right) |
+| **Pricing** | Horizontal-scroll container wrapping the `<table>`; or collapsed to card-per-plan view | Horizontal scroll | Full table visible |
+| **Final CTA** | Centered, buttons full-width | Same | Centered, buttons inline |
+
+**Typography scaling:** All headline `font-size` values use `clamp()` for fluid scaling between mobile and desktop minimums/maximums:
+- Hero headline: `clamp(1.75rem, 5vw, 2.75rem)`
+- Section headlines: `clamp(1.5rem, 3.5vw, 2.2rem)`
+- Eyebrows and labels: fixed size (no scaling needed)
+
+**Spacing:** Section vertical padding scales: `py-12 md:py-16 lg:py-20` pattern.
+
+**Nav (mobile):** The existing `PublicHeader` already handles mobile navigation — no changes needed.
 
 ### Authenticated Users
 The existing `isAuthenticated` prop is preserved. When authenticated:
