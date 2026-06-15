@@ -224,6 +224,17 @@ export function usePlaygroundState() {
     [activeSession.mode, sessions, persistSessions]
   )
 
+  const startNewSession = useCallback(
+    (mode: PlaygroundMode = 'chat') => {
+      const session = createDefaultSession({ mode })
+      persistSessions((prev) => [...prev, session])
+      setActiveSessionId(session.id)
+      saveActiveSessionId(session.id)
+      return session.id
+    },
+    [persistSessions]
+  )
+
   const switchSession = useCallback((sessionId: string) => {
     setActiveSessionId(sessionId)
     saveActiveSessionId(sessionId)
@@ -299,6 +310,7 @@ export function usePlaygroundState() {
     clearMessages,
     resetConfig,
     createSession,
+    startNewSession,
     switchSession,
     renameSession,
     deleteSession,

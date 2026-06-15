@@ -16,7 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useMemo, useRef, useState, useEffect, type RefObject } from 'react'
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  type RefObject,
+} from 'react'
 import {
   Loader2Icon,
   SquareIcon,
@@ -176,6 +183,7 @@ export function ComparePanel({
 }: ComparePanelProps) {
   const { t } = useTranslation()
   const [hasPrompt, setHasPrompt] = useState(false)
+  const hasPromptRef = useRef(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [expandedResultKey, setExpandedResultKey] = useState<string | null>(
     null
@@ -257,15 +265,22 @@ export function ComparePanel({
       return
     shouldStickToBottomRef.current = true
     onSend(text || '', selectedModels, message.files)
+    hasPromptRef.current = false
     setHasPrompt(false)
   }
+
+  const updateHasPrompt = useCallback((next: boolean) => {
+    if (hasPromptRef.current === next) return
+    hasPromptRef.current = next
+    setHasPrompt(next)
+  }, [])
 
   const handleSuggestionClick = (prompt: string) => {
     if (selectedModels.length !== 3 || isComparing) return
     const textarea = textareaRef.current
     if (!textarea) return
     textarea.value = t(prompt)
-    setHasPrompt(true)
+    updateHasPrompt(true)
     setTimeout(() => {
       textarea.focus()
       textarea.selectionStart = textarea.selectionEnd = textarea.value.length
@@ -404,9 +419,10 @@ export function ComparePanel({
 
   const renderInputBar = () => {
     return (
-      <div className='grid shrink-0 gap-2 px-2 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] sm:gap-4 sm:px-1 sm:pb-0 md:pb-4'>
+      <div className='grid w-full max-w-full min-w-0 shrink-0 gap-2 overflow-hidden px-0 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:gap-4 sm:px-1 sm:pb-0 md:pb-4'>
         <PromptInput
-          groupClassName='rounded-lg sm:rounded-xl'
+          className='max-w-full min-w-0 overflow-hidden'
+          groupClassName='rounded-lg has-[[data-slot=input-group-control]:focus-visible]:border-input has-[[data-slot=input-group-control]:focus-visible]:ring-0 sm:rounded-xl'
           onSubmit={submit}
           accept='image/*,application/pdf,text/*,application/json'
           maxFiles={5}
@@ -415,7 +431,7 @@ export function ComparePanel({
         >
           <CompareInputInner
             hasPrompt={hasPrompt}
-            setHasPrompt={setHasPrompt}
+            setHasPrompt={updateHasPrompt}
             textareaRef={textareaRef}
             isComparing={isComparing}
             selectedModels={selectedModels}
@@ -434,7 +450,7 @@ export function ComparePanel({
             onStopEvaluation={onStopEvaluation}
           />
         </PromptInput>
-        <div className='block'>
+        <div className='block max-w-full min-w-0 overflow-hidden'>
           <Suggestions>
             {suggestions.map(
               ({ icon: Icon, text, color, prompt: sugPrompt }) => (
@@ -459,7 +475,7 @@ export function ComparePanel({
 
   if (rounds.length === 0) {
     return (
-      <div className='relative flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8'>
+      <div className='relative flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-x-hidden overflow-y-auto p-4 md:p-8'>
         {/* Brand Logo & Title */}
         <div className='mb-6 flex flex-col items-center gap-2 text-center select-none'>
           <div className='bg-muted flex size-12 items-center justify-center rounded-2xl'>
@@ -498,7 +514,12 @@ export function ComparePanel({
         )}
 
         {/* Input Bar (Centered) */}
-        <div className='w-full max-w-4xl shrink-0'>{renderInputBar()}</div>
+        <div
+          className='mx-auto w-full min-w-0 shrink-0 sm:max-w-4xl'
+          style={{ maxWidth: 'min(56rem, calc(100dvw - 2rem))' }}
+        >
+          {renderInputBar()}
+        </div>
 
         <Dialog open={selectorOpen} onOpenChange={setSelectorOpen}>
           <DialogContent className='sm:max-w-4xl'>
@@ -1147,7 +1168,7 @@ function CompareInputInner({
       <PromptInputTextarea
         autoComplete='off'
         autoCorrect='off'
-        className='max-h-28 min-h-12 px-3 text-base sm:max-h-48 sm:min-h-16 sm:px-5 md:text-base'
+        className='field-sizing-fixed max-h-28 min-h-12 px-3 text-base sm:field-sizing-content sm:max-h-48 sm:min-h-16 sm:px-5 md:text-base'
         disabled={isComparing}
         onChange={(event) => setHasPrompt(event.target.value.trim().length > 0)}
         placeholder={
@@ -1159,7 +1180,7 @@ function CompareInputInner({
         spellCheck={false}
       />
 
-      <PromptInputFooter className='p-1.5 sm:p-2.5'>
+      <PromptInputFooter className='min-w-0 gap-1 p-1.5 sm:p-2.5'>
         <PromptInputTools>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -1195,7 +1216,7 @@ function CompareInputInner({
           />
         </PromptInputTools>
 
-        <div className='flex flex-wrap items-center justify-end gap-1.5 sm:gap-2'>
+        <div className='flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2'>
           <GroupSelector
             selectedGroup={groupValue}
             groups={groups}

@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useRef, useState, type RefObject } from 'react'
+import { useCallback, useRef, useState, type RefObject } from 'react'
 import {
   PlusIcon,
   PaperclipIcon,
@@ -95,6 +95,7 @@ const suggestions = [
 export function PlaygroundInput(props: PlaygroundInputProps) {
   const { t } = useTranslation()
   const [hasText, setHasText] = useState(false)
+  const hasTextRef = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const handleSubmit = (message: PromptInputMessage) => {
@@ -102,14 +103,21 @@ export function PlaygroundInput(props: PlaygroundInputProps) {
       return
     if (props.disabled) return
     props.onSubmit(message)
+    hasTextRef.current = false
     setHasText(false)
   }
+
+  const updateHasText = useCallback((next: boolean) => {
+    if (hasTextRef.current === next) return
+    hasTextRef.current = next
+    setHasText(next)
+  }, [])
 
   const handleSuggestionClick = (prompt: string) => {
     const textarea = textareaRef.current
     if (!textarea) return
     textarea.value = t(prompt)
-    setHasText(true)
+    updateHasText(true)
     setTimeout(() => {
       textarea.focus()
       textarea.selectionStart = textarea.selectionEnd = textarea.value.length
@@ -117,9 +125,10 @@ export function PlaygroundInput(props: PlaygroundInputProps) {
   }
 
   return (
-    <div className='grid shrink-0 gap-2 px-2 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] sm:gap-4 sm:px-1 sm:pb-0 md:pb-4'>
+    <div className='grid w-full max-w-full min-w-0 shrink-0 gap-2 overflow-hidden px-0 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:gap-4 sm:px-1 sm:pb-0 md:pb-4'>
       <PromptInput
-        groupClassName='rounded-lg sm:rounded-xl'
+        className='max-w-full min-w-0 overflow-hidden'
+        groupClassName='rounded-lg has-[[data-slot=input-group-control]:focus-visible]:border-input has-[[data-slot=input-group-control]:focus-visible]:ring-0 sm:rounded-xl'
         onSubmit={handleSubmit}
         accept='image/*,application/pdf,text/*,application/json'
         maxFiles={5}
@@ -129,12 +138,12 @@ export function PlaygroundInput(props: PlaygroundInputProps) {
         <PlaygroundInputInner
           {...props}
           hasText={hasText}
-          setHasText={setHasText}
+          setHasText={updateHasText}
           textareaRef={textareaRef}
         />
       </PromptInput>
 
-      <div className='block'>
+      <div className='block max-w-full min-w-0 overflow-hidden'>
         <Suggestions>
           {suggestions.map(({ icon: Icon, text: sugText, color, prompt }) => (
             <Suggestion
@@ -238,14 +247,14 @@ function PlaygroundInputInner({
         autoCorrect='off'
         autoCapitalize='off'
         spellCheck={false}
-        className='max-h-28 min-h-12 px-3 text-base sm:max-h-48 sm:min-h-16 sm:px-5 md:text-base'
+        className='field-sizing-fixed max-h-28 min-h-12 px-3 text-base sm:field-sizing-content sm:max-h-48 sm:min-h-16 sm:px-5 md:text-base'
         disabled={disabled}
         onChange={(event) => setHasText(event.target.value.trim().length > 0)}
         placeholder={t('Ask anything')}
         ref={textareaRef}
       />
 
-      <PromptInputFooter className='p-1.5 sm:p-2.5'>
+      <PromptInputFooter className='min-w-0 gap-1 p-1.5 sm:p-2.5'>
         <PromptInputTools>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -281,7 +290,7 @@ function PlaygroundInputInner({
           />
         </PromptInputTools>
 
-        <div className='flex items-center gap-1.5 md:gap-2'>
+        <div className='flex min-w-0 shrink-0 items-center gap-1.5 md:gap-2'>
           <ModelGroupSelector
             selectedModel={modelValue}
             models={models}

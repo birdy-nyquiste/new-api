@@ -16,9 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useSystemConfig } from '@/hooks/use-system-config'
 import {
   Columns2,
   FlaskConicalIcon,
@@ -28,6 +33,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { useSystemConfig } from '@/hooks/use-system-config'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input'
@@ -70,6 +76,7 @@ export function Playground() {
     setGroups,
     updateConfig,
     createSession,
+    startNewSession,
     switchSession,
     renameSession,
     deleteSession,
@@ -241,12 +248,10 @@ export function Playground() {
     }
   }, [mode, config.web_search, webSearchSupport, updateConfig])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const queryMode = params.get('mode')
-    if (queryMode === 'compare' || queryMode === 'chat') {
-      updateMode(queryMode)
-    }
+    startNewSession(queryMode === 'compare' ? 'compare' : 'chat')
     // Run only on mount; subsequent mode changes are handled by the tabs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -420,7 +425,7 @@ export function Playground() {
             onStopEvaluation={stopEvaluation}
           />
         ) : isSessionEmpty ? (
-          <div className='relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-4 md:p-8'>
+          <div className='relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-x-hidden overflow-y-auto p-4 md:p-8'>
             {/* Brand Logo & Title */}
             <div className='mb-6 flex flex-col items-center gap-2 text-center select-none'>
               <div className='bg-muted flex size-12 items-center justify-center rounded-2xl'>
@@ -457,7 +462,10 @@ export function Playground() {
             </div>
 
             {/* Input Bar (Centered) */}
-            <div className='w-full max-w-4xl shrink-0'>
+            <div
+              className='mx-auto w-full min-w-0 shrink-0 sm:max-w-4xl'
+              style={{ maxWidth: 'min(56rem, calc(100dvw - 2rem))' }}
+            >
               <PlaygroundInput
                 disabled={isGenerating}
                 groups={groups}
