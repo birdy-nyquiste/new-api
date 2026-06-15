@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Settings, Zap, BarChart3 } from 'lucide-react'
+import { CreditCard, Wifi, Cpu } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { AnimateInView } from '@/components/animate-in-view'
 
@@ -26,25 +26,27 @@ export function HowItWorks() {
   const steps = [
     {
       num: '1',
-      title: t('Configure'),
+      title: t('Choose Your Plan'),
       desc: t(
-        'Add your API keys, set up channels and configure access permissions'
+        'Select a Plus, Pro, or Max subscription based on your business or personal needs.'
       ),
-      icon: <Settings className='size-6' strokeWidth={1.5} />,
+      icon: <CreditCard className='size-6' strokeWidth={1.5} />,
     },
     {
       num: '2',
-      title: t('Connect'),
+      title: t('Activate SIM Traffic'),
       desc: t(
-        'Connect through OpenAI, Claude, Gemini, and other compatible API routes'
+        'Connect via a compliant China Telecom (Hong Kong) SIM card to establish a secure and stable connection.'
       ),
-      icon: <Zap className='size-6' strokeWidth={1.5} />,
+      icon: <Wifi className='size-6' strokeWidth={1.5} />,
     },
     {
       num: '3',
-      title: t('Monitor'),
-      desc: t('Track usage, costs and performance with real-time analytics'),
-      icon: <BarChart3 className='size-6' strokeWidth={1.5} />,
+      title: t('Access Global AI'),
+      desc: t(
+        'Directly access ChatGPT, Claude, and Gemini with zero hassle registering accounts or configuring proxies.'
+      ),
+      icon: <Cpu className='size-6' strokeWidth={1.5} />,
     },
   ]
 
@@ -66,7 +68,7 @@ export function HowItWorks() {
               key={step.num}
               delay={i * 150}
               animation='fade-up'
-              className='relative flex flex-col items-center text-center'
+              className='relative flex min-w-0 flex-col items-center text-center'
             >
               <div className='relative mb-6'>
                 <div className='text-muted-foreground border-border/50 bg-muted/30 flex size-16 items-center justify-center rounded-2xl border transition-colors'>
@@ -76,8 +78,10 @@ export function HowItWorks() {
                   {step.num}
                 </div>
               </div>
-              <h3 className='mb-2 text-base font-semibold'>{step.title}</h3>
-              <p className='text-muted-foreground max-w-[240px] text-sm leading-relaxed'>
+              <h3 className='mb-2 text-base font-semibold break-words'>
+                {step.title}
+              </h3>
+              <p className='text-muted-foreground max-w-[240px] text-sm leading-relaxed break-words'>
                 {step.desc}
               </p>
             </AnimateInView>

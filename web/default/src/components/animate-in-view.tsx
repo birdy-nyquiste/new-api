@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useRef, useEffect, type ReactNode } from 'react'
+import { useRef, useEffect, type CSSProperties, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 interface AnimateInViewProps {
@@ -38,7 +38,7 @@ export function AnimateInView(props: AnimateInViewProps) {
     once = true,
   } = props
 
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const el = ref.current
@@ -46,8 +46,7 @@ export function AnimateInView(props: AnimateInViewProps) {
 
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     if (mq.matches) {
-      el.classList.remove('opacity-0')
-      el.classList.add(`landing-animate-${animation}`)
+      el.classList.remove('opacity-0', 'will-change-[transform,opacity]')
       return
     }
 
@@ -76,7 +75,9 @@ export function AnimateInView(props: AnimateInViewProps) {
         'opacity-0 will-change-[transform,opacity]',
         props.className
       )}
-      style={{ animationDelay: delay ? `${delay}ms` : undefined }}
+      style={
+        { animationDelay: delay ? `${delay}ms` : undefined } as CSSProperties
+      }
     >
       {props.children}
     </Tag>
