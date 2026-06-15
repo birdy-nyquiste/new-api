@@ -50,65 +50,48 @@ export function Hero({ isAuthenticated }: HeroProps) {
 
             {/* Headline */}
             <h1
-              className='landing-animate-fade-up text-[clamp(1.75rem,5vw,2.75rem)] font-extrabold leading-[1.1] tracking-tight text-foreground break-words'
+              className='landing-animate-fade-up text-[clamp(1.75rem,5vw,2.75rem)] font-extrabold leading-[1.08] tracking-tight text-foreground break-words'
               style={{ animationDelay: '60ms' }}
             >
-              {t('Global AI,')}&nbsp;
-              <span
-                className='font-serif italic font-normal text-muted-foreground'
-                style={{ fontFamily: 'var(--font-serif)' }}
-              >
-                {t('without the setup.')}
+              <span className='mb-2 block'>{t('Nyquiste Router')}</span>
+              <span className='block pt-1 text-muted-foreground'>
+                {t('Global AI in one all-inclusive price')}
+              </span>
+              <span className='block text-muted-foreground'>
+                {t('No complex setup')}
               </span>
             </h1>
 
             {/* Subtext */}
             <p
-              className='landing-animate-fade-up mt-5 max-w-md text-sm leading-relaxed text-muted-foreground'
+              className='landing-animate-fade-up mt-8 max-w-lg text-[15px] leading-7 text-muted-foreground'
               style={{ animationDelay: '120ms' }}
             >
               {t(
-                'One subscription covers your AI accounts, global mobile data, and API access — pre-configured, compliant, and ready on day one.'
+                'No need to hassle with overseas accounts, subscription payments, phone verification, or network setups. Start using global mainstream AI tools with a single payment.'
               )}
             </p>
 
             {/* CTAs */}
             <div
-              className='landing-animate-fade-up mt-8 flex w-full flex-wrap gap-3 sm:w-auto'
+              className='landing-animate-fade-up mt-8 flex w-full flex-wrap gap-3 sm:w-auto md:mt-10 lg:mt-11'
               style={{ animationDelay: '180ms' }}
             >
               <Button
-                className='min-h-[44px] flex-1 rounded-lg sm:flex-none'
+                className='min-h-[48px] flex-1 rounded-lg px-5 text-sm sm:flex-none'
                 render={<Link to={isAuthenticated ? '/playground' : '/sign-up'} />}
               >
                 {isAuthenticated ? t('Open Model Lab →') : t('Get started free →')}
               </Button>
               <Button
                 variant='outline'
-                className='min-h-[44px] flex-1 rounded-lg border-border/50 sm:flex-none'
+                className='min-h-[48px] flex-1 rounded-lg border-border/50 px-5 text-sm sm:flex-none'
                 render={<Link to='/pricing' />}
               >
                 {t('View pricing')}
               </Button>
             </div>
 
-            {/* Trust chips */}
-            <div
-              className='landing-animate-fade-up mt-6 flex flex-wrap gap-2'
-              style={{ animationDelay: '240ms' }}
-            >
-              {['GPT-4o', 'Claude Sonnet', 'Gemini 2.0'].map((model) => (
-                <span
-                  key={model}
-                  className='rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground/70'
-                >
-                  {model}
-                </span>
-              ))}
-              <span className='rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground/70'>
-                {t('+ more')}
-              </span>
-            </div>
           </div>
 
           {/* Right column: bundle manifest panel */}

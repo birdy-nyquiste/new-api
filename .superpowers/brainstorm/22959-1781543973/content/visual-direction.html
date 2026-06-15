@@ -1,0 +1,79 @@
+<h2>What visual personality should the page have?</h2>
+<p class="subtitle">Three distinct directions — same product, different energy</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0a0a0f; border-radius: 10px; padding: 20px; min-height: 200px; position: relative; overflow: hidden;">
+      <!-- Dark premium mockup -->
+      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse 80% 60% at 30% 20%, rgba(99,102,241,0.25) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,92,246,0.15) 0%, transparent 60%);"></div>
+      <div style="position: relative; z-index: 1;">
+        <div style="font-size: 10px; color: #6366f1; letter-spacing: 3px; margin-bottom: 8px; font-family: monospace;">NYQUISTE</div>
+        <div style="font-size: 18px; font-weight: 800; background: linear-gradient(135deg, #a5b4fc, #c4b5fd, #e879f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; margin-bottom: 8px;">Global AI,<br/>Zero Friction.</div>
+        <div style="font-size: 9px; color: rgba(255,255,255,0.4); max-width: 160px; margin-bottom: 14px; line-height: 1.6;">One subscription. All the models. Works anywhere.</div>
+        <div style="display: flex; gap: 8px;">
+          <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 8px; font-weight: 700; padding: 5px 10px; border-radius: 5px;">Try Free →</div>
+          <div style="border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); font-size: 8px; padding: 5px 10px; border-radius: 5px;">Pricing</div>
+        </div>
+        <div style="margin-top: 14px; display: flex; gap: 6px;">
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 5px 8px; font-size: 7px; color: rgba(255,255,255,0.5);">OpenAI GPT-4o</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 5px 8px; font-size: 7px; color: rgba(255,255,255,0.5);">Claude Sonnet</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 5px 8px; font-size: 7px; color: rgba(255,255,255,0.5);">Gemini</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Premium Dark</h3>
+      <p>Dark backgrounds, purple/indigo gradient accents, subtle glow effects. Feels exclusive and tech-forward. Like a premium SaaS product. Strong contrast, high perceived value.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #ffffff; border-radius: 10px; padding: 20px; min-height: 200px; border: 1px solid #e5e7eb; position: relative; overflow: hidden;">
+      <!-- Clean minimal mockup -->
+      <div style="position: absolute; top: -40px; right: -40px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%); border-radius: 50%;"></div>
+      <div style="position: relative; z-index: 1;">
+        <div style="font-size: 10px; color: #6b7280; letter-spacing: 2px; margin-bottom: 10px; font-weight: 600;">NYQUISTE</div>
+        <div style="font-size: 18px; font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 6px;">Everything you need<br/>to use global AI.</div>
+        <div style="font-size: 9px; color: #6b7280; max-width: 180px; margin-bottom: 14px; line-height: 1.7;">AI accounts + SIM data + API access.<br/>One clean package.</div>
+        <div style="display: flex; gap: 8px;">
+          <div style="background: #111827; color: white; font-size: 8px; font-weight: 700; padding: 5px 10px; border-radius: 5px;">Get Started Free</div>
+          <div style="border: 1.5px solid #d1d5db; color: #374151; font-size: 8px; padding: 5px 10px; border-radius: 5px;">See Pricing</div>
+        </div>
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
+          <div style="font-size: 7px; color: #9ca3af; margin-bottom: 6px; letter-spacing: 1px;">INCLUDES</div>
+          <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 3px 7px; font-size: 7px; color: #374151;">✓ AI Accounts</div>
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 3px 7px; font-size: 7px; color: #374151;">✓ SIM / eSIM</div>
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; padding: 3px 7px; font-size: 7px; color: #374151;">✓ API Access</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Clean & Confident</h3>
+      <p>Light background, black typography, generous whitespace. Clarity over drama. The product speaks for itself. Trustworthy and professional — like Stripe or Linear.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 50%, #0c0a1e 100%); border-radius: 10px; padding: 20px; min-height: 200px; position: relative; overflow: hidden;">
+      <!-- Bold dynamic mockup -->
+      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(ellipse 100% 80% at 50% 0%, rgba(124,58,237,0.4) 0%, transparent 60%);"></div>
+      <div style="position: absolute; bottom: -20px; right: -20px; width: 120px; height: 120px; background: radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%); border-radius: 50%;"></div>
+      <div style="position: relative; z-index: 1;">
+        <div style="display: inline-block; background: linear-gradient(135deg, #7c3aed, #ec4899); padding: 3px 8px; border-radius: 20px; font-size: 7px; font-weight: 700; color: white; margin-bottom: 8px;">✦ NEW: Free credits for new users</div>
+        <div style="font-size: 17px; font-weight: 900; color: white; line-height: 1.15; margin-bottom: 8px; letter-spacing: -0.5px;">The only AI suite<br/><span style="background: linear-gradient(90deg, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">that works in China.</span></div>
+        <div style="font-size: 9px; color: rgba(255,255,255,0.55); max-width: 170px; margin-bottom: 14px; line-height: 1.6;">AI accounts. SIM data. All bundled. No more workarounds.</div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="background: linear-gradient(135deg, #7c3aed, #ec4899); color: white; font-size: 8px; font-weight: 800; padding: 6px 12px; border-radius: 20px; box-shadow: 0 4px 15px rgba(124,58,237,0.4);">Try Model Lab Free →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Bold & Direct</h3>
+      <p>Deep dark background, vivid purple-to-pink gradient, high-energy messaging. Leads immediately with the "free credits" hook. More opinionated and attention-grabbing. Startup energy.</p>
+    </div>
+  </div>
+
+</div>

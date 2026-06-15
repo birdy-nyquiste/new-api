@@ -28,14 +28,19 @@ interface ProviderCardProps {
   description: string
 }
 
-export function ProviderCard({ name, plan, models, description }: ProviderCardProps) {
+export function ProviderCard({
+  name,
+  plan,
+  models,
+  description,
+}: ProviderCardProps) {
   return (
-    <div className='flex flex-col p-5'>
+    <div className='flex min-w-0 flex-col p-5 [overflow-wrap:anywhere]'>
       <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
-        <span className='text-lg font-extrabold tracking-tight text-foreground'>
+        <span className='text-foreground min-w-0 text-lg font-extrabold tracking-tight break-words'>
           {name}
         </span>
-        <span className='rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary'>
+        <span className='bg-primary/10 text-primary max-w-full rounded-full px-2.5 py-0.5 text-[10px] font-semibold break-words'>
           {plan}
         </span>
       </div>
@@ -43,16 +48,18 @@ export function ProviderCard({ name, plan, models, description }: ProviderCardPr
         {models.map((model) => (
           <div
             key={model.name}
-            className='flex items-center justify-between gap-2 rounded-md bg-muted/50 px-3 py-1.5'
+            className='bg-muted/50 flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md px-3 py-1.5'
           >
-            <span className='text-xs font-medium text-foreground'>{model.name}</span>
-            <span className='flex-shrink-0 text-[10px] text-muted-foreground/70'>
+            <span className='text-foreground min-w-0 text-xs font-medium break-words'>
+              {model.name}
+            </span>
+            <span className='text-muted-foreground/70 min-w-0 text-[10px] break-words'>
               {model.category}
             </span>
           </div>
         ))}
       </div>
-      <p className='border-t border-border pt-3 text-[11px] italic leading-relaxed text-muted-foreground/70'>
+      <p className='border-border text-muted-foreground/70 border-t pt-3 text-[11px] leading-relaxed break-words italic'>
         {description}
       </p>
     </div>

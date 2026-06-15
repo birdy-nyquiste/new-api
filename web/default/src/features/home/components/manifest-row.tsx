@@ -25,22 +25,27 @@ interface ManifestRowProps {
   tag: string
 }
 
-export function ManifestRow({ icon, title, description, tag }: ManifestRowProps) {
+export function ManifestRow({
+  icon,
+  title,
+  description,
+  tag,
+}: ManifestRowProps) {
   return (
-    <div className='flex items-start gap-3 py-3 [&:not(:last-child)]:border-b [&:not(:last-child)]:border-border'>
-      <div className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded border border-border text-muted-foreground'>
+    <div className='[&:not(:last-child)]:border-border flex items-start gap-3 py-3 [&:not(:last-child)]:border-b'>
+      <div className='border-border text-muted-foreground flex h-9 w-9 flex-shrink-0 items-center justify-center rounded border'>
         {icon}
       </div>
-      <div className='min-w-0 flex-1'>
+      <div className='min-w-0 flex-1 [overflow-wrap:anywhere]'>
         <div className='flex flex-wrap items-center justify-between gap-2'>
-          <span className='text-sm font-semibold tracking-tight text-foreground'>
+          <span className='text-foreground min-w-0 text-sm font-semibold tracking-tight'>
             {title}
           </span>
-          <span className='rounded-full border border-border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70'>
+          <span className='border-border text-muted-foreground/70 max-w-full rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest break-words uppercase'>
             {tag}
           </span>
         </div>
-        <p className='mt-0.5 text-xs leading-relaxed text-muted-foreground'>
+        <p className='text-muted-foreground mt-0.5 text-xs leading-relaxed break-words'>
           {description}
         </p>
       </div>

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing + CTA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: oklch(14% 0.01 250);
+    --ink-2: oklch(38% 0.01 250);
+    --ink-3: oklch(58% 0.01 250);
+    --surface: oklch(99% 0.005 250);
+    --surface-2: oklch(96% 0.008 250);
+    --surface-3: oklch(92% 0.01 250);
+    --border: oklch(88% 0.01 250);
+    --accent: oklch(52% 0.14 248);
+    --accent-surface: oklch(95% 0.05 248);
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-serif: 'Lora', Georgia, serif;
+  }
+  body { font-family: var(--font-sans); background: #e4e4e4; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .panel-label { font-size: 11px; font-weight: 700; color: #fff; background: #333; display: inline-block; padding: 3px 10px; border-radius: 4px; margin-bottom: 10px; }
+  .frame { border-radius: 16px; overflow: hidden; box-shadow: 0 2px 24px oklch(0% 0 0 / 8%); background: var(--surface); }
+
+  /* ── PRICING ── */
+  .pricing-section { padding: 72px 40px 0; max-width: 960px; margin: 0 auto; width: 100%; }
+
+  .eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
+  .section-title { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 800; line-height: 1.15; letter-spacing: -1px; color: var(--ink); margin-bottom: 8px; }
+  .section-title em { font-family: var(--font-serif); font-style: italic; font-weight: 500; color: var(--ink-2); }
+  .section-sub { font-size: 13px; color: var(--ink-3); line-height: 1.7; max-width: 44ch; margin-bottom: 44px; }
+
+  /* Plan cards — horizontal strip, not vertical list */
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .plan {
+    background: var(--surface);
+    padding: 28px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+  .plan.recommended { background: var(--ink); }
+
+  .plan-badge {
+    font-size: 8px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: oklch(72% 0.14 248); background: oklch(22% 0.05 250);
+    padding: 3px 8px; border-radius: 4px;
+    position: absolute; top: 16px; right: 16px;
+  }
+
+  .plan-name { font-size: 13px; font-weight: 800; color: var(--ink); margin-bottom: 4px; letter-spacing: -0.3px; }
+  .plan.recommended .plan-name { color: oklch(97% 0.005 250); }
+
+  .plan-desc { font-size: 10px; color: var(--ink-3); line-height: 1.6; margin-bottom: 20px; }
+  .plan.recommended .plan-desc { color: oklch(55% 0.01 250); }
+
+  .plan-price {
+    font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+  .plan.recommended .plan-price { color: oklch(97% 0.005 250); }
+  .plan-price span { font-size: 12px; font-weight: 500; color: var(--ink-3); letter-spacing: 0; }
+  .plan.recommended .plan-price span { color: oklch(50% 0.01 250); }
+
+  .plan-note { font-size: 9px; color: var(--ink-3); margin-bottom: 20px; }
+  .plan.recommended .plan-note { color: oklch(45% 0.01 250); }
+
+  .plan-divider { height: 1px; background: var(--border); margin-bottom: 16px; }
+  .plan.recommended .plan-divider { background: oklch(24% 0.01 250); }
+
+  .plan-includes-label {
+    font-size: 8px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 10px;
+  }
+  .plan.recommended .plan-includes-label { color: oklch(40% 0.01 250); }
+
+  .plan-items { display: flex; flex-direction: column; gap: 7px; }
+  .plan-item {
+    font-size: 10px; color: var(--ink-2); display: flex; align-items: flex-start; gap: 7px; line-height: 1.4;
+  }
+  .plan.recommended .plan-item { color: oklch(68% 0.01 250); }
+  .plan-item-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 5px; }
+  .plan.recommended .plan-item-dot { background: oklch(65% 0.14 248); }
+
+  .plan-cta {
+    margin-top: auto; padding-top: 20px;
+    font-size: 11px; font-weight: 700;
+    color: var(--ink); background: var(--surface-2); border: 1.5px solid var(--border);
+    border-radius: 7px; padding: 9px 0; text-align: center; cursor: pointer;
+    font-family: var(--font-sans);
+  }
+  .plan.recommended .plan-cta {
+    background: oklch(97% 0.005 250); color: oklch(14% 0.01 250); border-color: transparent;
+    margin-top: 20px;
+  }
+
+  .pricing-footer {
+    font-size: 10px; color: var(--ink-3); text-align: center; padding-bottom: 0;
+    line-height: 1.7;
+  }
+  .pricing-footer a { color: var(--accent); font-weight: 600; text-decoration: none; }
+
+  /* ── FINAL CTA ── */
+  .cta-section {
+    padding: 64px 40px 72px;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    margin-top: 56px;
+  }
+
+  .cta-title {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 800; line-height: 1.1; letter-spacing: -1.2px;
+    color: var(--ink); margin-bottom: 12px;
+  }
+  .cta-title em { font-family: var(--font-serif); font-style: italic; font-weight: 500; color: var(--ink-2); }
+
+  .cta-sub { font-size: 13px; color: var(--ink-3); line-height: 1.7; max-width: 40ch; margin: 0 auto 32px; }
+
+  .cta-buttons { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .btn-primary { background: var(--ink); color: var(--surface); font-size: 13px; font-weight: 800; padding: 13px 28px; border-radius: 8px; cursor: pointer; border: none; font-family: var(--font-sans); letter-spacing: -0.3px; }
+  .btn-secondary { font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 13px 22px; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; background: transparent; font-family: var(--font-sans); }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    padding: 24px 40px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; color: var(--ink-3);
+  }
+  .footer-links { display: flex; gap: 20px; }
+
+  /* Dark */
+  .dark {
+    --ink: oklch(95% 0.005 250); --ink-2: oklch(68% 0.01 250); --ink-3: oklch(48% 0.01 250);
+    --surface: oklch(14% 0.01 250); --surface-2: oklch(18% 0.012 250); --surface-3: oklch(23% 0.012 250);
+    --border: oklch(27% 0.01 250); --accent: oklch(68% 0.14 248); --accent-surface: oklch(20% 0.06 248);
+    box-shadow: 0 2px 40px oklch(0% 0 0 / 50%);
+  }
+  .dark .plan.recommended { background: oklch(97% 0.005 250); }
+  .dark .plan.recommended .plan-name,
+  .dark .plan.recommended .plan-price,
+  .dark .plan.recommended .plan-cta { color: oklch(14% 0.01 250); }
+  .dark .plan.recommended .plan-desc,
+  .dark .plan.recommended .plan-note,
+  .dark .plan.recommended .plan-item,
+  .dark .plan.recommended .plan-includes-label { color: oklch(42% 0.01 250); }
+  .dark .plan.recommended .plan-divider { background: oklch(88% 0.01 250); }
+  .dark .plan.recommended .plan-item-dot { background: oklch(52% 0.14 248); }
+  .dark .plan.recommended .plan-badge { color: oklch(52% 0.14 248); background: oklch(90% 0.05 248); }
+  .dark .plan.recommended .plan-cta { background: oklch(14% 0.01 250); color: oklch(97% 0.005 250); }
+</style>
+</head>
+<body>
+
+<div style="font-size: 13px; font-weight: 700; text-align: center; color: #555; font-family: sans-serif; margin-bottom: 4px;">Sections 5 + 6 — Pricing Teaser · Final CTA · Footer</div>
+
+<!-- LIGHT -->
+<div class="panel-label">☀ Light</div>
+<div class="frame">
+  <!-- Pricing -->
+  <div class="pricing-section">
+    <div class="eyebrow">Pricing</div>
+    <h2 class="section-title">Simple, <em>transparent</em> plans.</h2>
+    <p class="section-sub">Pick what you need. All plans include Nyquiste Router credit and Model Lab access. Annual billing.</p>
+
+    <div class="plans">
+      <!-- Starter -->
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-desc">Get started with one AI account and basic connectivity.</div>
+        <div class="plan-price">¥XXX <span>/ year</span></div>
+        <div class="plan-note">Billed annually · Stripe</div>
+        <div class="plan-divider"></div>
+        <div class="plan-includes-label">Includes</div>
+        <div class="plan-items">
+          <div class="plan-item"><span class="plan-item-dot"></span>1 AI account (your choice)</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Nyquiste Router credit</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Model Lab access</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>SIM / eSIM add-on available</div>
+        </div>
+        <button class="plan-cta" style="margin-top: 20px;">Get started</button>
+      </div>
+
+      <!-- Pro — recommended -->
+      <div class="plan recommended">
+        <div class="plan-badge">Most popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-desc">The complete bundle — accounts, connectivity, and full API access.</div>
+        <div class="plan-price">¥XXX <span>/ year</span></div>
+        <div class="plan-note">Billed annually · 微信支付 / 支付宝 / 银行卡 / Card</div>
+        <div class="plan-divider"></div>
+        <div class="plan-includes-label">Includes</div>
+        <div class="plan-items">
+          <div class="plan-item"><span class="plan-item-dot"></span>3 AI accounts (OpenAI + Claude + Gemini)</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>SIM / eSIM global data included</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Nyquiste Router credit</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Model Lab access</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Priority support</div>
+        </div>
+        <button class="plan-cta">Get Pro</button>
+      </div>
+
+      <!-- Custom -->
+      <div class="plan">
+        <div class="plan-name">Custom</div>
+        <div class="plan-desc">Need specific providers, higher quotas, or team seats? Talk to us.</div>
+        <div class="plan-price">Contact <span>us</span></div>
+        <div class="plan-note">Tailored to your needs</div>
+        <div class="plan-divider"></div>
+        <div class="plan-includes-label">Everything in Pro, plus</div>
+        <div class="plan-items">
+          <div class="plan-item"><span class="plan-item-dot"></span>Any AI provider on request</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Multiple seats</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Dedicated support</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Flexible billing</div>
+        </div>
+        <button class="plan-cta" style="margin-top: 20px;">Contact us</button>
+      </div>
+    </div>
+
+    <p class="pricing-footer">Prices shown are indicative — <a href="#">view full pricing page</a> for current rates and payment options.</p>
+  </div>
+
+  <!-- Final CTA -->
+  <div class="cta-section">
+    <h2 class="cta-title">Global AI, <em>starting today.</em></h2>
+    <p class="cta-sub">Create your account, get free credits, and try Model Lab before committing to a plan.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary">Get started free →</button>
+      <button class="btn-secondary">View pricing</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="page-footer">
+    <span>© 2025 Nyquiste · 全球 AI 全家桶</span>
+    <div class="footer-links">
+      <span>Privacy</span><span>Terms</span><span>Contact</span>
+    </div>
+  </div>
+</div>
+
+<!-- DARK -->
+<div class="panel-label" style="margin-top:8px;">● Dark</div>
+<div class="frame dark">
+  <div class="pricing-section">
+    <div class="eyebrow">Pricing</div>
+    <h2 class="section-title">Simple, <em>transparent</em> plans.</h2>
+    <p class="section-sub">Pick what you need. All plans include Nyquiste Router credit and Model Lab access. Annual billing.</p>
+
+    <div class="plans">
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-desc">Get started with one AI account and basic connectivity.</div>
+        <div class="plan-price">¥XXX <span>/ year</span></div>
+        <div class="plan-note">Billed annually · Stripe</div>
+        <div class="plan-divider"></div>
+        <div class="plan-includes-label">Includes</div>
+        <div class="plan-items">
+          <div class="plan-item"><span class="plan-item-dot"></span>1 AI account (your choice)</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Nyquiste Router credit</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Model Lab access</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>SIM / eSIM add-on available</div>
+        </div>
+        <button class="plan-cta" style="margin-top: 20px;">Get started</button>
+      </div>
+
+      <div class="plan recommended">
+        <div class="plan-badge">Most popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-desc">The complete bundle — accounts, connectivity, and full API access.</div>
+        <div class="plan-price">¥XXX <span>/ year</span></div>
+        <div class="plan-note">Billed annually · 微信支付 / 支付宝 / 银行卡 / Card</div>
+        <div class="plan-divider"></div>
+        <div class="plan-includes-label">Includes</div>
+        <div class="plan-items">
+          <div class="plan-item"><span class="plan-item-dot"></span>3 AI accounts (OpenAI + Claude + Gemini)</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>SIM / eSIM global data included</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Nyquiste Router credit</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Model Lab access</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Priority support</div>
+        </div>
+        <button class="plan-cta">Get Pro</button>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Custom</div>
+        <div class="plan-desc">Need specific providers, higher quotas, or team seats? Talk to us.</div>
+        <div class="plan-price">Contact <span>us</span></div>
+        <div class="plan-note">Tailored to your needs</div>
+        <div class="plan-divider"></div>
+        <div class="plan-includes-label">Everything in Pro, plus</div>
+        <div class="plan-items">
+          <div class="plan-item"><span class="plan-item-dot"></span>Any AI provider on request</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Multiple seats</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Dedicated support</div>
+          <div class="plan-item"><span class="plan-item-dot"></span>Flexible billing</div>
+        </div>
+        <button class="plan-cta" style="margin-top: 20px;">Contact us</button>
+      </div>
+    </div>
+
+    <p class="pricing-footer">Prices shown are indicative — <a href="#">view full pricing page</a> for current rates and payment options.</p>
+  </div>
+
+  <div class="cta-section">
+    <h2 class="cta-title">Global AI, <em>starting today.</em></h2>
+    <p class="cta-sub">Create your account, get free credits, and try Model Lab before committing to a plan.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary">Get started free →</button>
+      <button class="btn-secondary">View pricing</button>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>© 2025 Nyquiste · 全球 AI 全家桶</span>
+    <div class="footer-links"><span>Privacy</span><span>Terms</span><span>Contact</span></div>
+  </div>
+</div>
+
+</body>
+</html>

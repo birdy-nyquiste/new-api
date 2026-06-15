@@ -33,14 +33,14 @@ export function PricingTeaser() {
     },
     {
       label: t('Price'),
-      pro: '¥XXX / yr',
-      ultra: '¥XXX / yr',
+      pro: t('¥XXX / year'),
+      ultra: t('¥XXX / year'),
       custom: t('Contact us'),
     },
     {
       label: t('Billing'),
-      pro: t('Annual · 微信 / 支付宝 / Card'),
-      ultra: t('Annual · 微信 / 支付宝 / Card'),
+      pro: t('Annual · WeChat / Alipay / Card'),
+      ultra: t('Annual · WeChat / Alipay / Card'),
       custom: t('Flexible'),
     },
     {

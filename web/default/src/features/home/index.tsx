@@ -18,6 +18,8 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { Markdown } from '@/components/ui/markdown'
 import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
@@ -35,13 +37,53 @@ export function Home() {
   const { t } = useTranslation()
   const { auth } = useAuthStore()
   const isAuthenticated = !!auth.user
-  const { content, isLoaded, isUrl } = useHomePageContent()
+  const { content, error, isLoaded, isRefreshing, isUrl, reload } =
+    useHomePageContent()
 
-  if (!isLoaded) {
+  const defaultHome = (
+    <>
+      {error && (
+        <div className='px-4 pt-4 sm:px-6'>
+          <Alert className='mx-auto max-w-5xl items-start gap-3 [overflow-wrap:anywhere]'>
+            <AlertDescription className='flex min-w-0 flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between'>
+              <span className='min-w-0 break-words'>
+                {t('Failed to load home page content')}
+              </span>
+              <Button
+                className='min-h-[40px] shrink-0 self-start sm:self-center'
+                disabled={isRefreshing}
+                onClick={() => {
+                  void reload()
+                }}
+                size='sm'
+                variant='outline'
+              >
+                {isRefreshing ? t('Refreshing...') : t('Retry')}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+      <Hero isAuthenticated={isAuthenticated} />
+      <PainVsSolution />
+      <ModelCoverage />
+      <ModelLabSpotlight />
+      <PricingTeaser />
+      <FinalCTA isAuthenticated={isAuthenticated} />
+      <Footer />
+    </>
+  )
+
+  if (!isLoaded && !content) {
     return (
       <PublicLayout showMainContainer={false}>
-        <main className='flex min-h-screen items-center justify-center'>
-          <div className='text-muted-foreground'>{t('Loading...')}</div>
+        <main
+          aria-busy='true'
+          className='flex min-h-screen items-center justify-center px-6'
+        >
+          <div className='border-border bg-card text-muted-foreground max-w-full rounded-lg border px-4 py-3 text-center text-sm [overflow-wrap:anywhere] shadow-sm'>
+            {t('Loading...')}
+          </div>
         </main>
       </PublicLayout>
     )
@@ -50,16 +92,21 @@ export function Home() {
   if (content) {
     return (
       <PublicLayout showMainContainer={false}>
-        <main className='overflow-x-hidden'>
+        <main className='min-w-0 overflow-x-hidden'>
           {isUrl ? (
             <iframe
-              src={content}
-              className='h-screen w-full border-none'
+              src={content.trim()}
+              className='h-[100dvh] min-h-screen w-full border-none'
+              loading='lazy'
+              referrerPolicy='no-referrer'
+              sandbox='allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts'
               title={t('Custom Home Page')}
             />
           ) : (
-            <div className='container mx-auto py-8'>
-              <Markdown className='custom-home-content'>{content}</Markdown>
+            <div className='container mx-auto min-w-0 px-4 py-8 sm:px-6'>
+              <Markdown className='custom-home-content prose-pre:max-w-full prose-pre:overflow-x-auto prose-table:block prose-table:max-w-full prose-table:overflow-x-auto prose-img:max-w-full min-w-0 [overflow-wrap:anywhere]'>
+                {content}
+              </Markdown>
             </div>
           )}
         </main>
@@ -67,15 +114,5 @@ export function Home() {
     )
   }
 
-  return (
-    <PublicLayout showMainContainer={false}>
-      <Hero isAuthenticated={isAuthenticated} />
-      <PainVsSolution />
-      <ModelCoverage />
-      <ModelLabSpotlight />
-      <PricingTeaser />
-      <FinalCTA isAuthenticated={isAuthenticated} />
-      <Footer />
-    </PublicLayout>
-  )
+  return <PublicLayout showMainContainer={false}>{defaultHome}</PublicLayout>
 }

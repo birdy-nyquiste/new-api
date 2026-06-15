@@ -41,7 +41,7 @@ export function PainVsSolution() {
     {
       title: t('Pay your way — local or international'),
       body: null,
-      chips: ['微信支付', '支付宝', '银行卡', 'Credit card'],
+      chips: [t('WeChat Pay'), t('Alipay'), t('Bank card'), t('Credit card')],
     },
     {
       title: t('SIM / eSIM for stable, compliant connectivity'),
@@ -66,7 +66,7 @@ export function PainVsSolution() {
         {/* Header */}
         <AnimateInView className='mb-12 text-center' animation='fade-up'>
           <p className='mb-3 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
-            {t('Why Nyquiste')}
+            {t('Why Nyquiste Router')}
           </p>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground break-words'>
             {t('Getting global AI')}&nbsp;
@@ -91,7 +91,7 @@ export function PainVsSolution() {
           >
             <p className='mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground'>
               <span className='h-px w-4 bg-muted-foreground/40' aria-hidden />
-              {t('Without Nyquiste')}
+              {t('Without Nyquiste Router')}
             </p>
             <ol className='space-y-3'>
               {painItems.map((item, i) => (
@@ -119,7 +119,7 @@ export function PainVsSolution() {
           <AnimateInView className='md:pl-8' animation='fade-left'>
             <p className='mb-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-primary'>
               <span className='h-px w-4 bg-primary/50' aria-hidden />
-              {t('With Nyquiste')}
+              {t('With Nyquiste Router')}
             </p>
             <ol className='space-y-4'>
               {solutionItems.map((item, i) => (

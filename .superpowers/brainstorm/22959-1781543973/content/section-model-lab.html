@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Lab Spotlight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: oklch(14% 0.01 250);
+    --ink-2: oklch(38% 0.01 250);
+    --ink-3: oklch(58% 0.01 250);
+    --surface: oklch(99% 0.005 250);
+    --surface-2: oklch(96% 0.008 250);
+    --surface-3: oklch(92% 0.01 250);
+    --border: oklch(88% 0.01 250);
+    --accent: oklch(52% 0.14 248);
+    --accent-surface: oklch(95% 0.05 248);
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-serif: 'Lora', Georgia, serif;
+  }
+  body { font-family: var(--font-sans); background: #e4e4e4; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+  .panel-label { font-size: 11px; font-weight: 700; color: #fff; background: #333; display: inline-block; padding: 3px 10px; border-radius: 4px; margin-bottom: 10px; }
+  .frame { border-radius: 16px; overflow: hidden; box-shadow: 0 2px 24px oklch(0% 0 0 / 8%); background: var(--surface); }
+
+  /* Section — dark surface to stand out from surrounding white sections */
+  .spotlight {
+    background: var(--ink);
+    padding: 72px 40px;
+  }
+  .spotlight-inner {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* Top: label + headline + sub + CTA (left-aligned) */
+  .spotlight-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 40px;
+    margin-bottom: 44px;
+  }
+  .eyebrow {
+    font-size: 9px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    color: oklch(55% 0.01 250); margin-bottom: 12px;
+  }
+  .spotlight-title {
+    font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+    font-weight: 800; line-height: 1.1; letter-spacing: -1px;
+    color: oklch(97% 0.005 250);
+    margin-bottom: 10px;
+  }
+  .spotlight-title em {
+    font-family: var(--font-serif); font-style: italic; font-weight: 500;
+    color: oklch(72% 0.01 250);
+  }
+  .spotlight-sub {
+    font-size: 13px; line-height: 1.7; color: oklch(60% 0.01 250); max-width: 44ch;
+  }
+  .cta-block { flex-shrink: 0; text-align: right; }
+  .free-note {
+    font-size: 10px; color: oklch(55% 0.01 250); margin-bottom: 10px; text-align: right;
+    line-height: 1.5;
+  }
+  .free-note strong { color: oklch(75% 0.01 250); }
+  .btn-lab {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: oklch(97% 0.005 250); color: var(--ink);
+    font-size: 13px; font-weight: 800; padding: 12px 24px;
+    border-radius: 8px; cursor: pointer; border: none;
+    font-family: var(--font-sans); letter-spacing: -0.3px;
+    white-space: nowrap;
+  }
+  .btn-lab svg { transition: transform 0.15s; }
+
+  /* Preview mockup of Model Lab interface */
+  .lab-preview {
+    background: oklch(18% 0.012 250);
+    border-radius: 12px;
+    border: 1px solid oklch(28% 0.01 250);
+    overflow: hidden;
+  }
+
+  /* Toolbar */
+  .lab-toolbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid oklch(25% 0.01 250);
+    background: oklch(16% 0.01 250);
+  }
+  .lab-toolbar-label {
+    font-size: 10px; font-weight: 700; color: oklch(65% 0.01 250);
+    letter-spacing: 1px; text-transform: uppercase; margin-right: 4px;
+  }
+  .model-select {
+    display: flex; align-items: center; gap: 6px;
+    background: oklch(22% 0.01 250); border: 1px solid oklch(30% 0.01 250);
+    border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 600;
+    color: oklch(85% 0.01 250);
+  }
+  .model-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-oai { background: oklch(75% 0.1 145); }
+  .dot-claude { background: oklch(72% 0.12 55); }
+  .dot-gemini { background: oklch(68% 0.14 248); }
+  .add-model {
+    border: 1.5px dashed oklch(35% 0.01 250); border-radius: 6px;
+    padding: 4px 10px; font-size: 10px; color: oklch(45% 0.01 250);
+    font-weight: 600; cursor: pointer;
+  }
+
+  /* Prompt area */
+  .lab-prompt {
+    padding: 16px; border-bottom: 1px solid oklch(25% 0.01 250);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .prompt-label {
+    font-size: 9px; font-weight: 700; color: oklch(40% 0.01 250);
+    letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; padding-top: 2px;
+  }
+  .prompt-text {
+    font-size: 12px; color: oklch(78% 0.01 250); line-height: 1.6; flex: 1;
+    font-style: italic;
+  }
+  .send-btn {
+    background: oklch(65% 0.14 248); border-radius: 6px; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    margin-top: 2px; color: white;
+  }
+
+  /* Responses grid */
+  .lab-responses {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px;
+    background: oklch(25% 0.01 250);
+  }
+  .response-col {
+    background: oklch(18% 0.012 250); padding: 16px;
+  }
+  .response-header {
+    display: flex; align-items: center; gap: 7px; margin-bottom: 12px;
+  }
+  .response-model { font-size: 10px; font-weight: 700; color: oklch(72% 0.01 250); }
+  .response-badge {
+    font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+    background: oklch(25% 0.01 250); color: oklch(50% 0.01 250);
+  }
+  .response-body {
+    font-size: 10px; color: oklch(62% 0.01 250); line-height: 1.7;
+  }
+  .response-body .highlight { color: oklch(82% 0.01 250); font-weight: 500; }
+  .typing-cursor {
+    display: inline-block; width: 2px; height: 10px;
+    background: oklch(65% 0.14 248); border-radius: 1px;
+    vertical-align: middle; margin-left: 2px;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .response-footer {
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid oklch(25% 0.01 250);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .token-count { font-size: 9px; color: oklch(38% 0.01 250); }
+  .copy-btn {
+    font-size: 9px; color: oklch(45% 0.01 250); cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Gate overlay */
+  .gate-overlay {
+    position: relative;
+    margin-top: -1px;
+  }
+  .gate-blur {
+    /* Show blurred bottom of responses */
+    height: 48px;
+    background: linear-gradient(to bottom, transparent, oklch(18% 0.012 250));
+    position: absolute; bottom: 0; left: 0; right: 0; pointer-events: none;
+  }
+
+  /* Sign-up gate strip */
+  .signup-gate {
+    background: oklch(21% 0.02 250);
+    border-top: 1px solid oklch(30% 0.01 250);
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  }
+  .gate-text { font-size: 11px; color: oklch(65% 0.01 250); line-height: 1.5; }
+  .gate-text strong { color: oklch(88% 0.01 250); font-weight: 700; }
+  .gate-btn {
+    background: oklch(97% 0.005 250); color: oklch(14% 0.01 250);
+    font-size: 11px; font-weight: 800; padding: 8px 18px; border-radius: 6px;
+    white-space: nowrap; cursor: pointer; border: none; font-family: var(--font-sans);
+  }
+
+  /* Light version of spotlight */
+  .spotlight-light {
+    background: var(--surface-2);
+    padding: 72px 40px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .spotlight-light .eyebrow { color: var(--ink-3); }
+  .spotlight-light .spotlight-title { color: var(--ink); }
+  .spotlight-light .spotlight-title em { color: var(--ink-2); }
+  .spotlight-light .spotlight-sub { color: var(--ink-2); }
+  .spotlight-light .free-note { color: var(--ink-3); }
+  .spotlight-light .free-note strong { color: var(--ink-2); }
+  .spotlight-light .btn-lab { background: var(--ink); color: var(--surface); }
+
+  .dark {
+    --ink: oklch(95% 0.005 250); --ink-2: oklch(68% 0.01 250); --ink-3: oklch(48% 0.01 250);
+    --surface: oklch(14% 0.01 250); --surface-2: oklch(18% 0.012 250); --surface-3: oklch(23% 0.012 250);
+    --border: oklch(27% 0.01 250); --accent: oklch(68% 0.14 248); --accent-surface: oklch(20% 0.06 248);
+    box-shadow: 0 2px 40px oklch(0% 0 0 / 50%);
+  }
+</style>
+</head>
+<body>
+
+<div style="font-size: 13px; font-weight: 700; text-align: center; color: #555; font-family: sans-serif; margin-bottom: 4px;">Section 4 — Model Lab Spotlight</div>
+<div style="font-size: 11px; color: #888; text-align: center; margin-bottom: 12px; font-family: sans-serif;">Dark surface section · Live UI preview · Sign-up gate strip at bottom</div>
+
+<!-- LIGHT MODE PAGE — spotlight uses dark surface regardless -->
+<div class="panel-label">☀ Light page · spotlight always dark</div>
+<div class="frame">
+  <div class="spotlight">
+    <div class="spotlight-inner">
+
+      <div class="spotlight-header">
+        <div>
+          <div class="eyebrow">Model Lab</div>
+          <h2 class="spotlight-title">Compare any model,<br><em>side by side.</em></h2>
+          <p class="spotlight-sub">Send the same prompt to GPT-4o, Claude, and Gemini at once. See exactly how they differ — in style, reasoning, and speed. Sign up to try it free.</p>
+        </div>
+        <div class="cta-block">
+          <div class="free-note"><strong>New accounts get free credits.</strong><br>No payment needed to explore.</div>
+          <button class="btn-lab">
+            Try Model Lab
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Lab UI preview -->
+      <div class="lab-preview">
+        <div class="lab-toolbar">
+          <span class="lab-toolbar-label">Models</span>
+          <div class="model-select"><span class="model-dot dot-oai"></span>GPT-4o</div>
+          <div class="model-select"><span class="model-dot dot-claude"></span>Claude Sonnet</div>
+          <div class="model-select"><span class="model-dot dot-gemini"></span>Gemini 2.5 Pro</div>
+          <div class="add-model">+ Add model</div>
+        </div>
+
+        <div class="lab-prompt">
+          <span class="prompt-label">Prompt</span>
+          <span class="prompt-text">"Explain the difference between machine learning and deep learning in simple terms"</span>
+          <div class="send-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
+        </div>
+
+        <div class="lab-responses">
+          <div class="response-col">
+            <div class="response-header">
+              <span class="model-dot dot-oai"></span>
+              <span class="response-model">GPT-4o</span>
+              <span class="response-badge">1.2s</span>
+            </div>
+            <div class="response-body">
+              <span class="highlight">Machine learning</span> is a broad field where computers learn patterns from data without being explicitly programmed. <span class="highlight">Deep learning</span> is a subset that uses layered neural networks — inspired by the brain — to handle complex tasks like image recognition and language understanding.<typing-cursor></typing-cursor>
+            </div>
+            <div class="response-footer">
+              <span class="token-count">142 tokens</span>
+              <span class="copy-btn">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </span>
+            </div>
+          </div>
+
+          <div class="response-col">
+            <div class="response-header">
+              <span class="model-dot dot-claude"></span>
+              <span class="response-model">Claude Sonnet</span>
+              <span class="response-badge">0.9s</span>
+            </div>
+            <div class="response-body">
+              Think of it like this: <span class="highlight">machine learning</span> teaches a computer to improve through experience — like training a dog with treats. <span class="highlight">Deep learning</span> takes this further using many layers of processing, letting computers understand complex things like faces, speech, and nuanced text on their own.
+            </div>
+            <div class="response-footer">
+              <span class="token-count">128 tokens</span>
+              <span class="copy-btn"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</span>
+            </div>
+          </div>
+
+          <div class="response-col">
+            <div class="response-header">
+              <span class="model-dot dot-gemini"></span>
+              <span class="response-model">Gemini 2.5 Pro</span>
+              <span class="response-badge">1.5s</span>
+            </div>
+            <div class="response-body">
+              <span class="highlight">Machine learning (ML)</span> algorithms find patterns in data to make decisions. <span class="highlight">Deep learning (DL)</span> is a powerful ML technique using artificial neural networks with many layers — it excels when you have large amounts of data and complex patterns to detect, such as in translation or image generation.
+            </div>
+            <div class="response-footer">
+              <span class="token-count">156 tokens</span>
+              <span class="copy-btn"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="signup-gate">
+          <div class="gate-text"><strong>Create a free account to use Model Lab.</strong> New users get free credits — no payment needed to get started.</div>
+          <button class="gate-btn">Sign up free →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DARK PAGE — same dark spotlight, just shows inside dark frame -->
+<div class="panel-label" style="margin-top:8px;">● Dark page (same spotlight section)</div>
+<div class="frame dark">
+  <div class="spotlight">
+    <div class="spotlight-inner">
+      <div class="spotlight-header">
+        <div>
+          <div class="eyebrow">Model Lab</div>
+          <h2 class="spotlight-title">Compare any model,<br><em>side by side.</em></h2>
+          <p class="spotlight-sub">Send the same prompt to GPT-4o, Claude, and Gemini at once. See exactly how they differ — in style, reasoning, and speed. Sign up to try it free.</p>
+        </div>
+        <div class="cta-block">
+          <div class="free-note"><strong>New accounts get free credits.</strong><br>No payment needed to explore.</div>
+          <button class="btn-lab">
+            Try Model Lab
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="lab-preview">
+        <div class="lab-toolbar">
+          <span class="lab-toolbar-label">Models</span>
+          <div class="model-select"><span class="model-dot dot-oai"></span>GPT-4o</div>
+          <div class="model-select"><span class="model-dot dot-claude"></span>Claude Sonnet</div>
+          <div class="model-select"><span class="model-dot dot-gemini"></span>Gemini 2.5 Pro</div>
+          <div class="add-model">+ Add model</div>
+        </div>
+        <div class="lab-prompt">
+          <span class="prompt-label">Prompt</span>
+          <span class="prompt-text">"Explain the difference between machine learning and deep learning in simple terms"</span>
+          <div class="send-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        </div>
+        <div class="lab-responses">
+          <div class="response-col">
+            <div class="response-header"><span class="model-dot dot-oai"></span><span class="response-model">GPT-4o</span><span class="response-badge">1.2s</span></div>
+            <div class="response-body"><span class="highlight">Machine learning</span> is a broad field where computers learn patterns from data without being explicitly programmed. <span class="highlight">Deep learning</span> is a subset using layered neural networks to handle complex tasks like image recognition and language.</div>
+            <div class="response-footer"><span class="token-count">142 tokens</span><span class="copy-btn"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</span></div>
+          </div>
+          <div class="response-col">
+            <div class="response-header"><span class="model-dot dot-claude"></span><span class="response-model">Claude Sonnet</span><span class="response-badge">0.9s</span></div>
+            <div class="response-body">Think of it like this: <span class="highlight">machine learning</span> teaches a computer to improve through experience. <span class="highlight">Deep learning</span> takes this further using many layers of processing, letting computers understand faces, speech, and nuanced text.</div>
+            <div class="response-footer"><span class="token-count">128 tokens</span><span class="copy-btn"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</span></div>
+          </div>
+          <div class="response-col">
+            <div class="response-header"><span class="model-dot dot-gemini"></span><span class="response-model">Gemini 2.5 Pro</span><span class="response-badge">1.5s</span></div>
+            <div class="response-body"><span class="highlight">Machine learning (ML)</span> algorithms find patterns in data. <span class="highlight">Deep learning (DL)</span> uses neural networks with many layers — excelling when you have large data and complex patterns like translation or image generation.</div>
+            <div class="response-footer"><span class="token-count">156 tokens</span><span class="copy-btn"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</span></div>
+          </div>
+        </div>
+        <div class="signup-gate">
+          <div class="gate-text"><strong>Create a free account to use Model Lab.</strong> New users get free credits — no payment needed to get started.</div>
+          <button class="gate-btn">Sign up free →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

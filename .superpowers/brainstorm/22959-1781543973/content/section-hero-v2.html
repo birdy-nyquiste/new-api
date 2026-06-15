@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Mockup v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: oklch(14% 0.01 250);
+    --ink-2: oklch(38% 0.01 250);
+    --ink-3: oklch(58% 0.01 250);
+    --surface: oklch(99% 0.005 250);
+    --surface-2: oklch(96% 0.008 250);
+    --surface-3: oklch(92% 0.01 250);
+    --border: oklch(88% 0.01 250);
+    --accent: oklch(52% 0.14 248);
+    --accent-surface: oklch(96% 0.04 248);
+    --success: oklch(52% 0.13 155);
+    --success-surface: oklch(96% 0.04 155);
+    --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-serif: 'Lora', Georgia, serif;
+  }
+
+  body { font-family: var(--font-sans); background: #f0f0f0; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+  .label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .panel-label { font-size: 11px; font-weight: 700; color: #fff; background: #333; display: inline-block; padding: 3px 10px; border-radius: 4px; margin-bottom: 12px; }
+
+  /* ====== LIGHT MODE ====== */
+  .light {
+    background: var(--surface);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 24px oklch(0% 0 0 / 8%);
+  }
+
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.4px;
+  }
+  .nav-logo span {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--ink-3);
+    margin-left: 6px;
+  }
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+  .nav-links a { text-decoration: none; color: inherit; }
+  .nav-links .cta-nav {
+    background: var(--ink);
+    color: var(--surface);
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  .hero-body {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    min-height: 480px;
+  }
+
+  /* Left col */
+  .hero-left {
+    padding: 56px 40px 56px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .free-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--success-surface);
+    border: 1px solid oklch(75% 0.1 155);
+    color: var(--success);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+    width: fit-content;
+  }
+
+  .hero-headline {
+    font-size: clamp(2rem, 3.5vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1.5px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .hero-headline em {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    color: var(--ink-2);
+  }
+
+  .hero-sub {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink-2);
+    max-width: 42ch;
+    margin-top: 16px;
+    margin-bottom: 36px;
+  }
+
+  .cta-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--surface);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 11px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    font-family: var(--font-sans);
+    letter-spacing: -0.2px;
+  }
+  .btn-secondary {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    padding: 11px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    background: transparent;
+    font-family: var(--font-sans);
+  }
+
+  .trust-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 28px;
+  }
+  .model-chip {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-3);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: 5px;
+  }
+  .trust-sep { font-size: 10px; color: var(--border); }
+
+  /* Right col — manifest */
+  .hero-right {
+    padding: 40px 32px;
+    background: var(--surface-2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .manifest-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .manifest-item {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: start;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .manifest-item:last-child { border-bottom: none; }
+
+  .manifest-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .manifest-content {}
+  .manifest-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+  }
+  .manifest-desc {
+    font-size: 10px;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+
+  .manifest-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+  .tag-annual { background: var(--accent-surface); color: var(--accent); }
+  .tag-flex { background: var(--surface-3); color: var(--ink-2); }
+  .tag-incl { background: oklch(96% 0.02 90); color: oklch(42% 0.12 90); }
+
+  .manifest-footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    font-size: 10px;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+
+  /* ====== DARK MODE ====== */
+  .dark {
+    --ink: oklch(96% 0.005 250);
+    --ink-2: oklch(70% 0.01 250);
+    --ink-3: oklch(50% 0.01 250);
+    --surface: oklch(14% 0.01 250);
+    --surface-2: oklch(18% 0.01 250);
+    --surface-3: oklch(22% 0.01 250);
+    --border: oklch(26% 0.01 250);
+    --accent: oklch(68% 0.14 248);
+    --accent-surface: oklch(20% 0.05 248);
+    --success: oklch(68% 0.13 155);
+    --success-surface: oklch(18% 0.04 155);
+    background: var(--surface);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 40px oklch(0% 0 0 / 40%);
+  }
+
+  .page-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #888;
+    text-align: center;
+    margin-bottom: 4px;
+    font-family: var(--font-sans);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-label">Hero Section — v2 · Redesigned</div>
+<div style="font-size: 11px; color: #888; text-align: center; margin-bottom: 8px; font-family: sans-serif;">Clean & Confident · Plus Jakarta Sans + Lora · No gradient text · Asymmetric two-column · Bundle manifest layout</div>
+
+<!-- LIGHT MODE -->
+<div class="panel-label">☀️ Light Mode</div>
+<div class="light">
+  <nav class="nav">
+    <div class="nav-logo">Nyquiste <span>全球 AI 全家桶</span></div>
+    <div class="nav-links">
+      <a href="#">Pricing</a>
+      <a href="#">Model Lab</a>
+      <a href="#">About</a>
+      <a href="#" class="cta-nav">Sign in</a>
+    </div>
+  </nav>
+
+  <div class="hero-body">
+    <!-- Left: Headline + CTAs -->
+    <div class="hero-left">
+      <div class="free-badge">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.5 4.5H11L8.5 7L9.5 11L6 9L2.5 11L3.5 7L1 4.5H4.5L6 1Z" fill="currentColor"/></svg>
+        New accounts get free credits
+      </div>
+
+      <h1 class="hero-headline">
+        Global AI,<br>
+        <em>without the setup.</em>
+      </h1>
+
+      <p class="hero-sub">
+        One subscription covers your AI accounts, global mobile data, and API access — pre-configured, compliant, and ready on day one.
+      </p>
+
+      <div class="cta-row">
+        <button class="btn-primary">Get started free →</button>
+        <button class="btn-secondary">View pricing</button>
+      </div>
+
+      <div class="trust-row">
+        <div class="model-chip">GPT-4o</div>
+        <div class="model-chip">Claude Sonnet</div>
+        <div class="model-chip">Gemini 2.0</div>
+        <span class="trust-sep">+</span>
+        <span style="font-size:10px; color:var(--ink-3);">more</span>
+      </div>
+    </div>
+
+    <!-- Right: Bundle manifest -->
+    <div class="hero-right">
+      <div class="manifest-label">What's in the package</div>
+
+      <div class="manifest-item">
+        <div class="manifest-icon">🤖</div>
+        <div class="manifest-content">
+          <div class="manifest-title">AI Accounts</div>
+          <div class="manifest-desc">Official access to OpenAI, Claude, Gemini — pre-configured. Choose the providers you need.</div>
+        </div>
+        <div class="manifest-tag tag-annual">Annual</div>
+      </div>
+
+      <div class="manifest-item">
+        <div class="manifest-icon">📡</div>
+        <div class="manifest-content">
+          <div class="manifest-title">SIM / eSIM</div>
+          <div class="manifest-desc">Global data via China Telecom HK. Stable, compliant internet routing — no VPN.</div>
+        </div>
+        <div class="manifest-tag tag-flex">Flexible</div>
+      </div>
+
+      <div class="manifest-item">
+        <div class="manifest-icon">⚡</div>
+        <div class="manifest-content">
+          <div class="manifest-title">API Router</div>
+          <div class="manifest-desc">One API key for all providers. Use with any tool or IDE that supports OpenAI format.</div>
+        </div>
+        <div class="manifest-tag tag-incl">Included</div>
+      </div>
+
+      <div class="manifest-footer">
+        Try it first — sign up to explore <strong>Model Lab</strong> free,<br>then choose a plan that fits.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DARK MODE -->
+<div class="panel-label" style="margin-top:8px;">🌙 Dark Mode</div>
+<div class="dark">
+  <nav class="nav">
+    <div class="nav-logo">Nyquiste <span>全球 AI 全家桶</span></div>
+    <div class="nav-links">
+      <a href="#">Pricing</a>
+      <a href="#">Model Lab</a>
+      <a href="#">About</a>
+      <a href="#" class="cta-nav">Sign in</a>
+    </div>
+  </nav>
+
+  <div class="hero-body">
+    <div class="hero-left">
+      <div class="free-badge">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1L7.5 4.5H11L8.5 7L9.5 11L6 9L2.5 11L3.5 7L1 4.5H4.5L6 1Z" fill="currentColor"/></svg>
+        New accounts get free credits
+      </div>
+
+      <h1 class="hero-headline">
+        Global AI,<br>
+        <em>without the setup.</em>
+      </h1>
+
+      <p class="hero-sub">
+        One subscription covers your AI accounts, global mobile data, and API access — pre-configured, compliant, and ready on day one.
+      </p>
+
+      <div class="cta-row">
+        <button class="btn-primary">Get started free →</button>
+        <button class="btn-secondary">View pricing</button>
+      </div>
+
+      <div class="trust-row">
+        <div class="model-chip">GPT-4o</div>
+        <div class="model-chip">Claude Sonnet</div>
+        <div class="model-chip">Gemini 2.0</div>
+        <span class="trust-sep">+</span>
+        <span style="font-size:10px; color:var(--ink-3);">more</span>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="manifest-label">What's in the package</div>
+
+      <div class="manifest-item">
+        <div class="manifest-icon">🤖</div>
+        <div class="manifest-content">
+          <div class="manifest-title">AI Accounts</div>
+          <div class="manifest-desc">Official access to OpenAI, Claude, Gemini — pre-configured. Choose the providers you need.</div>
+        </div>
+        <div class="manifest-tag tag-annual">Annual</div>
+      </div>
+
+      <div class="manifest-item">
+        <div class="manifest-icon">📡</div>
+        <div class="manifest-content">
+          <div class="manifest-title">SIM / eSIM</div>
+          <div class="manifest-desc">Global data via China Telecom HK. Stable, compliant internet routing — no VPN.</div>
+        </div>
+        <div class="manifest-tag tag-flex">Flexible</div>
+      </div>
+
+      <div class="manifest-item">
+        <div class="manifest-icon">⚡</div>
+        <div class="manifest-content">
+          <div class="manifest-title">API Router</div>
+          <div class="manifest-desc">One API key for all providers. Use with any tool or IDE that supports OpenAI format.</div>
+        </div>
+        <div class="manifest-tag tag-incl">Included</div>
+      </div>
+
+      <div class="manifest-footer">
+        Try it first — sign up to explore <strong>Model Lab</strong> free,<br>then choose a plan that fits.
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
