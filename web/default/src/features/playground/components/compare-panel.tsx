@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useMemo, useRef, useState, useEffect } from 'react'
+import { useMemo, useRef, useState, useEffect, type RefObject } from 'react'
 import {
   Loader2Icon,
   SquareIcon,
@@ -175,7 +175,7 @@ export function ComparePanel({
   onStopEvaluation,
 }: ComparePanelProps) {
   const { t } = useTranslation()
-  const [prompt, setPrompt] = useState('')
+  const [hasPrompt, setHasPrompt] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [expandedResultKey, setExpandedResultKey] = useState<string | null>(
     null
@@ -184,6 +184,7 @@ export function ComparePanel({
   const [editText, setEditText] = useState('')
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const shouldStickToBottomRef = useRef(true)
 
   const selectedModels = useMemo(
@@ -256,20 +257,18 @@ export function ComparePanel({
       return
     shouldStickToBottomRef.current = true
     onSend(text || '', selectedModels, message.files)
-    setPrompt('')
+    setHasPrompt(false)
   }
 
   const handleSuggestionClick = (prompt: string) => {
     if (selectedModels.length !== 3 || isComparing) return
-    setPrompt(t(prompt))
+    const textarea = textareaRef.current
+    if (!textarea) return
+    textarea.value = t(prompt)
+    setHasPrompt(true)
     setTimeout(() => {
-      const textarea = document.querySelector(
-        'textarea[name="message"]'
-      ) as HTMLTextAreaElement | null
-      if (textarea) {
-        textarea.focus()
-        textarea.selectionStart = textarea.selectionEnd = textarea.value.length
-      }
+      textarea.focus()
+      textarea.selectionStart = textarea.selectionEnd = textarea.value.length
     }, 0)
   }
 
@@ -405,9 +404,9 @@ export function ComparePanel({
 
   const renderInputBar = () => {
     return (
-      <div className='grid shrink-0 gap-4 px-1 md:pb-4'>
+      <div className='grid shrink-0 gap-2 px-2 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] sm:gap-4 sm:px-1 sm:pb-0 md:pb-4'>
         <PromptInput
-          groupClassName='rounded-xl'
+          groupClassName='rounded-lg sm:rounded-xl'
           onSubmit={submit}
           accept='image/*,application/pdf,text/*,application/json'
           maxFiles={5}
@@ -415,8 +414,9 @@ export function ComparePanel({
           onError={(err) => toast.error(err.message)}
         >
           <CompareInputInner
-            prompt={prompt}
-            setPrompt={setPrompt}
+            hasPrompt={hasPrompt}
+            setHasPrompt={setHasPrompt}
+            textareaRef={textareaRef}
             isComparing={isComparing}
             selectedModels={selectedModels}
             onStop={onStop}
@@ -434,21 +434,25 @@ export function ComparePanel({
             onStopEvaluation={onStopEvaluation}
           />
         </PromptInput>
-        <Suggestions>
-          {suggestions.map(({ icon: Icon, text, color, prompt: sugPrompt }) => (
-            <Suggestion
-              className={`text-xs font-normal sm:text-sm ${
-                text === 'More' ? 'hidden sm:flex' : ''
-              }`}
-              key={text}
-              onClick={() => handleSuggestionClick(sugPrompt)}
-              suggestion={text}
-            >
-              {Icon && <Icon size={16} style={{ color }} />}
-              {t(text)}
-            </Suggestion>
-          ))}
-        </Suggestions>
+        <div className='block'>
+          <Suggestions>
+            {suggestions.map(
+              ({ icon: Icon, text, color, prompt: sugPrompt }) => (
+                <Suggestion
+                  className={`h-8 px-3 text-xs font-normal sm:px-4 sm:text-sm ${
+                    text === 'More' ? 'hidden sm:flex' : ''
+                  }`}
+                  key={text}
+                  onClick={() => handleSuggestionClick(sugPrompt)}
+                  suggestion={text}
+                >
+                  {Icon && <Icon size={16} style={{ color }} />}
+                  {t(text)}
+                </Suggestion>
+              )
+            )}
+          </Suggestions>
+        </div>
       </div>
     )
   }
@@ -716,7 +720,7 @@ function CompareRoundResults({
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className='-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:grid lg:min-h-[min(34rem,65vh)] lg:snap-none lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden'
+        className='-mx-4 flex snap-x snap-mandatory [scrollbar-width:none] gap-3 overflow-x-auto px-4 pb-1 lg:mx-0 lg:grid lg:min-h-[min(34rem,65vh)] lg:snap-none lg:grid-cols-3 lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden'
       >
         {round.results.map((result, resultIndex) => {
           const resultKey = `${round.id}:${resultIndex}`
@@ -835,7 +839,7 @@ function CompareResultCard({
                 'animate-in zoom-in-95 duration-300',
                 expandedOriginClass
               )
-            : 'relative h-full w-full hover:border-primary/40 hover:ring-primary/15 hover:shadow-primary/10 hover:-translate-y-1 hover:shadow-lg hover:ring-2'
+            : 'hover:border-primary/40 hover:ring-primary/15 hover:shadow-primary/10 relative h-full w-full hover:-translate-y-1 hover:shadow-lg hover:ring-2'
         )}
       >
         <header
@@ -1043,18 +1047,18 @@ function CompareEvaluationCard({
 
 function CompareSubmitButton({
   disabled,
-  text,
+  hasText,
   isComparing,
   onStop,
 }: {
   disabled?: boolean
-  text: string
+  hasText: boolean
   isComparing?: boolean
   onStop?: () => void
 }) {
   const { t } = useTranslation()
   const attachments = usePromptInputAttachments()
-  const hasContent = text.trim().length > 0 || attachments.files.length > 0
+  const hasContent = hasText || attachments.files.length > 0
 
   if (isComparing && onStop) {
     return (
@@ -1083,8 +1087,9 @@ function CompareSubmitButton({
 }
 
 interface CompareInputInnerProps {
-  prompt: string
-  setPrompt: (v: string) => void
+  hasPrompt: boolean
+  setHasPrompt: (v: boolean) => void
+  textareaRef: RefObject<HTMLTextAreaElement | null>
   isComparing: boolean
   selectedModels: ModelOption[]
   onStop: () => void
@@ -1103,8 +1108,9 @@ interface CompareInputInnerProps {
 }
 
 function CompareInputInner({
-  prompt,
-  setPrompt,
+  hasPrompt,
+  setHasPrompt,
+  textareaRef,
   isComparing,
   selectedModels,
   onStop,
@@ -1141,19 +1147,19 @@ function CompareInputInner({
       <PromptInputTextarea
         autoComplete='off'
         autoCorrect='off'
-        className='px-5 md:text-base'
+        className='max-h-28 min-h-12 px-3 text-base sm:max-h-48 sm:min-h-16 sm:px-5 md:text-base'
         disabled={isComparing}
-        onChange={(event) => setPrompt(event.target.value)}
+        onChange={(event) => setHasPrompt(event.target.value.trim().length > 0)}
         placeholder={
           selectedModels.length === 3
             ? t('Ask anything')
             : t('Select exactly 3 models to compare')
         }
+        ref={textareaRef}
         spellCheck={false}
-        value={prompt}
       />
 
-      <PromptInputFooter className='p-2.5'>
+      <PromptInputFooter className='p-1.5 sm:p-2.5'>
         <PromptInputTools>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -1189,7 +1195,7 @@ function CompareInputInner({
           />
         </PromptInputTools>
 
-        <div className='flex flex-wrap items-center justify-end gap-2'>
+        <div className='flex flex-wrap items-center justify-end gap-1.5 sm:gap-2'>
           <GroupSelector
             selectedGroup={groupValue}
             groups={groups}
@@ -1237,7 +1243,7 @@ function CompareInputInner({
 
           <CompareSubmitButton
             disabled={isComparing || selectedModels.length !== 3}
-            text={prompt}
+            hasText={hasPrompt}
             onStop={onStop}
             isComparing={isComparing}
           />

@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useState } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import {
   PlusIcon,
   PaperclipIcon,
@@ -73,90 +73,102 @@ const suggestions = [
     icon: MailIcon,
     text: 'Draft an email',
     color: '#b388ff',
-    prompt: 'Draft a professional email regarding [Insert topic, e.g. project update, meeting request] to [Insert recipient, e.g. client, team]. The tone should be [Insert tone, e.g. polite, formal] and include the following key details:\n- ',
+    prompt:
+      'Draft a professional email regarding [Insert topic, e.g. project update, meeting request] to [Insert recipient, e.g. client, team]. The tone should be [Insert tone, e.g. polite, formal] and include the following key details:\n- ',
   },
   {
     icon: FileTextIcon,
     text: 'Summarize text',
     color: '#ffd54f',
-    prompt: 'Provide a concise bullet-point summary of the main points and key takeaways from the following text:\n\n[Insert text here]',
+    prompt:
+      'Provide a concise bullet-point summary of the main points and key takeaways from the following text:\n\n[Insert text here]',
   },
   {
     icon: LanguagesIcon,
     text: 'Translate language',
     color: '#81c784',
-    prompt: 'Translate the following text into [Insert target language, e.g. Spanish, Chinese, French, Japanese]. Ensure the translation preserves the original tone, idioms, and context:\n\n"[Insert text here]"',
+    prompt:
+      'Translate the following text into [Insert target language, e.g. Spanish, Chinese, French, Japanese]. Ensure the translation preserves the original tone, idioms, and context:\n\n"[Insert text here]"',
   },
 ]
 
 export function PlaygroundInput(props: PlaygroundInputProps) {
   const { t } = useTranslation()
-  const [text, setText] = useState('')
+  const [hasText, setHasText] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const handleSubmit = (message: PromptInputMessage) => {
-    if (!message.text?.trim() && (!message.files || message.files.length === 0)) return
+    if (!message.text?.trim() && (!message.files || message.files.length === 0))
+      return
     if (props.disabled) return
     props.onSubmit(message)
-    setText('')
+    setHasText(false)
   }
 
   const handleSuggestionClick = (prompt: string) => {
-    setText(t(prompt))
+    const textarea = textareaRef.current
+    if (!textarea) return
+    textarea.value = t(prompt)
+    setHasText(true)
     setTimeout(() => {
-      const textarea = document.querySelector('textarea[name="message"]') as HTMLTextAreaElement | null
-      if (textarea) {
-        textarea.focus()
-        textarea.selectionStart = textarea.selectionEnd = textarea.value.length
-      }
+      textarea.focus()
+      textarea.selectionStart = textarea.selectionEnd = textarea.value.length
     }, 0)
   }
 
   return (
-    <div className='grid shrink-0 gap-4 px-1 md:pb-4'>
+    <div className='grid shrink-0 gap-2 px-2 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] sm:gap-4 sm:px-1 sm:pb-0 md:pb-4'>
       <PromptInput
-        groupClassName='rounded-xl'
+        groupClassName='rounded-lg sm:rounded-xl'
         onSubmit={handleSubmit}
         accept='image/*,application/pdf,text/*,application/json'
         maxFiles={5}
         maxFileSize={20 * 1024 * 1024}
         onError={(err) => toast.error(err.message)}
       >
-        <PlaygroundInputInner {...props} text={text} setText={setText} />
+        <PlaygroundInputInner
+          {...props}
+          hasText={hasText}
+          setHasText={setHasText}
+          textareaRef={textareaRef}
+        />
       </PromptInput>
 
-      <Suggestions>
-        {suggestions.map(({ icon: Icon, text: sugText, color, prompt }) => (
-          <Suggestion
-            className={`text-xs font-normal sm:text-sm ${
-              sugText === 'More' ? 'hidden sm:flex' : ''
-            }`}
-            key={sugText}
-            onClick={() => handleSuggestionClick(prompt)}
-            suggestion={sugText}
-          >
-            {Icon && <Icon size={16} style={{ color }} />}
-            {t(sugText)}
-          </Suggestion>
-        ))}
-      </Suggestions>
+      <div className='block'>
+        <Suggestions>
+          {suggestions.map(({ icon: Icon, text: sugText, color, prompt }) => (
+            <Suggestion
+              className={`h-8 px-3 text-xs font-normal sm:px-4 sm:text-sm ${
+                sugText === 'More' ? 'hidden sm:flex' : ''
+              }`}
+              key={sugText}
+              onClick={() => handleSuggestionClick(prompt)}
+              suggestion={sugText}
+            >
+              {Icon && <Icon size={16} style={{ color }} />}
+              {t(sugText)}
+            </Suggestion>
+          ))}
+        </Suggestions>
+      </div>
     </div>
   )
 }
 
 function PlaygroundSubmitButton({
   disabled,
-  text,
+  hasText,
   isGenerating,
   onStop,
 }: {
   disabled?: boolean
-  text: string
+  hasText: boolean
   isGenerating?: boolean
   onStop?: () => void
 }) {
   const { t } = useTranslation()
   const attachments = usePromptInputAttachments()
-  const hasContent = text.trim().length > 0 || attachments.files.length > 0
+  const hasContent = hasText || attachments.files.length > 0
 
   if (isGenerating && onStop) {
     return (
@@ -185,8 +197,9 @@ function PlaygroundSubmitButton({
 }
 
 interface PlaygroundInputInnerProps extends PlaygroundInputProps {
-  text: string
-  setText: (v: string) => void
+  hasText: boolean
+  setHasText: (v: boolean) => void
+  textareaRef: RefObject<HTMLTextAreaElement | null>
 }
 
 function PlaygroundInputInner({
@@ -201,8 +214,9 @@ function PlaygroundInputInner({
   groupValue,
   onGroupChange,
   onStop,
-  text,
-  setText,
+  hasText,
+  setHasText,
+  textareaRef,
   webSearchEnabled = false,
   webSearchSupport = 'unsupported',
   onWebSearchToggle,
@@ -224,14 +238,14 @@ function PlaygroundInputInner({
         autoCorrect='off'
         autoCapitalize='off'
         spellCheck={false}
-        className='px-5 md:text-base'
+        className='max-h-28 min-h-12 px-3 text-base sm:max-h-48 sm:min-h-16 sm:px-5 md:text-base'
         disabled={disabled}
-        onChange={(event) => setText(event.target.value)}
+        onChange={(event) => setHasText(event.target.value.trim().length > 0)}
         placeholder={t('Ask anything')}
-        value={text}
+        ref={textareaRef}
       />
 
-      <PromptInputFooter className='p-2.5'>
+      <PromptInputFooter className='p-1.5 sm:p-2.5'>
         <PromptInputTools>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -280,7 +294,7 @@ function PlaygroundInputInner({
 
           <PlaygroundSubmitButton
             disabled={disabled}
-            text={text}
+            hasText={hasText}
             isGenerating={isGenerating}
             onStop={onStop}
           />
