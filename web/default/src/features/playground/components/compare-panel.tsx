@@ -35,6 +35,8 @@ import {
   MailIcon,
   FileTextIcon,
   LanguagesIcon,
+  TriangleIcon,
+  FlipHorizontal2Icon,
   FlaskConicalIcon,
   MessagesSquareIcon,
   Columns2,
@@ -128,6 +130,18 @@ const suggestions = [
     color: '#81c784',
     prompt:
       'Translate the following text into [Insert target language, e.g. Spanish, Chinese, French, Japanese]. Ensure the translation preserves the original tone, idioms, and context:\n\n"[Insert text here]"',
+  },
+  {
+    icon: TriangleIcon,
+    text: '几何问题',
+    color: '#64b5f6',
+    prompt: '一根5.5米长的竹竿可以通过高4米宽3米的门吗？',
+  },
+  {
+    icon: FlipHorizontal2Icon,
+    text: '镜子问题',
+    color: '#ff8a65',
+    prompt: '我正对着镜子站立，举起一只手。在我的视野中，这只手出现在镜子画面的左侧。请问在现实中，我举起的是哪只手？',
   },
 ]
 

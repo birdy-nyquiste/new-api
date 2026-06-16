@@ -25,13 +25,6 @@ import {
 
 export const Route = createFileRoute('/_authenticated/dashboard/$section')({
   beforeLoad: ({ params }) => {
-    if (params.section === 'model-compare') {
-      throw redirect({
-        to: '/playground',
-        search: { mode: 'compare' },
-      })
-    }
-
     const validSections = DASHBOARD_SECTION_IDS as unknown as string[]
     if (!validSections.includes(params.section)) {
       throw redirect({

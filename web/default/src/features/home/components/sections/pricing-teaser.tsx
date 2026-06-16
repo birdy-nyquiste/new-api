@@ -141,6 +141,7 @@ export function PricingTeaser() {
                     <Button
                       variant='outline'
                       className='min-h-[44px] w-full rounded-lg text-xs'
+                      onClick={() => window.location.href = 'mailto:admin@nyquiste.com'}
                     >
                       {t('Contact us')}
                     </Button>

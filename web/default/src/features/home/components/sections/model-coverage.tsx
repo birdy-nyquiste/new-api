@@ -115,7 +115,7 @@ export function ModelCoverage() {
             </span>
           ))}
           <a
-            href='mailto:support@quantumnous.com'
+            href='mailto:admin@nyquiste.com'
             className='rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors'
           >
             {t('Contact us →')}
