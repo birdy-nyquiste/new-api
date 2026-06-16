@@ -8,11 +8,11 @@ License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
@@ -41,12 +41,12 @@ export function FinalCTA({ isAuthenticated }: FinalCTAProps) {
             className='italic font-normal text-muted-foreground'
             style={{ fontFamily: 'var(--font-serif)' }}
           >
-            {t('starting today.')}
+            {t('configured for how you actually work.')}
           </span>
         </h2>
         <p className='mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground'>
           {t(
-            'Create your account, get free credits, and try Model Lab before committing to a plan.'
+            'Tell us which AI tools you need, what devices you use, and what you want to accomplish. We will recommend the right combination before setup.'
           )}
         </p>
         <div className='mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
@@ -54,14 +54,14 @@ export function FinalCTA({ isAuthenticated }: FinalCTAProps) {
             className='min-h-[44px] w-full rounded-lg sm:w-auto'
             render={<Link to='/sign-up' />}
           >
-            {t('Get started free →')}
+            {t('Start custom setup')}
           </Button>
           <Button
             variant='outline'
             className='min-h-[44px] w-full rounded-lg border-border/50 sm:w-auto'
             render={<Link to='/pricing' />}
           >
-            {t('View pricing')}
+            {t('View configuration options')}
           </Button>
         </div>
       </AnimateInView>
