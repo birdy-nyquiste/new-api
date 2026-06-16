@@ -47,12 +47,12 @@ const BUILTIN_SEARCH_PATTERNS = [
 // Endpoint types whose relay adapters translate or pass through `web_search_options`
 // to the provider's native web search tool.
 // - anthropic/gemini: relay translates web_search_options into the provider's native format
-// - openai/openai-response: relay passes web_search_options through directly; OpenAI now
-//   supports web search natively on many models beyond the original search-preview variants
+// - openai-response: Responses API supports web search via the web_search_preview built-in tool
+// NOTE: plain 'openai' (chat completions) is excluded — only *-search-preview models accept
+//       web_search_options there, and those are caught by OPENAI_SEARCH_PREVIEW_PATTERN above.
 const SUPPORTED_ENDPOINT_TYPES = new Set([
   'anthropic',
   'gemini',
-  'openai',
   'openai-response',
 ])
 
