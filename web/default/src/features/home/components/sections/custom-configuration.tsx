@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { CheckCircle2, Layers3, Settings2, Sparkles, Wifi } from 'lucide-react'
+import { Layers3, Settings2, Sparkles, Wifi } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { AnimateInView } from '@/components/animate-in-view'
 
@@ -67,19 +67,9 @@ export function CustomConfiguration() {
             </h2>
             <p className='mt-4 text-sm leading-7 text-muted-foreground'>
               {t(
-                'This is not a rigid package. We first look at what you want to do, then combine accounts, subscription tiers, quota, traffic, and setup support.'
+                'Flexible configuration of accounts, subscriptions, quota, traffic, and custom needs.'
               )}
             </p>
-            <div className='mt-6 rounded-xl border border-primary/20 bg-primary/5 p-4'>
-              <div className='flex items-start gap-3 text-sm'>
-                <CheckCircle2 className='mt-0.5 size-4 shrink-0 text-primary' />
-                <p className='min-w-0 leading-6 text-foreground'>
-                  {t(
-                    'You can choose only one tool, or configure several together. The point is to stop paying with your time before you even start using AI.'
-                  )}
-                </p>
-              </div>
-            </div>
           </AnimateInView>
 
           <div className='grid gap-px overflow-hidden rounded-xl border border-border/40 bg-border/40 sm:grid-cols-2'>

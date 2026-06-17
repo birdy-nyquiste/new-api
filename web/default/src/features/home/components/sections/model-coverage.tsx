@@ -28,37 +28,28 @@ export function ModelCoverage() {
       name: 'OpenAI',
       plan: 'ChatGPT Plus / Pro',
       models: [
-        { name: 'ChatGPT', category: t('General work') },
-        { name: 'Deep Research', category: t('Research') },
-        { name: 'Sora', category: t('Video') },
+        { name: 'GPT-5.5', category: t('Flagship') },
+        { name: 'GPT-5.5 Pro', category: t('Complex tasks') },
+        { name: 'GPT-5.4', category: t('Daily tasks') },
       ],
-      description: t(
-        'Strong general capability for structured thinking, writing, research, images, video, and broad productivity tasks.'
-      ),
     },
     {
       name: 'Anthropic',
       plan: 'Claude Pro / Max',
       models: [
-        { name: 'Claude', category: t('Long documents') },
-        { name: 'Artifacts', category: t('Creation') },
-        { name: 'Code tasks', category: t('Development') },
+        { name: 'Claude Fable 5', category: t('Flagship') },
+        { name: 'Claude Opus 4.8', category: t('Complex tasks') },
+        { name: 'Claude Sonnet 4.6', category: t('Daily tasks') },
       ],
-      description: t(
-        'Useful for long document reading, rewriting, careful writing, complex code understanding, and structured analysis.'
-      ),
     },
     {
       name: 'Google',
       plan: 'Google AI Pro / Ultra',
       models: [
-        { name: 'Gemini', category: t('Multimodal') },
-        { name: 'Google ecosystem', category: t('Workflow') },
-        { name: 'Large context', category: t('Context') },
+        { name: 'Gemini 3.5 Pro', category: t('Flagship') },
+        { name: 'Gemini 3.5 Flash', category: t('Complex tasks') },
+        { name: 'Gemini 3.1 Flash', category: t('Daily tasks') },
       ],
-      description: t(
-        'A strong fit for multimodal tasks, large-context work, and users already relying on the Google ecosystem.'
-      ),
     },
   ]
 
@@ -105,14 +96,14 @@ export function ModelCoverage() {
           {otherProviders.map((provider) => (
             <span
               key={provider}
-              className='rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground/70'
+              className='rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground'
             >
               {provider}
             </span>
           ))}
           <a
             href='mailto:admin@nyquiste.com'
-            className='rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/20'
+            className='inline-flex min-h-[44px] items-center rounded-full bg-primary/10 px-3.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20'
           >
             {t('Contact us')}
           </a>

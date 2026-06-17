@@ -38,21 +38,21 @@ export function PainVsSolution() {
       ),
     },
     {
-      title: t('Setup details handled in one place'),
-      body: t(
-        'Overseas account setup, verification flow, subscription payment, renewal, and usage support are handled as one service.'
-      ),
-    },
-    {
       title: t('SIM / eSIM for stable, compliant connectivity'),
       body: t(
         'Optional China Telecom Hong Kong SIM or eSIM traffic is available when your device and tools need a more stable connection.'
       ),
     },
     {
-      title: t('API Router stays available for advanced users'),
+      title: t('Complete setup support'),
       body: t(
-        'Use unified API access and Model Lab when you want to compare models, test prompts, or connect developer tools.'
+        'Professional user support covering account setup, subscriptions, quota planning, renewal, and workflow building.'
+      ),
+    },
+    {
+      title: t('Includes Nyquiste Router quota'),
+      body: t(
+        'One API key for global model access, built for complex coding and agent tasks.'
       ),
     },
   ]
@@ -69,8 +69,7 @@ export function PainVsSolution() {
             >
               {t('should not mean')}
             </span>
-            <br />
-            {t('spending your time on setup.')}
+            &nbsp;{t('spending your time on setup.')}
           </h2>
         </AnimateInView>
 
@@ -84,7 +83,7 @@ export function PainVsSolution() {
               <span className='h-px w-4 bg-muted-foreground/40' aria-hidden />
               {t('If you do it yourself')}
             </p>
-            <ol className='space-y-5'>
+            <ol className='space-y-11'>
               {painItems.map((item, i) => (
                 <li
                   key={item}

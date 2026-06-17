@@ -22,39 +22,6 @@ import { AnimateInView } from '@/components/animate-in-view'
 export function HomeFAQ() {
   const { t } = useTranslation()
 
-  const faqs = [
-    {
-      q: t('Why not just use domestic AI?'),
-      a: t(
-        'Domestic AI is useful for many daily tasks. If you care about English work, code, long documents, complex reasoning, overseas material, or multi-model comparison, ChatGPT, Claude, and Gemini are still worth adding.'
-      ),
-    },
-    {
-      q: t('Is one ChatGPT account enough?'),
-      a: t(
-        'Sometimes yes. But different models have different strengths: ChatGPT is broad, Claude is strong for writing and long documents, and Gemini fits multimodal and Google ecosystem workflows.'
-      ),
-    },
-    {
-      q: t('Is this a fixed all-in-one package?'),
-      a: t(
-        'No. It is a custom global AI setup. You can choose one or several providers, pick subscription tiers, and decide whether SIM or eSIM traffic is needed.'
-      ),
-    },
-    {
-      q: t('Will the account always work without risk?'),
-      a: t(
-        'Any overseas AI service can be affected by platform policy, region rules, and usage behavior. We focus on reducing setup and usage risk, explaining usage rules, and providing necessary support.'
-      ),
-    },
-    {
-      q: t('Do Android and Huawei phones work?'),
-      a: t(
-        'It depends on the AI tools you choose. Web access is usually easier. App usage may involve app stores, system versions, and regional settings, so we confirm your device before delivery.'
-      ),
-    },
-  ]
-
   return (
     <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
       <div className='mx-auto max-w-4xl'>
@@ -67,23 +34,11 @@ export function HomeFAQ() {
           </h2>
         </AnimateInView>
 
-        <div className='divide-y divide-border overflow-hidden rounded-xl border border-border/50 bg-background'>
-          {faqs.map((faq, index) => (
-            <AnimateInView
-              key={faq.q}
-              delay={index * 60}
-              animation='fade-up'
-              className='min-w-0 p-6'
-            >
-              <h3 className='text-sm font-semibold text-foreground break-words'>
-                {faq.q}
-              </h3>
-              <p className='mt-2 text-sm leading-7 text-muted-foreground break-words'>
-                {faq.a}
-              </p>
-            </AnimateInView>
-          ))}
-        </div>
+        <AnimateInView animation='fade-up'>
+          <div className='rounded-xl border border-dashed border-border/50 bg-muted/20 px-8 py-12 text-center'>
+            <p className='text-sm text-muted-foreground'>{t('Working in progress')}</p>
+          </div>
+        </AnimateInView>
       </div>
     </section>
   )

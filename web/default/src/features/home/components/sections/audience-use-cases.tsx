@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { BookOpen, BriefcaseBusiness, Code2, PenLine, UserRound } from 'lucide-react'
+import { BookOpen, Code2, PenLine, UserRound } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { AnimateInView } from '@/components/animate-in-view'
 import { cn } from '@/lib/utils'
@@ -56,15 +56,7 @@ export function AudienceUseCases() {
         'Combine tools for coding, debugging, technical planning, Cursor workflows, and long-context code understanding.'
       ),
       tags: [t('Code'), t('Debugging'), t('Cursor')],
-    },
-    {
-      icon: BriefcaseBusiness,
-      title: t('Small teams and companies'),
-      body: t(
-        'Plan accounts, subscriptions, quota, renewal, and usage rules centrally instead of having every member subscribe alone.'
-      ),
-      tags: [t('Team setup'), t('Quota planning'), t('Unified management')],
-    },
+    }
   ]
 
   return (
@@ -79,7 +71,7 @@ export function AudienceUseCases() {
           </h2>
           <p className='mt-4 text-sm leading-7 text-muted-foreground'>
             {t(
-              'Most users start with the same problem: they want reliable access to global AI. The right model mix depends on what they do every day.'
+              'Whatever your scenario, the suite has a plan that fits.'
             )}
           </p>
         </AnimateInView>
@@ -95,7 +87,7 @@ export function AudienceUseCases() {
                 animation='scale-in'
                 className={cn(
                   'min-w-0 bg-background p-6 transition-colors duration-300 hover:bg-muted/20',
-                  index === 0 && 'lg:col-span-2'
+                  (index === 0 || index === 3) && 'md:col-span-2 lg:col-span-2'
                 )}
               >
                 <div className='mb-5 flex items-center gap-3'>

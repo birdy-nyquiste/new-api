@@ -52,7 +52,7 @@ export function Hero({ isAuthenticated }: HeroProps) {
               style={{ animationDelay: '60ms' }}
             >
               <span className='mb-2 block'>{t('Nyquiste Global AI Suite')}</span>
-              <span className='block pt-1 text-muted-foreground'>
+              <span className='block pt-2 text-muted-foreground'>
                 {t('Use top global AI without the setup work')}
               </span>
             </h1>
@@ -72,14 +72,12 @@ export function Hero({ isAuthenticated }: HeroProps) {
             >
               <Button
                 className='min-h-[48px] flex-1 rounded-lg px-5 text-sm sm:flex-none'
-                render={<Link to={isAuthenticated ? '/playground' : '/sign-up'} />}
               >
                 {isAuthenticated ? t('Open Model Lab') : t('Start custom setup')}
               </Button>
               <Button
                 variant='outline'
                 className='min-h-[48px] flex-1 rounded-lg border-border/50 px-5 text-sm sm:flex-none'
-                render={<Link to='/pricing' />}
               >
                 {t('View configuration options')}
               </Button>
@@ -100,7 +98,6 @@ export function Hero({ isAuthenticated }: HeroProps) {
               description={t(
                 'ChatGPT, Claude, Gemini, and more providers configured around your needs.'
               )}
-              tag={t('Custom')}
             />
             <ManifestRow
               icon={<Wifi size={16} />}
@@ -108,7 +105,6 @@ export function Hero({ isAuthenticated }: HeroProps) {
               description={t(
                 'Optional China Telecom Hong Kong SIM or eSIM traffic for more stable global AI access.'
               )}
-              tag={t('Optional')}
             />
             <ManifestRow
               icon={<Settings2 size={16} />}
@@ -116,7 +112,6 @@ export function Hero({ isAuthenticated }: HeroProps) {
               description={t(
                 'Account setup, subscription, quota planning, renewal, and usage guidance handled in one place.'
               )}
-              tag={t('Included')}
             />
             <ManifestRow
               icon={<Zap size={16} />}
@@ -124,7 +119,6 @@ export function Hero({ isAuthenticated }: HeroProps) {
               description={t(
                 'A secondary option for developers who want unified API access and model comparison.'
               )}
-              tag={t('Advanced')}
             />
           </div>
         </div>
