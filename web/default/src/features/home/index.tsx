@@ -73,7 +73,7 @@ export function Home() {
       <CustomConfiguration />
       <SimConnectivity />
       <AudienceUseCases />
-      <ModelLabSpotlight />
+      <ModelLabSpotlight isAuthenticated={isAuthenticated} />
       <HomeFAQ />
       <FinalCTA isAuthenticated={isAuthenticated} />
       <Footer />

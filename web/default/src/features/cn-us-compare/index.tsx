@@ -35,6 +35,16 @@ type Dimension = {
   pts: DataPoint[]
 }
 type DimensionKey = 'index' | 'coding' | 'agent' | 'science'
+type CellData = { v: string; src: string; win?: boolean; cnwin?: boolean }
+type BenchmarkRow = {
+  label: string
+  sub: string
+  usVals: CellData[]
+  cnVals: CellData[]
+}
+
+const US_MODELS = ['Claude Opus 4.8', 'GPT-5.5', 'Gemini 3.1 Pro']
+const CN_MODELS = ['Qwen 3.7 Max', 'DeepSeek V4-Pro', 'GLM-5.1']
 
 // ─── Benchmark data ────────────────────────────────────────────────────────────
 const DATA: Record<DimensionKey, Dimension> = {
@@ -100,6 +110,79 @@ const DATA: Record<DimensionKey, Dimension> = {
   },
 }
 
+const BENCHMARK_ROWS: BenchmarkRow[] = [
+  {
+    label: '综合智能',
+    sub: 'Artificial Analysis 智能指数 v4.1',
+    usVals: [
+      { v: '56', src: 'AA · 本组#1', win: true },
+      { v: '55', src: 'AA' },
+      { v: '46', src: 'AA' },
+    ],
+    cnVals: [
+      { v: '46', src: 'AA · 国产最高' },
+      { v: '44', src: 'AA' },
+      { v: '40', src: 'AA' },
+    ],
+  },
+  {
+    label: '编程',
+    sub: 'SciCode · 真实科研编程 %',
+    usVals: [
+      { v: '53', src: 'AA' },
+      { v: '56', src: 'AA' },
+      { v: '59', src: 'AA · 本组#1', win: true },
+    ],
+    cnVals: [
+      { v: '49', src: 'AA' },
+      { v: '50', src: 'AA' },
+      { v: '44', src: 'AA' },
+    ],
+  },
+  {
+    label: '智能体 / 终端',
+    sub: 'Terminal-Bench v2.1 · 自主操作 %',
+    usVals: [
+      { v: '85', src: 'AA · 本组#1', win: true },
+      { v: '84', src: 'AA' },
+      { v: '74', src: 'AA' },
+    ],
+    cnVals: [
+      { v: '75', src: 'AA · 国产最高' },
+      { v: '64', src: 'AA' },
+      { v: '62', src: 'AA' },
+    ],
+  },
+  {
+    label: '科学 · 生物',
+    sub: 'GPQA Diamond · 研究生级生化物 %',
+    usVals: [
+      { v: '92', src: 'AA' },
+      { v: '94', src: 'AA · 并列#1', win: true },
+      { v: '94', src: 'AA · 并列#1', win: true },
+    ],
+    cnVals: [
+      { v: '92', src: 'AA · 国产最高' },
+      { v: '89', src: 'AA' },
+      { v: '87', src: 'AA' },
+    ],
+  },
+  {
+    label: '价格',
+    sub: '输出 · 美元 / 百万 token · 越低越省',
+    usVals: [
+      { v: '$25', src: '官方' },
+      { v: '$30', src: '官方' },
+      { v: '$12', src: '官方' },
+    ],
+    cnVals: [
+      { v: '$1.5', src: '官方·qwen3-max' },
+      { v: '$0.87', src: '官方·折扣价', cnwin: true },
+      { v: '$3.08', src: '官方' },
+    ],
+  },
+]
+
 // ─── Chart layout helpers (ported from original) ───────────────────────────────
 type LabelBox = { l: number; r: number; t: number; b: number }
 type PlacedItem = { name: LabelBox; stat: LabelBox }
@@ -132,7 +215,16 @@ function layoutLabels(
   padT: number,
   plotH: number,
 ): LayoutItem[] {
-  const items = pts.map((pt) => ({ pt, cx: sx(pt.x), cy: sy(pt.p), lx: 0, nameY: 0, statY: 0, anchor: 'middle' as const, leader: false }))
+  const items: LayoutItem[] = pts.map((pt) => ({
+    pt,
+    cx: sx(pt.x),
+    cy: sy(pt.p),
+    lx: 0,
+    nameY: 0,
+    statY: 0,
+    anchor: 'middle',
+    leader: false,
+  }))
   items.sort((a, b) => a.cy - b.cy || a.cx - b.cx)
   const placed: PlacedItem[] = []
 
@@ -191,12 +283,12 @@ function layoutLabels(
 // ─── Scatter chart ─────────────────────────────────────────────────────────────
 function buildChartSvg(key: DimensionKey, mobile: boolean): string {
   const d = DATA[key]
-  const W = mobile ? 680 : 960
+  const W = mobile ? 390 : 960
   const H = mobile ? 380 : 460
-  const padL = mobile ? 46 : 72
-  const padR = mobile ? 14 : 44
-  const padT = mobile ? 36 : 52
-  const padB = mobile ? 46 : 64
+  const padL = mobile ? 42 : 72
+  const padR = mobile ? 24 : 44
+  const padT = mobile ? 44 : 52
+  const padB = mobile ? 54 : 64
   const plotW = W - padL - padR
   const plotH = H - padT - padB
   const pmax = 32
@@ -212,11 +304,19 @@ function buildChartSvg(key: DimensionKey, mobile: boolean): string {
   const sx = (x: number) => padL + ((x - xmin) / (xmax - xmin)) * plotW
   const sy = (p: number) => padT + plotH - (p / pmax) * plotH
 
-  const fs = mobile ? 10 : 10.5
-  const fsAxis = mobile ? 11 : 12
-  const fsName = mobile ? 10.5 : 11.5
+  const fs = mobile ? 8.8 : 10.5
+  const fsAxis = mobile ? 9.5 : 12
+  const fsName = mobile ? 9.4 : 11.5
 
   const esc = (t: string | number) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const modelLabel = (name: string) => {
+    if (!mobile) return name
+    return name
+      .replace('Claude Opus 4.8', 'Claude')
+      .replace('Gemini 3.1 Pro', 'Gemini')
+      .replace('Qwen 3.7 Max', 'Qwen')
+      .replace('DeepSeek V4-Pro', 'DeepSeek')
+  }
 
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(d.title)}" style="display:block;width:100%;height:auto;font-family:ui-monospace,monospace">`
   s += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="currentColor" stroke-opacity="0.15"/>`
@@ -245,7 +345,7 @@ function buildChartSvg(key: DimensionKey, mobile: boolean): string {
       s += `<line x1="${it.cx}" y1="${it.cy}" x2="${it.lx}" y2="${it.nameY}" stroke="${c}" stroke-opacity=".35" stroke-width="1"/>`
     }
     s += `<circle cx="${it.cx}" cy="${it.cy}" r="${r}" fill="${c}" fill-opacity=".9" stroke="white" stroke-opacity="0.8" stroke-width="1.5"/>`
-    s += `<text x="${it.lx}" y="${it.nameY}" text-anchor="${it.anchor}" fill="${c}" font-size="${fsName}" font-weight="700">${esc(it.pt.n)}</text>`
+    s += `<text x="${it.lx}" y="${it.nameY}" text-anchor="${it.anchor}" fill="${c}" font-size="${fsName}" font-weight="700">${esc(modelLabel(it.pt.n))}</text>`
     s += `<text x="${it.lx}" y="${it.statY}" text-anchor="${it.anchor}" fill="currentColor" fill-opacity="0.5" font-size="${fs}">${it.pt.x} · $${it.pt.p}</text>`
   }
 
@@ -272,11 +372,10 @@ function ScatterChart({ activeKey }: { activeKey: DimensionKey }) {
   return (
     <div
       ref={containerRef}
-      className='overflow-x-auto -webkit-overflow-scrolling-touch'
-      style={{ WebkitOverflowScrolling: 'touch' }}
+      className='w-full overflow-hidden'
     >
       <div
-        style={{ minWidth: '680px' }}
+        className='w-full'
         // Data is fully hardcoded, no user input — safe use of dangerouslySetInnerHTML
         dangerouslySetInnerHTML={{ __html: svg }}
       />
@@ -287,8 +386,10 @@ function ScatterChart({ activeKey }: { activeKey: DimensionKey }) {
 // ─── Table ─────────────────────────────────────────────────────────────────────
 function DataTable() {
   return (
-    <div className='overflow-x-auto rounded-2xl border border-border/60 shadow-sm'>
-      <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: '860px', fontSize: '13.5px' }}>
+    <div
+      className='hidden overflow-hidden rounded-2xl border border-border/60 shadow-sm lg:block'
+    >
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '13.5px' }}>
         <caption style={{ captionSide: 'bottom', textAlign: 'left', fontSize: '12px', padding: '13px 16px', lineHeight: 1.7, color: 'var(--muted-foreground)' }}>
           六个型号四维度均取自 Artificial Analysis 独立复测（智能指数 v4.1 及其分项 SciCode、Terminal-Bench v2.1、GPQA Diamond），采集于 2026 年 6 月，口径统一。价格为各厂商官方输出价（美元/百万 token，人民币按 1 USD≈6.76 CNY 折算）：Qwen 取 qwen3-max，DeepSeek V4-Pro 为官网折扣价，GLM-5.1 为国际站美元报价。
         </caption>
@@ -305,92 +406,134 @@ function DataTable() {
             </th>
           </tr>
           <tr>
-            {['Claude Opus 4.8', 'GPT-5.5', 'Gemini 3.1 Pro'].map((m) => (
+            {US_MODELS.map((m) => (
               <th key={m} style={{ color: US, borderBottom: '1px solid var(--border)', padding: '13px 12px', textAlign: 'center', fontSize: '12.5px', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 20%, transparent)' }}>{m}</th>
             ))}
-            {['Qwen 3.7 Max', 'DeepSeek V4-Pro', 'GLM-5.1'].map((m) => (
+            {CN_MODELS.map((m) => (
               <th key={m} style={{ color: CN, borderBottom: '1px solid var(--border)', padding: '13px 12px', textAlign: 'center', fontSize: '12.5px', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 20%, transparent)' }}>{m}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          <TableRow
-            label='综合智能'
-            sub='Artificial Analysis 智能指数 v4.1'
-            usVals={[
-              { v: '56', src: 'AA · 本组#1', win: true },
-              { v: '55', src: 'AA' },
-              { v: '46', src: 'AA' },
-            ]}
-            cnVals={[
-              { v: '46', src: 'AA · 国产最高' },
-              { v: '44', src: 'AA' },
-              { v: '40', src: 'AA' },
-            ]}
-          />
-          <TableRow
-            label='编程'
-            sub='SciCode · 真实科研编程 %'
-            usVals={[
-              { v: '53', src: 'AA' },
-              { v: '56', src: 'AA' },
-              { v: '59', src: 'AA · 本组#1', win: true },
-            ]}
-            cnVals={[
-              { v: '49', src: 'AA' },
-              { v: '50', src: 'AA' },
-              { v: '44', src: 'AA' },
-            ]}
-          />
-          <TableRow
-            label='智能体 / 终端'
-            sub='Terminal-Bench v2.1 · 自主操作 %'
-            usVals={[
-              { v: '85', src: 'AA · 本组#1', win: true },
-              { v: '84', src: 'AA' },
-              { v: '74', src: 'AA' },
-            ]}
-            cnVals={[
-              { v: '75', src: 'AA · 国产最高' },
-              { v: '64', src: 'AA' },
-              { v: '62', src: 'AA' },
-            ]}
-          />
-          <TableRow
-            label='科学 · 生物'
-            sub='GPQA Diamond · 研究生级生化物 %'
-            usVals={[
-              { v: '92', src: 'AA' },
-              { v: '94', src: 'AA · 并列#1', win: true },
-              { v: '94', src: 'AA · 并列#1', win: true },
-            ]}
-            cnVals={[
-              { v: '92', src: 'AA · 国产最高' },
-              { v: '89', src: 'AA' },
-              { v: '87', src: 'AA' },
-            ]}
-          />
-          <TableRow
-            label='价格'
-            sub='输出 · 美元 / 百万 token · 越低越省'
-            usVals={[
-              { v: '$25', src: '官方' },
-              { v: '$30', src: '官方' },
-              { v: '$12', src: '官方' },
-            ]}
-            cnVals={[
-              { v: '$1.5', src: '官方·qwen3-max' },
-              { v: '$0.87', src: '官方·折扣价', cnwin: true },
-              { v: '$3.08', src: '官方' },
-            ]}
-          />
+          {BENCHMARK_ROWS.map((row) => (
+            <TableRow key={row.label} {...row} />
+          ))}
         </tbody>
       </table>
     </div>
   )
 }
 
-type CellData = { v: string; src: string; win?: boolean; cnwin?: boolean }
+function BenchmarkTabs({
+  activeIndex,
+  onChange,
+}: {
+  activeIndex: number
+  onChange: (index: number) => void
+}) {
+  const activeRow = BENCHMARK_ROWS[activeIndex]
+
+  return (
+    <div className='lg:hidden'>
+      <div className='-mx-1 mb-5 flex gap-2 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch] sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0' role='tablist'>
+        {BENCHMARK_ROWS.map((row, index) => (
+          <button
+            aria-controls='benchmark-panel'
+            aria-selected={activeIndex === index}
+            className='min-h-[44px] shrink-0 cursor-pointer rounded-full border px-4 py-2.5 text-[13.5px] font-semibold transition-colors duration-150'
+            id={`benchmark-tab-${index}`}
+            key={row.label}
+            onClick={() => onChange(index)}
+            role='tab'
+            style={
+              activeIndex === index
+                ? { background: 'var(--foreground)', color: 'var(--background)', borderColor: 'var(--foreground)' }
+                : { background: 'transparent', color: 'var(--muted-foreground)', borderColor: 'var(--border)' }
+            }
+          >
+            {row.label}
+          </button>
+        ))}
+      </div>
+
+      <section
+        aria-labelledby={`benchmark-tab-${activeIndex}`}
+        className='overflow-hidden rounded-2xl border border-border/60 bg-muted/20'
+        id='benchmark-panel'
+        role='tabpanel'
+      >
+        <div className='border-b border-border/50 px-4 py-3'>
+          <h3 className='text-sm font-bold text-foreground'>{activeRow.label}</h3>
+          <p className='mt-1 text-xs leading-relaxed text-muted-foreground'>
+            {activeRow.sub}
+          </p>
+        </div>
+        <div className='grid grid-cols-1 divide-y divide-border/50 sm:grid-cols-2 sm:divide-x sm:divide-y-0'>
+          <MobileMetricGroup
+            accent={US}
+            cells={activeRow.usVals}
+            models={US_MODELS}
+            title='美国前沿'
+          />
+          <MobileMetricGroup
+            accent={CN}
+            cells={activeRow.cnVals}
+            models={CN_MODELS}
+            title='国产主力'
+          />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function MobileMetricGroup({
+  accent,
+  cells,
+  models,
+  title,
+}: {
+  accent: string
+  cells: CellData[]
+  models: string[]
+  title: string
+}) {
+  return (
+    <div className='p-3.5'>
+      <div className='mb-2 flex items-center gap-2 text-xs font-semibold text-muted-foreground'>
+        <span className='inline-block size-2 rounded-full' style={{ background: accent }} />
+        {title}
+      </div>
+      <div className='space-y-2'>
+        {cells.map((cell, index) => {
+          const isWinner = cell.win || cell.cnwin
+
+          return (
+            <div
+              key={models[index]}
+              className='grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg bg-background/65 px-3 py-2.5'
+            >
+              <div className='min-w-0'>
+                <p className='truncate text-sm font-semibold text-foreground'>
+                  {models[index]}
+                </p>
+                <p className='mt-0.5 text-[11px] text-muted-foreground'>
+                  {cell.src}
+                </p>
+              </div>
+              <span
+                className='font-mono text-base font-bold'
+                style={{ color: isWinner ? accent : 'var(--foreground)' }}
+              >
+                {cell.v}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 function TableRow({
   label,
@@ -407,7 +550,7 @@ function TableRow({
 
   return (
     <tr>
-      <th style={{ textAlign: 'left', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 15%, transparent)', minWidth: '190px', fontSize: '13px', padding: '13px 12px', borderBottom: '1px solid var(--border)' }}>
+      <th style={{ textAlign: 'left', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 15%, transparent)', width: '180px', fontSize: '13px', padding: '13px 12px', borderBottom: '1px solid var(--border)' }}>
         {label}
         <small style={{ display: 'block', color: 'var(--muted-foreground)', fontWeight: 400, fontSize: '10.5px', marginTop: '2px' }}>{sub}</small>
       </th>
@@ -473,20 +616,30 @@ const FAQ_ITEMS = [
 ]
 
 function FaqItem({ q, a, defaultOpen = false }: { q: string; a: React.ReactNode; defaultOpen?: boolean }) {
+  const contentClassName =
+    'border-t border-border/40 px-5 py-4 text-sm text-muted-foreground leading-relaxed [&_strong]:text-foreground [&_a]:underline [&_a]:underline-offset-2 [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs [&_p]:mb-3 [&_p:last-child]:mb-0'
+
   return (
-    <details
-      open={defaultOpen}
-      className='group rounded-xl border border-border/60 bg-muted/20 overflow-hidden'
-    >
-      <summary className='flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden'>
-        {q}
-        <span className='shrink-0 font-mono text-lg font-normal text-muted-foreground group-open:hidden'>+</span>
-        <span className='shrink-0 font-mono text-lg font-normal text-muted-foreground hidden group-open:block'>−</span>
-      </summary>
-      <div className='border-t border-border/40 px-5 py-4 text-sm text-muted-foreground leading-relaxed [&_strong]:text-foreground [&_a]:underline [&_a]:underline-offset-2 [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs [&_p]:mb-3 [&_p:last-child]:mb-0'>
-        {a}
-      </div>
-    </details>
+    <>
+      <article className='hidden overflow-hidden rounded-xl border border-border/60 bg-muted/20 md:block'>
+        <h3 className='px-5 py-4 text-sm font-semibold text-foreground'>
+          {q}
+        </h3>
+        <div className={contentClassName}>{a}</div>
+      </article>
+
+      <details
+        open={defaultOpen}
+        className='group overflow-hidden rounded-xl border border-border/60 bg-muted/20 md:hidden'
+      >
+        <summary className='flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden'>
+          {q}
+          <span className='shrink-0 font-mono text-lg font-normal text-muted-foreground group-open:hidden'>+</span>
+          <span className='hidden shrink-0 font-mono text-lg font-normal text-muted-foreground group-open:block'>−</span>
+        </summary>
+        <div className={contentClassName}>{a}</div>
+      </details>
+    </>
   )
 }
 
@@ -500,13 +653,14 @@ const TABS: { key: DimensionKey; label: string }[] = [
 
 export function CnUsCompare() {
   const [activeTab, setActiveTab] = useState<DimensionKey>('index')
+  const [activeBenchmark, setActiveBenchmark] = useState(0)
 
   return (
     <PublicLayout>
-      <div className='mx-auto max-w-[1040px] px-5'>
+      <div className='mx-auto w-full max-w-[1040px] px-0 sm:px-5'>
 
         {/* Header */}
-        <header className='py-12 border-b border-border/50'>
+        <header className='border-b border-border/50 py-10 sm:py-12'>
           <p className='mb-3 font-mono text-[11px] tracking-[.2em] uppercase text-muted-foreground'>
             Artificial Analysis · 中美模型对比 · 2026年6月
           </p>
@@ -530,18 +684,22 @@ export function CnUsCompare() {
         </header>
 
         {/* Table section */}
-        <section className='py-11 border-b border-border/50'>
+        <section className='border-b border-border/50 py-9 sm:py-11'>
           <h2 className='text-[clamp(1.2rem,2.5vw,1.6rem)] font-bold tracking-tight text-foreground mb-1.5'>
             硬指标对照
           </h2>
-          <p className='text-sm text-muted-foreground mb-6'>
+          <p className='mb-6 text-sm text-muted-foreground'>
             四个维度同源、同口径，可直接横向比较。
           </p>
+          <BenchmarkTabs
+            activeIndex={activeBenchmark}
+            onChange={setActiveBenchmark}
+          />
           <DataTable />
         </section>
 
         {/* Chart section */}
-        <section className='py-11 border-b border-border/50'>
+        <section className='border-b border-border/50 py-9 sm:py-11'>
           <h2 className='text-[clamp(1.2rem,2.5vw,1.6rem)] font-bold tracking-tight text-foreground mb-1.5'>
             各维度和价格对比分析
           </h2>
@@ -550,14 +708,14 @@ export function CnUsCompare() {
           </p>
 
           {/* Tabs */}
-          <div className='flex flex-wrap gap-2 mb-5' role='tablist'>
+          <div className='-mx-1 mb-5 flex gap-2 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch] sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0' role='tablist'>
             {TABS.map(({ key, label }) => (
               <button
                 key={key}
                 role='tab'
                 aria-selected={activeTab === key}
                 onClick={() => setActiveTab(key)}
-                className='rounded-full border px-4 py-2 text-[13.5px] font-semibold transition-colors duration-150 cursor-pointer'
+                className='min-h-[44px] shrink-0 cursor-pointer rounded-full border px-4 py-2.5 text-[13.5px] font-semibold transition-colors duration-150'
                 style={
                   activeTab === key
                     ? { background: 'var(--foreground)', color: 'var(--background)', borderColor: 'var(--foreground)' }
@@ -570,7 +728,7 @@ export function CnUsCompare() {
           </div>
 
           {/* Chart card */}
-          <div className='rounded-2xl border border-border/60 bg-muted/20 p-5'>
+          <div className='-mx-4 border-y border-border/60 bg-muted/20 p-3 sm:mx-0 sm:rounded-2xl sm:border sm:p-5'>
             <div className='flex flex-wrap items-baseline justify-between gap-3 mb-2'>
               <h3 className='text-base font-bold text-foreground'>{DATA[activeTab].title}</h3>
               <span className='font-mono text-[11px] text-muted-foreground'>{DATA[activeTab].src}</span>
@@ -580,11 +738,11 @@ export function CnUsCompare() {
         </section>
 
         {/* FAQ section */}
-        <section className='py-11 border-b border-border/50'>
+        <section className='border-b border-border/50 py-9 sm:py-11'>
           <h2 className='text-[clamp(1.2rem,2.5vw,1.6rem)] font-bold tracking-tight text-foreground mb-5'>
             常见问题
           </h2>
-          <div className='grid gap-2.5 sm:grid-cols-2'>
+          <div className='grid gap-2.5 md:grid-cols-2'>
             {FAQ_ITEMS.map((item) => (
               <FaqItem key={item.q} q={item.q} a={item.a} defaultOpen={item.defaultOpen} />
             ))}
@@ -592,8 +750,8 @@ export function CnUsCompare() {
         </section>
 
         {/* Sources footer */}
-        <footer className='py-10 pb-16'>
-          <div className='rounded-2xl border border-border/60 bg-muted/20 p-5'>
+        <footer className='py-9 pb-16 sm:py-10'>
+          <div className='-mx-4 border-y border-border/60 bg-muted/20 p-4 sm:mx-0 sm:rounded-2xl sm:border sm:p-5'>
             <p className='text-xs font-bold uppercase tracking-wider text-foreground mb-4'>数据来源</p>
             <div className='grid gap-4 sm:grid-cols-2 text-sm text-muted-foreground'>
               <div className='flex flex-col gap-1'>

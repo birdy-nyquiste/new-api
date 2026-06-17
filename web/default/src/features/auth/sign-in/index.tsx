@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { Link, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { useStatus } from '@/hooks/use-status'
+import { Button } from '@/components/ui/button'
 import { AuthLayout } from '../auth-layout'
 import { TermsFooter } from '../components/terms-footer'
 import { UserAuthForm } from './components/user-auth-form'
@@ -35,19 +36,18 @@ export function SignIn() {
           <h2 className='text-center text-2xl font-semibold tracking-tight sm:text-left'>
             {t('Sign in')}
           </h2>
-          {!status?.self_use_mode_enabled &&
-            status?.register_enabled !== false && (
-              <p className='text-muted-foreground text-left text-sm sm:text-base'>
-                {t("Don't have an account?")}{' '}
-                <Link
-                  to='/sign-up'
-                  className='hover:text-primary font-medium underline underline-offset-4'
-                >
-                  {t('Sign up')}
-                </Link>
-                .
-              </p>
-            )}
+          <div className='space-y-3'>
+            <p className='text-muted-foreground text-left text-sm sm:text-base'>
+              {t("Don't have an account?")}
+            </p>
+            <Button
+              variant='outline'
+              className='w-full'
+              render={<Link to='/sign-up' />}
+            >
+              {t('Sign up')}
+            </Button>
+          </div>
         </div>
 
         <UserAuthForm redirectTo={redirect} />
