@@ -22,11 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { AnimateInView } from '@/components/animate-in-view'
 import { Button } from '@/components/ui/button'
 
-interface SupportServicesProps {
-  isAuthenticated?: boolean
-}
-
-export function SupportServices({ isAuthenticated }: SupportServicesProps) {
+export function SupportServices() {
   const { t } = useTranslation()
 
   const services = [
@@ -88,7 +84,7 @@ export function SupportServices({ isAuthenticated }: SupportServicesProps) {
         >
           <Button
             className='min-h-[48px] rounded-lg px-5 text-sm'
-            render={<Link to={isAuthenticated ? '/dashboard' : '/sign-up'} />}
+            render={<Link to='/plan-config' />}
           >
             {t('Configure the full bundle')}
           </Button>

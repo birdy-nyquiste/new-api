@@ -20,11 +20,7 @@ import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
-interface HeroProps {
-  isAuthenticated?: boolean
-}
-
-export function Hero({ isAuthenticated }: HeroProps) {
+export function Hero() {
   const { t } = useTranslation()
   const heroTitle = t('Use top global AI without the setup work')
   const heroTitleParts = heroTitle.includes('，')
@@ -90,7 +86,7 @@ export function Hero({ isAuthenticated }: HeroProps) {
           >
             <Button
               className='min-h-[50px] rounded-lg px-6 text-sm shadow-sm'
-              render={<Link to={isAuthenticated ? '/dashboard' : '/sign-up'} />}
+              render={<Link to='/plan-config' />}
             >
               {t('Configure the full bundle')}
             </Button>

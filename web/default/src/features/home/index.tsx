@@ -64,10 +64,10 @@ export function Home() {
           </Alert>
         </div>
       )}
-      <Hero isAuthenticated={isAuthenticated} />
+      <Hero />
       <PainVsSolution />
-      <ModelCoverage isAuthenticated={isAuthenticated} />
-      <SupportServices isAuthenticated={isAuthenticated} />
+      <ModelCoverage />
+      <SupportServices />
       <ModelLabSpotlight isAuthenticated={isAuthenticated} />
       <HomeFAQ />
       <Footer

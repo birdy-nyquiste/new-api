@@ -22,11 +22,7 @@ import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
 import { ProviderCard } from '../provider-card'
 
-interface ModelCoverageProps {
-  isAuthenticated?: boolean
-}
-
-export function ModelCoverage({ isAuthenticated }: ModelCoverageProps) {
+export function ModelCoverage() {
   const { t } = useTranslation()
 
   const providers = [
@@ -91,7 +87,7 @@ export function ModelCoverage({ isAuthenticated }: ModelCoverageProps) {
         >
           <Button
             className='min-h-[48px] rounded-lg px-5 text-sm'
-            render={<Link to={isAuthenticated ? '/dashboard' : '/sign-up'} />}
+            render={<Link to='/plan-config' />}
           >
             {t('Configure the full bundle')}
           </Button>
