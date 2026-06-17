@@ -102,7 +102,7 @@ export function ModelCoverage() {
             </span>
           ))}
           <a
-            href='mailto:admin@nyquiste.com'
+            href='mailto:r@nyquiste.com'
             className='inline-flex min-h-[44px] items-center rounded-full bg-primary/10 px-3.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20'
           >
             {t('Contact us')}

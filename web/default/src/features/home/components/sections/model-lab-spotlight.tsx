@@ -22,7 +22,11 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
 
-export function ModelLabSpotlight() {
+interface ModelLabSpotlightProps {
+  isAuthenticated?: boolean
+}
+
+export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
   const { t } = useTranslation()
 
   const features = [
@@ -55,9 +59,9 @@ export function ModelLabSpotlight() {
           <div className='flex flex-wrap gap-3'>
             <Button
               className='min-h-[44px] rounded-lg px-5 text-sm'
-              render={<Link to='/playground' />}
+              render={<Link to={isAuthenticated ? '/playground' : '/sign-up'} />}
             >
-              {t('Try Model Lab')}
+              {isAuthenticated ? t('Open Model Lab action') : t('Try Model Lab')}
             </Button>
             <Button
               variant='outline'

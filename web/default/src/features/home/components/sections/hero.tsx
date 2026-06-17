@@ -16,8 +16,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Link } from '@tanstack/react-router'
 import { Monitor, Settings2, Wifi, Zap } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { ManifestRow } from '../manifest-row'
@@ -67,19 +67,14 @@ export function Hero({ isAuthenticated }: HeroProps) {
             </p>
 
             <div
-              className='landing-animate-fade-up mt-8 flex w-full flex-wrap gap-3 sm:w-auto md:mt-10 lg:mt-11'
+              className='landing-animate-fade-up mt-8 flex w-full sm:w-auto md:mt-10 lg:mt-11'
               style={{ animationDelay: '180ms' }}
             >
               <Button
                 className='min-h-[48px] flex-1 rounded-lg px-5 text-sm sm:flex-none'
+                render={isAuthenticated ? <Link to='/dashboard' /> : undefined}
               >
                 {isAuthenticated ? t('Open Model Lab') : t('Start custom setup')}
-              </Button>
-              <Button
-                variant='outline'
-                className='min-h-[48px] flex-1 rounded-lg border-border/50 px-5 text-sm sm:flex-none'
-              >
-                {t('View configuration options')}
               </Button>
             </div>
 

@@ -39,17 +39,11 @@ export function FinalCTA({ isAuthenticated }: FinalCTAProps) {
           <br />
           {t('Seamless access to global AI')}
         </h2>
-        <div className='mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center'>
+        <div className='mt-8 flex justify-center'>
           <Button
             className='min-h-[44px] w-full rounded-lg sm:w-auto'
           >
             {t('Start custom setup')}
-          </Button>
-          <Button
-            variant='outline'
-            className='min-h-[44px] w-full rounded-lg border-border/50 sm:w-auto'
-          >
-            {t('View configuration options')}
           </Button>
         </div>
       </AnimateInView>
