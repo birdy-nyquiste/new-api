@@ -16,13 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-export { AudienceUseCases } from './sections/audience-use-cases'
-export { CustomConfiguration } from './sections/custom-configuration'
-export { FinalCTA } from './sections/final-cta'
-export { Hero } from './sections/hero'
-export { HomeFAQ } from './sections/home-faq'
-export { ModelCoverage } from './sections/model-coverage'
-export { ModelLabSpotlight } from './sections/model-lab-spotlight'
-export { PainVsSolution } from './sections/pain-solution'
-export { SimConnectivity } from './sections/sim-connectivity'
+import { createFileRoute } from '@tanstack/react-router'
+import { CnUsCompare } from '@/features/cn-us-compare'
 
+export const Route = createFileRoute('/cn-us-compare')({
+  component: CnUsCompare,
+})

@@ -62,6 +62,7 @@ export function ModelLabSpotlight() {
             <Button
               variant='outline'
               className='min-h-[44px] rounded-lg border-border/50 px-5 text-sm'
+              render={<Link to='/cn-us-compare' />}
             >
               {t('View CN vs US model benchmark')}
             </Button>
