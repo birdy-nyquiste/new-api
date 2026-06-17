@@ -296,6 +296,16 @@ export function PublicHeader(props: PublicHeaderProps) {
                 />
               )}
 
+              <div className='bg-border/40 mx-1 h-4 w-px' />
+              <Button
+                size='sm'
+                variant='outline'
+                className='h-8 rounded-lg px-3.5 text-xs font-medium'
+                render={<Link to='/plan-config' />}
+              >
+                {t('Configure the full bundle')}
+              </Button>
+
               {showAuthButtons && (
                 <>
                   <div className='bg-border/40 mx-1 h-4 w-px' />
@@ -421,6 +431,13 @@ export function PublicHeader(props: PublicHeaderProps) {
             )}
             style={{ transitionDelay: mobileOpen ? '250ms' : '0ms' }}
           >
+            <Link
+              to='/plan-config'
+              onClick={() => setMobileOpen(false)}
+              className='border-border/70 text-foreground inline-flex h-10 items-center justify-center rounded-lg border text-sm font-medium transition-colors hover:bg-muted/40'
+            >
+              {t('Configure the full bundle')}
+            </Link>
             {showAuthButtons && (
               <Link
                 to={isAuthenticated ? '/dashboard' : '/sign-in'}
