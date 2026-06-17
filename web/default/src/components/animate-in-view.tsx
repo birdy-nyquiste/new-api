@@ -50,19 +50,35 @@ export function AnimateInView(props: AnimateInViewProps) {
       return
     }
 
+    const animate = () => {
+      el.classList.remove('opacity-0')
+      el.classList.add(`landing-animate-${animation}`)
+      if (once) {
+        el.addEventListener(
+          'animationend',
+          () => el.classList.remove('will-change-[transform,opacity]'),
+          { once: true }
+        )
+      }
+    }
+
+    // If the element is already in the viewport at mount time, animate immediately.
+    // IntersectionObserver fires asynchronously and can miss elements that are
+    // visible on first paint or after a layout shift.
+    const rect = el.getBoundingClientRect()
+    const vh = window.innerHeight
+    const effectiveBottom = vh - 40 // mirrors rootMargin '0px 0px -40px 0px'
+    const visiblePx = Math.min(rect.bottom, effectiveBottom) - Math.max(rect.top, 0)
+    if (rect.bottom > 0 && rect.top < effectiveBottom && visiblePx / rect.height >= threshold) {
+      animate()
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          el.classList.remove('opacity-0')
-          el.classList.add(`landing-animate-${animation}`)
-          if (once) {
-            observer.unobserve(el)
-            el.addEventListener(
-              'animationend',
-              () => el.classList.remove('will-change-[transform,opacity]'),
-              { once: true }
-            )
-          }
+          animate()
+          if (once) observer.unobserve(el)
         } else if (!once) {
           el.classList.add('opacity-0')
           el.classList.remove(`landing-animate-${animation}`)

@@ -25,15 +25,9 @@ interface ProviderCardProps {
   name: string
   plan: string
   models: ModelItem[]
-  description: string
 }
 
-export function ProviderCard({
-  name,
-  plan,
-  models,
-  description,
-}: ProviderCardProps) {
+export function ProviderCard({ name, plan, models }: ProviderCardProps) {
   return (
     <div className='flex min-w-0 flex-col p-5 [overflow-wrap:anywhere]'>
       <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
@@ -44,7 +38,7 @@ export function ProviderCard({
           {plan}
         </span>
       </div>
-      <div className='mb-4 space-y-1.5'>
+      <div className='space-y-1.5'>
         {models.map((model) => (
           <div
             key={model.name}
@@ -59,9 +53,6 @@ export function ProviderCard({
           </div>
         ))}
       </div>
-      <p className='flex-1 border-border text-muted-foreground/70 border-t pt-3 text-[11px] leading-relaxed break-words italic'>
-        {description}
-      </p>
     </div>
   )
 }

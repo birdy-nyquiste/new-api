@@ -24,12 +24,15 @@ import { Markdown } from '@/components/ui/markdown'
 import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
 import {
+  AudienceUseCases,
+  CustomConfiguration,
   FinalCTA,
   Hero,
+  HomeFAQ,
   ModelCoverage,
   ModelLabSpotlight,
   PainVsSolution,
-  PricingTeaser,
+  SimConnectivity,
 } from './components'
 import { useHomePageContent } from './hooks'
 
@@ -67,8 +70,11 @@ export function Home() {
       <Hero isAuthenticated={isAuthenticated} />
       <PainVsSolution />
       <ModelCoverage />
+      <CustomConfiguration />
+      <SimConnectivity />
+      <AudienceUseCases />
       <ModelLabSpotlight />
-      <PricingTeaser />
+      <HomeFAQ />
       <FinalCTA isAuthenticated={isAuthenticated} />
       <Footer />
     </>

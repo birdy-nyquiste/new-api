@@ -8,15 +8,16 @@ License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link } from '@tanstack/react-router'
+import { Gift, GitCompare, MessageSquare } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
@@ -25,59 +26,68 @@ export function ModelLabSpotlight() {
   const { t } = useTranslation()
 
   const features = [
-    t('One prompt, real-time side-by-side comparison across models'),
-    t('Bring in a judge model to evaluate response quality'),
-    t('Chat with any model interactively'),
+    {
+      icon: Gift,
+      title: t('Free credits on sign-up'),
+    },
+    {
+      icon: MessageSquare,
+      title: t('Chat-style interaction with global models'),
+    },
+    {
+      icon: GitCompare,
+      title: t('Compare outputs from 3 models side by side — AI rates response quality'),
+    },
   ]
 
   return (
-    <section className='font-landing border-t border-border/50 px-6 py-12 md:py-16 lg:py-20'>
+    <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
       <div className='mx-auto max-w-5xl'>
-        <AnimateInView animation='fade-up'>
-          <div className='grid grid-cols-1 items-start gap-8 rounded-2xl border border-border p-8 md:grid-cols-[1fr_auto] md:gap-12 md:p-12'>
-
-            {/* Left: copy */}
-            <div>
-              <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
-                {t('Model Lab')}
-              </h2>
-
-              <ul className='mt-5 space-y-2'>
-                {features.map((feature) => (
-                  <li
-                    key={feature}
-                    className='flex items-center gap-2.5 text-base text-muted-foreground'
-                  >
-                    <span
-                      className='h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary'
-                      aria-hidden
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Right: CTA */}
-            <div className='flex flex-col items-center gap-3 md:min-w-[180px]'>
-              <span className='rounded-full border border-border px-3 py-1.5 text-center text-[10px] font-semibold text-muted-foreground'>
-                {t('No subscription needed to try')}
-              </span>
-              <Button
-                className='min-h-[44px] w-full rounded-lg'
-                render={<Link to='/playground' />}
-              >
-                {t('Try Model Lab →')}
-              </Button>
-              <Link
-                to='/pricing'
-                className='text-[11px] text-muted-foreground/60 underline underline-offset-2 decoration-border hover:text-muted-foreground transition-colors'
-              >
-                {t('or view pricing first')}
-              </Link>
-            </div>
+        <AnimateInView className='mb-10 flex flex-col gap-6'>
+          <div className='max-w-2xl'>
+            <p className='mb-3 text-xs font-medium tracking-widest text-muted-foreground uppercase'>
+              {t('Model Lab')}
+            </p>
+            <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
+              {t('Free to try, fast to start')}
+            </h2>
+          </div>
+          <div className='flex flex-wrap gap-3'>
+            <Button
+              className='min-h-[44px] rounded-lg px-5 text-sm'
+              render={<Link to='/playground' />}
+            >
+              {t('Try Model Lab')}
+            </Button>
+            <Button
+              variant='outline'
+              className='min-h-[44px] rounded-lg border-border/50 px-5 text-sm'
+            >
+              {t('View CN vs US model benchmark')}
+            </Button>
           </div>
         </AnimateInView>
+
+        <div className='grid gap-px overflow-hidden rounded-xl border border-border/40 bg-border/40 md:grid-cols-3'>
+          {features.map((item, index) => {
+            const Icon = item.icon
+            return (
+              <AnimateInView
+                key={item.title}
+                delay={index * 70}
+                animation='scale-in'
+                className='min-w-0 bg-background p-6 transition-colors duration-300 hover:bg-muted/20'
+              >
+                <div className='mb-5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground'>
+                  <Icon className='size-4' />
+                </div>
+                <p className='whitespace-pre-line text-sm font-semibold text-foreground break-words'>
+                  {item.title}
+                </p>
+              </AnimateInView>
+            )
+          })}
+        </div>
       </div>
     </section>
   )

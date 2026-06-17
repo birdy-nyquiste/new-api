@@ -22,7 +22,7 @@ interface ManifestRowProps {
   icon: ReactNode
   title: string
   description: string
-  tag: string
+  tag?: string
 }
 
 export function ManifestRow({
@@ -33,7 +33,7 @@ export function ManifestRow({
 }: ManifestRowProps) {
   return (
     <div className='[&:not(:last-child)]:border-border flex items-start gap-3 py-3 [&:not(:last-child)]:border-b'>
-      <div className='border-border text-muted-foreground flex h-9 w-9 flex-shrink-0 items-center justify-center rounded border'>
+      <div className='border-border bg-muted/20 text-muted-foreground flex h-9 w-9 flex-shrink-0 items-center justify-center rounded border'>
         {icon}
       </div>
       <div className='min-w-0 flex-1 [overflow-wrap:anywhere]'>
@@ -41,9 +41,11 @@ export function ManifestRow({
           <span className='text-foreground min-w-0 text-sm font-semibold tracking-tight'>
             {title}
           </span>
-          <span className='text-muted-foreground/50 text-[10px] font-semibold uppercase tracking-widest'>
-            {tag}
-          </span>
+          {tag && (
+            <span className='text-muted-foreground/50 text-[10px] font-semibold uppercase tracking-widest'>
+              {tag}
+            </span>
+          )}
         </div>
         <p className='text-muted-foreground mt-0.5 text-xs leading-relaxed break-words'>
           {description}
