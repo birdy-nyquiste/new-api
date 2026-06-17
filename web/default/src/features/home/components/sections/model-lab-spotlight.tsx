@@ -47,16 +47,19 @@ export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
   return (
     <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
       <div className='mx-auto max-w-5xl'>
-        <AnimateInView className='mb-10 flex flex-col gap-6'>
+        <AnimateInView className='mb-10 flex flex-col items-center gap-6 text-center'>
           <div className='max-w-2xl'>
-            <p className='mb-3 text-xs font-medium tracking-widest text-muted-foreground uppercase'>
-              {t('Model Lab')}
-            </p>
             <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
-              {t('Free to try, fast to start')}
+              {t('Model Lab,')}&nbsp;
+              <span
+                className='italic font-normal text-muted-foreground'
+                style={{ fontFamily: 'var(--font-serif)' }}
+              >
+                {t('compare Chinese and US models')}
+              </span>
             </h2>
           </div>
-          <div className='flex flex-wrap gap-3'>
+          <div className='flex flex-wrap justify-center gap-3'>
             <Button
               className='min-h-[44px] rounded-lg px-5 text-sm'
               render={<Link to={isAuthenticated ? '/playground' : '/sign-up'} />}
@@ -81,9 +84,9 @@ export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
                 key={item.title}
                 delay={index * 70}
                 animation='scale-in'
-                className='min-w-0 bg-background p-6 transition-colors duration-300 hover:bg-muted/20'
+                className='min-w-0 bg-background p-6 text-center transition-colors duration-300 hover:bg-muted/20'
               >
-                <div className='mb-5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground'>
+                <div className='mb-5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground mx-auto'>
                   <Icon className='size-4' />
                 </div>
                 <p className='whitespace-pre-line text-sm font-semibold text-foreground break-words'>

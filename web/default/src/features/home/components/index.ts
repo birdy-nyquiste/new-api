@@ -18,11 +18,10 @@ For commercial licensing, please contact support@quantumnous.com
 */
 export { AudienceUseCases } from './sections/audience-use-cases'
 export { CustomConfiguration } from './sections/custom-configuration'
-export { FinalCTA } from './sections/final-cta'
 export { Hero } from './sections/hero'
 export { HomeFAQ } from './sections/home-faq'
 export { ModelCoverage } from './sections/model-coverage'
 export { ModelLabSpotlight } from './sections/model-lab-spotlight'
 export { PainVsSolution } from './sections/pain-solution'
 export { SimConnectivity } from './sections/sim-connectivity'
-
+export { SupportServices } from './sections/support-services'

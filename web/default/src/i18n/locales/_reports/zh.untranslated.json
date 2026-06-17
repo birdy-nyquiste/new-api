@@ -1,8 +1,14 @@
 {
   "(Maximum reached)": "(Maximum reached)",
+  "Apple ID": "Apple ID",
   "Artifacts": "Artifacts",
   "Cursor": "Cursor",
+  "Includes Nyquiste Router quota": "涵盖 Nyquiste Router 额度",
+  "Nyquiste AI Suite": "Nyquiste AI 全家桶",
+  "© 2023 - 2026 Nyquiste Corporation. All rights reserved.": "© 2023 - 2026 Nyquiste Corporation. All rights reserved.",
+  "Nyquiste global AI suite — top AI without the setup hassle": "Nyquiste 全球 AI 全家桶，不用折腾，也能用上全球顶级 AI",
   "Nyquiste Router": "Nyquiste Router",
+  "One API key for global model access, built for complex coding and agent tasks.": "一个 API Key 接入全球模型，助力复杂编程和智能体任务。",
   "Selected {{count}} / {{max}} models": "Selected {{count}} / {{max}} models",
   "SIM / eSIM": "SIM / eSIM"
 }

@@ -18,37 +18,33 @@ For commercial licensing, please contact support@quantumnous.com
 */
 interface ModelItem {
   name: string
-  category: string
 }
 
 interface ProviderCardProps {
-  name: string
+  provider: string
   plan: string
   models: ModelItem[]
 }
 
-export function ProviderCard({ name, plan, models }: ProviderCardProps) {
+export function ProviderCard({ provider, plan, models }: ProviderCardProps) {
   return (
     <div className='flex min-w-0 flex-col p-5 [overflow-wrap:anywhere]'>
-      <div className='mb-4 flex flex-wrap items-center justify-between gap-2'>
-        <span className='text-foreground min-w-0 text-lg font-extrabold tracking-tight break-words'>
-          {name}
-        </span>
-        <span className='bg-primary/10 text-primary max-w-full rounded-full px-2.5 py-0.5 text-[10px] font-semibold break-words'>
+      <div className='mb-4 flex min-w-0 items-start justify-between gap-3'>
+        <h3 className='min-w-0 text-lg font-extrabold tracking-tight text-foreground break-words text-left'>
+          {provider}
+        </h3>
+        <span className='shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary text-right'>
           {plan}
         </span>
       </div>
-      <div className='space-y-1.5'>
+      <div className='space-y-2'>
         {models.map((model) => (
           <div
             key={model.name}
-            className='bg-muted/50 flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-md px-3 py-1.5'
+            className='bg-muted/50 flex min-w-0 items-center rounded-md px-3 py-2'
           >
-            <span className='text-foreground min-w-0 text-xs font-medium break-words'>
+            <span className='text-foreground min-w-0 text-sm font-medium break-words'>
               {model.name}
-            </span>
-            <span className='text-muted-foreground/70 min-w-0 text-[10px] break-words'>
-              {model.category}
             </span>
           </div>
         ))}

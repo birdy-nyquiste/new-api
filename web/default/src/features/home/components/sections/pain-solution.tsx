@@ -16,160 +16,82 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { ArrowRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { AnimateInView } from '@/components/animate-in-view'
 
 export function PainVsSolution() {
   const { t } = useTranslation()
 
-  const painItems = [
-    t('Overseas account registration takes time'),
-    t('Phone verification and subscription payment are inconvenient'),
-    t('Mobile, desktop, and network setup can get complicated'),
-    t('Trying multiple models one by one costs more time and money'),
-  ]
-
   const solutionItems = [
     {
-      title: t('We configure the accounts and subscriptions for you'),
+      title: t('Accounts and subscriptions, configured in one place'),
       body: t(
-        'ChatGPT, Claude, Gemini, and other services can be prepared together, with subscription tiers and quota matched to your use case.'
+        'ChatGPT, Claude, Gemini, and more providers in one bundled setup, with subscription tiers chosen around your needs.'
       ),
     },
     {
-      title: t('SIM / eSIM for stable, compliant connectivity'),
+      title: t('Stable and compliant network access'),
       body: t(
-        'Optional China Telecom Hong Kong SIM or eSIM traffic is available when your device and tools need a more stable connection.'
+        'Global traffic access through Hong Kong or US carriers, with support for SIM / eSIM.'
       ),
     },
     {
-      title: t('Complete setup support'),
+      title: t('Complete supporting help'),
       body: t(
-        'Professional user support covering account setup, subscriptions, quota planning, renewal, and workflow building.'
+        'Professional support covering account setup, Apple ID, US-market phones, and the full process end to end.'
       ),
     },
     {
-      title: t('Includes Nyquiste Router quota'),
+      title: t('API Router'),
       body: t(
-        'One API key for global model access, built for complex coding and agent tasks.'
+        'Includes Nyquiste Router quota for users who need a unified API key and routed access as an advanced option.'
       ),
     },
   ]
 
   return (
     <section className='font-landing border-t border-border/50 px-6 py-12 md:py-16 lg:py-20'>
-      <div className='mx-auto max-w-4xl'>
+      <div className='mx-auto max-w-5xl'>
         <AnimateInView className='mb-10 text-center' animation='fade-up'>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground break-words'>
-            {t('Using global AI')}&nbsp;
+            {t('Use global AI')}&nbsp;
             <span
               className='italic font-normal text-muted-foreground'
               style={{ fontFamily: 'var(--font-serif)' }}
             >
-              {t('should not mean')}
+              {t('with ease')}
             </span>
-            &nbsp;{t('spending your time on setup.')}
           </h2>
         </AnimateInView>
 
-        <AnimateInView
-          animation='fade-up'
-          className='hidden items-stretch md:flex'
-          delay={100}
-        >
-          <div className='flex-1 pr-8'>
-            <p className='mb-6 flex items-center gap-2 text-[10px] font-bold tracking-[2px] text-muted-foreground uppercase'>
-              <span className='h-px w-4 bg-muted-foreground/40' aria-hidden />
-              {t('If you do it yourself')}
-            </p>
-            <ol className='space-y-11'>
-              {painItems.map((item, i) => (
+        <AnimateInView animation='fade-up' delay={100}>
+          <ol className='grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-12 md:gap-5'>
+            {solutionItems.map((item, index) => {
+              const desktopSpan =
+                index === 0 || index === 3 ? 'md:col-span-7' : 'md:col-span-5'
+
+              return (
                 <li
-                  key={item}
-                  className='flex items-start gap-2.5 text-sm text-muted-foreground line-through decoration-muted-foreground/40'
+                  key={item.title}
+                  className={`rounded-[1.75rem] border border-border/60 bg-muted/20 p-5 transition-colors duration-300 hover:bg-muted/30 sm:p-6 ${desktopSpan}`}
                 >
-                  <span className='mt-0.5 shrink-0 text-xs font-bold text-muted-foreground/40'>
-                    {i + 1}.
-                  </span>
-                  <span className='min-w-0 break-words'>{item}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className='flex items-center justify-center px-8'>
-            <div className='flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground/50'>
-              <ArrowRight size={14} />
-            </div>
-          </div>
-
-          <div className='flex-1 pl-8'>
-            <p className='mb-6 flex items-center gap-2 text-[10px] font-bold tracking-[2px] text-primary uppercase'>
-              <span className='h-px w-4 bg-primary/50' aria-hidden />
-              {t('With Nyquiste')}
-            </p>
-            <ol className='space-y-5'>
-              {solutionItems.map((item) => (
-                <li key={item.title} className='text-sm'>
-                  <p className='font-semibold text-foreground break-words'>
+                  <div className='mb-5 flex items-center justify-between gap-3'>
+                    <span className='text-primary/75 text-[0.72rem] font-semibold tracking-[0.22em]'>
+                      0{index + 1}
+                    </span>
+                    <span className='h-px flex-1 bg-border/70' aria-hidden />
+                  </div>
+                  <p className='text-[1.02rem] font-semibold leading-6 text-foreground break-words md:text-[1.08rem]'>
                     {item.title}
                   </p>
-                  <p className='mt-0.5 text-muted-foreground break-words'>
+                  <p className='text-muted-foreground mt-2.5 max-w-[42rem] text-sm leading-7 break-words md:text-[0.96rem]'>
                     {item.body}
                   </p>
                 </li>
-              ))}
-            </ol>
-          </div>
+              )
+            })}
+          </ol>
         </AnimateInView>
-
-        <div className='grid grid-cols-1 gap-6 md:hidden'>
-          <AnimateInView animation='fade-right'>
-            <p className='mb-4 flex items-center gap-2 text-[10px] font-bold tracking-[2px] text-muted-foreground uppercase'>
-              <span className='h-px w-4 bg-muted-foreground/40' aria-hidden />
-              {t('If you do it yourself')}
-            </p>
-            <ol className='space-y-3'>
-              {painItems.map((item, i) => (
-                <li
-                  key={item}
-                  className='flex items-start gap-2.5 text-sm text-muted-foreground line-through decoration-muted-foreground/40'
-                >
-                  <span className='mt-0.5 shrink-0 text-xs font-bold text-muted-foreground/40'>
-                    {i + 1}.
-                  </span>
-                  <span className='min-w-0 break-words'>{item}</span>
-                </li>
-              ))}
-            </ol>
-          </AnimateInView>
-
-          <div className='flex justify-center'>
-            <div className='flex h-9 w-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground/50'>
-              <ArrowRight size={14} className='rotate-90' />
-            </div>
-          </div>
-
-          <AnimateInView animation='fade-left'>
-            <p className='mb-4 flex items-center gap-2 text-[10px] font-bold tracking-[2px] text-primary uppercase'>
-              <span className='h-px w-4 bg-primary/50' aria-hidden />
-              {t('With Nyquiste')}
-            </p>
-            <ol className='space-y-4'>
-              {solutionItems.map((item) => (
-                <li key={item.title} className='text-sm'>
-                  <p className='font-semibold text-foreground break-words'>
-                    {item.title}
-                  </p>
-                  <p className='mt-0.5 text-muted-foreground break-words'>
-                    {item.body}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          </AnimateInView>
-        </div>
       </div>
     </section>
   )

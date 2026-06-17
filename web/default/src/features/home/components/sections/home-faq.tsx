@@ -25,17 +25,14 @@ export function HomeFAQ() {
   return (
     <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
       <div className='mx-auto max-w-4xl'>
-        <AnimateInView className='mb-10'>
-          <p className='mb-3 text-xs font-medium tracking-widest text-muted-foreground uppercase'>
-            {t('FAQ')}
-          </p>
+        <AnimateInView className='mb-10 text-center'>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
             {t('Questions before you configure')}
           </h2>
         </AnimateInView>
 
         <AnimateInView animation='fade-up'>
-          <div className='rounded-xl border border-dashed border-border/50 bg-muted/20 px-8 py-12 text-center'>
+          <div className='mx-auto max-w-2xl rounded-xl border border-dashed border-border/50 bg-muted/20 px-8 py-12 text-center'>
             <p className='text-sm text-muted-foreground'>{t('Working in progress')}</p>
           </div>
         </AnimateInView>
