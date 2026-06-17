@@ -29,7 +29,7 @@ export interface Selection {
 }
 
 /** features[] is intentionally empty for now — reserved for live-synced plan details. */
-export interface SubscriptionTier {
+interface SubscriptionTier {
   /** Literal product name, e.g. "ChatGPT Plus". Not translated. */
   productName: string
   features: string[]
