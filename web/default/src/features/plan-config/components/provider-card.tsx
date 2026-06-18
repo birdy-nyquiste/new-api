@@ -46,35 +46,39 @@ export function ProviderCard({ provider, upgraded, onToggleUpgrade }: ProviderCa
         {provider.included.productName}
       </span>
 
-      <div className='min-h-[72px]'>
+      <div>
         <p className='mb-2 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase'>
           {t('What you get')}
         </p>
-        {features.length > 0 ? (
-          <ul className='space-y-1.5 text-xs text-muted-foreground'>
-            {features.map((f) => (
-              <li key={f.title} className='flex items-start gap-1.5'>
-                <span aria-hidden className='mt-0.5'>·</span>
-                <span>
-                  <span className='text-foreground'>{t(f.title)}</span>
-                  {f.detail && (
-                    <span className='mt-0.5 block text-[11px] text-muted-foreground/80'>
-                      {t(f.detail)}
-                    </span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className='space-y-2'>
-            <div className='h-2 w-full rounded bg-muted/60' />
-            <div className='h-2 w-3/4 rounded bg-muted/60' />
-            <p className='text-[10px] text-muted-foreground/70 italic'>
-              {t('Plan details synced from official site')}
-            </p>
-          </div>
-        )}
+        {/* Side-by-side (sm+): fixed, responsive height with internal scroll so all
+            cards stay equal height. Stacked (mobile): height adapts to content, no scroll. */}
+        <div className='sm:h-40 sm:overflow-y-auto sm:pr-1 lg:h-44'>
+          {features.length > 0 ? (
+            <ul className='space-y-1.5 text-xs text-muted-foreground'>
+              {features.map((f) => (
+                <li key={f.title} className='flex items-start gap-1.5'>
+                  <span aria-hidden className='mt-0.5'>·</span>
+                  <span>
+                    <span className='text-foreground'>{t(f.title)}</span>
+                    {f.detail && (
+                      <span className='mt-0.5 block text-[11px] text-muted-foreground/80'>
+                        {t(f.detail)}
+                      </span>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className='space-y-2'>
+              <div className='h-2 w-full rounded bg-muted/60' />
+              <div className='h-2 w-3/4 rounded bg-muted/60' />
+              <p className='text-[10px] text-muted-foreground/70 italic'>
+                {t('Plan details synced from official site')}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <button
