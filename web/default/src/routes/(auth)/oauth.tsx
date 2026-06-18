@@ -23,7 +23,7 @@ import { toast } from 'sonner'
 import { useAuthStore, type AuthUser } from '@/stores/auth-store'
 import { getSelf } from '@/lib/api'
 import { wechatLoginByCode } from '@/features/auth/api'
-import { resolveModelLabRedirectTarget } from '@/features/model-lab/constants'
+import { resolvePostSignInRedirectTarget } from '@/features/auth/lib/redirect'
 
 function OAuthComponent() {
   const navigate = useNavigate()
@@ -43,7 +43,7 @@ function OAuthComponent() {
         const res = await getSelf()
         if (res?.success) {
           useAuthStore.getState().auth.setUser(res.data as AuthUser)
-          const target = resolveModelLabRedirectTarget(search?.redirect)
+          const target = resolvePostSignInRedirectTarget(search?.redirect)
           navigate({ to: target, replace: true })
           return
         }

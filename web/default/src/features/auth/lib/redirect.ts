@@ -16,7 +16,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { MODEL_LAB_COMPARE_PATH } from '@/features/model-lab/constants'
 
-export const MODEL_LAB_ROUTE = '/model-lab'
-export const MODEL_LAB_DEFAULT_MODE = 'compare'
-export const MODEL_LAB_COMPARE_PATH = '/model-lab?mode=compare'
+export const DEFAULT_POST_SIGN_IN_REDIRECT = MODEL_LAB_COMPARE_PATH
+
+export function resolvePostSignInRedirectTarget(redirectTo?: string): string {
+  const target = redirectTo?.trim()
+  return target || DEFAULT_POST_SIGN_IN_REDIRECT
+}

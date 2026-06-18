@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, test } from 'node:test'
+import { resolvePostSignInRedirectTarget } from '../auth/lib/redirect'
+import { MODEL_LAB_COMPARE_PATH } from './constants'
 
 const srcRoot = resolve(import.meta.dirname, '../..')
 
@@ -20,6 +22,7 @@ describe('Model Lab standalone routing', () => {
     assert.match(routeSource, /createFileRoute\('\/model-lab'\)/)
     assert.match(routeSource, /ModelLabPage/)
     assert.match(routeSource, /validateSearch/)
+    assert.match(routeSource, /search: \{ redirect: location\.href \}/)
   })
 
   test('defaults Model Lab sessions and links to compare mode', () => {
@@ -71,10 +74,68 @@ describe('Model Lab standalone routing', () => {
     }
   })
 
-  test('uses Model Lab compare mode as the default post-sign-in target', () => {
+  test('preserves the homepage Model Lab compare redirect through auth entry points', () => {
+    const spotlightSource = readSource(
+      'features/home/components/sections/model-lab-spotlight.tsx'
+    )
+    const signUpRouteSource = readSource('routes/(auth)/sign-up.tsx')
+    const signUpSource = readSource('features/auth/sign-up/index.tsx')
+    const signUpFormSource = readSource(
+      'features/auth/sign-up/components/sign-up-form.tsx'
+    )
+    const signInSource = readSource('features/auth/sign-in/index.tsx')
+
+    assert.match(spotlightSource, /MODEL_LAB_COMPARE_PATH/)
+    assert.match(spotlightSource, /to='\/sign-up'/)
+    assert.match(
+      spotlightSource,
+      /search=\{\{ redirect: MODEL_LAB_COMPARE_PATH \}\}/
+    )
+
+    assert.match(signUpRouteSource, /redirect: z\.string\(\)\.optional\(\)/)
+    assert.match(signUpRouteSource, /validateSearch: searchSchema/)
+    assert.match(signUpSource, /useSearch\(\{ from: '\/\(auth\)\/sign-up' \}\)/)
+    assert.match(signUpSource, /to='\/sign-in'/)
+    assert.match(signUpSource, /search=\{\{ redirect \}\}/)
+    assert.match(signUpSource, /<SignUpForm redirectTo=\{redirect\} \/>/)
+    assert.match(signUpFormSource, /redirectTo/)
+    assert.match(signUpFormSource, /handleLoginSuccess\(.*redirectTo/s)
+
+    assert.match(signInSource, /to='\/sign-up'/)
+    assert.match(signInSource, /search=\{\{ redirect \}\}/)
+  })
+
+  test('sends unauthenticated public header Model Lab links directly to sign in', () => {
+    const publicHeaderSource = readSource(
+      'components/layout/components/public-header.tsx'
+    )
+
+    assert.match(publicHeaderSource, /if \(link\.requiresAuth\)/)
+    assert.match(
+      publicHeaderSource,
+      /navigate\(\{ to: '\/sign-in', search: \{ redirect: link\.href \} \}\)/
+    )
+    assert.doesNotMatch(publicHeaderSource, /Sign in required/)
+    assert.doesNotMatch(publicHeaderSource, /authPromptTarget/)
+    assert.doesNotMatch(publicHeaderSource, /AUTH_PROMPT_SECONDS/)
+  })
+
+  test('uses explicit protected-route redirects and Model Lab compare as the default sign-in target', () => {
+    assert.equal(resolvePostSignInRedirectTarget(), MODEL_LAB_COMPARE_PATH)
+    assert.equal(resolvePostSignInRedirectTarget(''), MODEL_LAB_COMPARE_PATH)
+    assert.equal(
+      resolvePostSignInRedirectTarget('/model-lab?mode=compare'),
+      '/model-lab?mode=compare'
+    )
+    assert.equal(resolvePostSignInRedirectTarget('/dashboard'), '/dashboard')
+    assert.equal(resolvePostSignInRedirectTarget('/playground'), '/playground')
+
     const signInSource = readSource('routes/(auth)/sign-in.tsx')
     const authOauthSource = readSource('routes/(auth)/oauth.tsx')
     const providerOauthSource = readSource('routes/oauth/$provider.tsx')
+    const authenticatedRouteSource = readSource(
+      'routes/_authenticated/route.tsx'
+    )
     const authRedirectSource = readSource(
       'features/auth/hooks/use-auth-redirect.ts'
     )
@@ -85,11 +146,16 @@ describe('Model Lab standalone routing', () => {
       providerOauthSource,
       authRedirectSource,
     ]) {
-      assert.match(source, /resolveModelLabRedirectTarget/)
+      assert.match(source, /resolvePostSignInRedirectTarget/)
       assert.doesNotMatch(
         source,
-        /redirect \|\| '\/dashboard'|target \|\| search\?\.redirect \|\| '\/dashboard'/
+        /MODEL_LAB_COMPARE_PATH|resolveModelLabRedirectTarget/
       )
     }
+
+    assert.match(
+      authenticatedRouteSource,
+      /search: \{ redirect: location\.href \}/
+    )
   })
 })

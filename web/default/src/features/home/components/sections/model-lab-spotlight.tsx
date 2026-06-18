@@ -21,7 +21,10 @@ import { Gift, GitCompare, MessageSquare } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
-import { MODEL_LAB_ROUTE } from '@/features/model-lab/constants'
+import {
+  MODEL_LAB_COMPARE_PATH,
+  MODEL_LAB_ROUTE,
+} from '@/features/model-lab/constants'
 
 interface ModelLabSpotlightProps {
   isAuthenticated?: boolean
@@ -69,7 +72,10 @@ export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
                 isAuthenticated ? (
                   <Link to={MODEL_LAB_ROUTE} search={{ mode: 'compare' }} />
                 ) : (
-                  <Link to='/sign-up' />
+                  <Link
+                    to='/sign-up'
+                    search={{ redirect: MODEL_LAB_COMPARE_PATH }}
+                  />
                 )
               }
             >

@@ -19,8 +19,8 @@ For commercial licensing, please contact support@quantumnous.com
 import { z } from 'zod'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth-store'
+import { resolvePostSignInRedirectTarget } from '@/features/auth/lib/redirect'
 import { SignIn } from '@/features/auth/sign-in'
-import { resolveModelLabRedirectTarget } from '@/features/model-lab/constants'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -35,8 +35,8 @@ export const Route = createFileRoute('/(auth)/sign-in')({
     // 如果已经有用户信息，说明已登录
     if (auth.user) {
       // 优先使用 redirect 参数（用户之前想去的地方）
-      // 否则跳转到 Model Lab Compare
-      throw redirect({ to: resolveModelLabRedirectTarget(search?.redirect) })
+      // 否则恢复到默认控制台
+      throw redirect({ to: resolvePostSignInRedirectTarget(search?.redirect) })
     }
   },
 })

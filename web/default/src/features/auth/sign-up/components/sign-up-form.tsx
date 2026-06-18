@@ -35,10 +35,15 @@ import {
   saveAffiliateCode,
 } from '@/features/auth/lib/storage'
 
+interface SignUpFormProps extends React.HTMLAttributes<HTMLFormElement> {
+  redirectTo?: string
+}
+
 export function SignUpForm({
   className,
+  redirectTo,
   ...props
-}: React.HTMLAttributes<HTMLFormElement>) {
+}: SignUpFormProps) {
   const { t } = useTranslation()
   const { status } = useStatus()
   const { handleLoginSuccess } = useAuthRedirect()
@@ -128,7 +133,9 @@ export function SignUpForm({
         setChallengeId(nextChallengeId)
         setSecondsLeft(cooldownSeconds)
         toast.success(
-          t('A verification code will arrive shortly if this email is eligible.')
+          t(
+            'A verification code will arrive shortly if this email is eligible.'
+          )
         )
       } else {
         toast.error(res.message || t('Failed to send code'))
@@ -161,7 +168,7 @@ export function SignUpForm({
         aff_code: getAffiliateCode(),
       })
       if (res.success) {
-        await handleLoginSuccess(res.data as { id?: number } | null)
+        await handleLoginSuccess(res.data as { id?: number } | null, redirectTo)
         toast.success(t('Account created'))
       } else {
         toast.error(res.message || t('Failed to create account'))

@@ -43,7 +43,7 @@ export function SignIn() {
             <Button
               variant='outline'
               className='w-full'
-              render={<Link to='/sign-up' />}
+              render={<Link to='/sign-up' search={{ redirect }} />}
             >
               {t('Sign up')}
             </Button>

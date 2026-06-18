@@ -20,8 +20,8 @@ import { useNavigate } from '@tanstack/react-router'
 import i18n from 'i18next'
 import { useAuthStore } from '@/stores/auth-store'
 import { getSelf } from '@/lib/api'
-import { resolveModelLabRedirectTarget } from '@/features/model-lab/constants'
 import type { User } from '@/features/users/types'
+import { resolvePostSignInRedirectTarget } from '../lib/redirect'
 import { saveUserId } from '../lib/storage'
 
 function getSavedLanguage(user: User): string | undefined {
@@ -87,7 +87,7 @@ export function useAuthRedirect() {
     }
 
     // Navigate to target page
-    const targetPath = resolveModelLabRedirectTarget(redirectTo)
+    const targetPath = resolvePostSignInRedirectTarget(redirectTo)
     navigate({ to: targetPath, replace: true })
   }
 
