@@ -26,8 +26,8 @@ export function computeTotal(selection: Selection): number {
     const provider = PROVIDERS.find((p) => p.id === id)
     if (provider) total += provider.upgrade.price
   }
-  for (const id of selection.dataLines) {
-    const line = GLOBAL_DATA_LINES.find((l) => l.id === id)
+  for (const selectedLine of selection.dataLines) {
+    const line = GLOBAL_DATA_LINES.find((l) => l.id === selectedLine.id)
     if (line) total += line.price
   }
   if (selection.appleId) total += APPLE_ID.price
@@ -43,8 +43,9 @@ function sameDataLines(a: readonly string[], b: readonly string[]): boolean {
 /** Returns the preset whose add-ons exactly match the selection, else null (custom). */
 export function matchPreset(selection: Selection): TierId | null {
   if (selection.upgrades.length > 0 || selection.appleId) return null
+  const selectedDataLineIds = selection.dataLines.map((line) => line.id)
   const preset = PRESETS.find(
-    (p) => p.upgrades.length === 0 && sameDataLines(p.dataLines, selection.dataLines)
+    (p) => p.upgrades.length === 0 && sameDataLines(p.dataLines, selectedDataLineIds)
   )
   return preset ? preset.id : null
 }

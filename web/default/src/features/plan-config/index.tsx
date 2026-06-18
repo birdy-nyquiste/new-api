@@ -21,16 +21,20 @@ import { useTranslation } from 'react-i18next'
 import { AnimateInView } from '@/components/animate-in-view'
 import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
-import { APPLE_ID, CONTACT_ITEMS, PRESETS, PROVIDERS } from './data'
+import { APPLE_ID, CONTACT_ITEMS, DEFAULT_DATA_LINE_DELIVERY, PRESETS, PROVIDERS } from './data'
 import { computeTotal, matchPreset } from './pricing'
-import type { DataLineId, ProviderId, Selection, TierId } from './types'
+import type { DataLineDeliveryType, DataLineId, ProviderId, Selection, TierId } from './types'
 import { AddonRow } from './components/addon-row'
 import { GlobalDataList } from './components/global-data-list'
 import { ProviderCard } from './components/provider-card'
 import { SummaryPanel } from './components/summary-panel'
 import { TierSelector } from './components/tier-selector'
 
-const INITIAL: Selection = { upgrades: [], dataLines: ['ct-hk'], appleId: false }
+const INITIAL: Selection = {
+  upgrades: [],
+  dataLines: [{ id: 'ct-hk', delivery: DEFAULT_DATA_LINE_DELIVERY }],
+  appleId: false,
+}
 
 function toggle<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
@@ -46,13 +50,30 @@ export function PlanConfig() {
   const applyPreset = (id: TierId) => {
     const preset = PRESETS.find((p) => p.id === id)
     if (!preset) return
-    setSelection({ upgrades: [...preset.upgrades], dataLines: [...preset.dataLines], appleId: false })
+    setSelection({
+      upgrades: [...preset.upgrades],
+      dataLines: preset.dataLines.map((lineId) => ({ id: lineId, delivery: DEFAULT_DATA_LINE_DELIVERY })),
+      appleId: false,
+    })
   }
 
   const toggleUpgrade = (id: ProviderId) =>
     setSelection((s) => ({ ...s, upgrades: toggle(s.upgrades, id) }))
   const toggleDataLine = (id: DataLineId) =>
-    setSelection((s) => ({ ...s, dataLines: toggle(s.dataLines, id) }))
+    setSelection((s) => {
+      const exists = s.dataLines.some((line) => line.id === id)
+      return {
+        ...s,
+        dataLines: exists
+          ? s.dataLines.filter((line) => line.id !== id)
+          : [...s.dataLines, { id, delivery: DEFAULT_DATA_LINE_DELIVERY }],
+      }
+    })
+  const setDataLineDelivery = (id: DataLineId, delivery: DataLineDeliveryType) =>
+    setSelection((s) => ({
+      ...s,
+      dataLines: s.dataLines.map((line) => (line.id === id ? { ...line, delivery } : line)),
+    }))
   const toggleAppleId = () => setSelection((s) => ({ ...s, appleId: !s.appleId }))
 
   return (
@@ -63,9 +84,6 @@ export function PlanConfig() {
             <h1 className='text-[clamp(1.8rem,4vw,2.8rem)] font-extrabold tracking-tight text-foreground'>
               {t('Configure your AI bundle')}
             </h1>
-            <p className='mt-3 text-sm text-muted-foreground'>
-              {t('Pick a starting tier, then tailor it. Your price updates live.')}
-            </p>
           </AnimateInView>
 
           <AnimateInView className='mb-10' delay={80}>
@@ -96,9 +114,13 @@ export function PlanConfig() {
                   {t('Global Data')}
                 </p>
                 <p className='mb-4 text-sm text-muted-foreground'>
-                  {t('50 GB · SIM / eSIM · add one or more lines')}
+                  {t('Default 50 GB · SIM / eSIM available')}
                 </p>
-                <GlobalDataList selected={selection.dataLines} onToggle={toggleDataLine} />
+                <GlobalDataList
+                  selected={selection.dataLines}
+                  onToggle={toggleDataLine}
+                  onDeliveryChange={setDataLineDelivery}
+                />
               </AnimateInView>
 
               <div className='grid gap-6 sm:grid-cols-2'>
@@ -128,6 +150,10 @@ export function PlanConfig() {
             </div>
 
             <AnimateInView animation='fade-up' delay={140}>
+              <div aria-hidden className='mb-1 h-[14px]' />
+              <p className='mb-4 text-sm text-muted-foreground'>
+                {t('Your configuration')}
+              </p>
               <SummaryPanel selection={selection} total={total} />
             </AnimateInView>
           </div>

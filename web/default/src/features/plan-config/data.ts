@@ -18,10 +18,13 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import type {
+  DataLineDeliveryType,
   DataLineConfig,
   PresetConfig,
   ProviderConfig,
 } from './types'
+
+export const DEFAULT_DATA_LINE_DELIVERY: DataLineDeliveryType = 'esim'
 
 export const BASE_PRICE = 6666
 

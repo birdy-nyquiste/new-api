@@ -31,6 +31,7 @@ interface ProviderCardProps {
 export function ProviderCard({ provider, upgraded, onToggleUpgrade }: ProviderCardProps) {
   const { t } = useTranslation()
   const features = upgraded ? provider.upgrade.features : provider.included.features
+  const activeProductName = upgraded ? provider.upgrade.productName : provider.included.productName
 
   return (
     <div className='font-landing flex flex-col gap-3 rounded-2xl border border-border/60 p-5'>
@@ -43,7 +44,7 @@ export function ProviderCard({ provider, upgraded, onToggleUpgrade }: ProviderCa
 
       <span className='inline-flex w-max items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-foreground'>
         <Check className='size-3' />
-        {provider.included.productName}
+        {activeProductName}
       </span>
 
       <div>
@@ -86,16 +87,16 @@ export function ProviderCard({ provider, upgraded, onToggleUpgrade }: ProviderCa
         onClick={onToggleUpgrade}
         aria-pressed={upgraded}
         className={cn(
-          'mt-auto flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-xs transition-colors',
+          'mt-auto flex min-h-16 w-full cursor-pointer flex-col items-stretch justify-between gap-1.5 rounded-xl border px-3 py-2.5 text-left text-xs transition-colors',
           upgraded
             ? 'border-foreground bg-muted/20 ring-1 ring-foreground'
             : 'border-dashed border-border/60 hover:bg-muted/30'
         )}
       >
-        <span className='font-medium text-foreground'>
+        <span className='block font-medium leading-snug text-foreground'>
           ↑ {t('Upgrade to {{plan}}', { plan: provider.upgrade.productName })}
         </span>
-        <span className='font-mono font-semibold tabular-nums text-foreground'>
+        <span className='block font-mono font-semibold tabular-nums text-foreground'>
           +¥{provider.upgrade.price.toLocaleString()}
         </span>
       </button>
