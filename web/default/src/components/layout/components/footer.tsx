@@ -39,6 +39,9 @@ interface FooterProps {
   columns?: FooterColumnProps[]
   copyright?: string
   className?: string
+  hideInnerDivider?: boolean
+  compactBar?: boolean
+  compactBarCopyright?: string
 }
 
 const NEW_API_FOOTER_ATTRIBUTION_KEY = [
@@ -162,6 +165,28 @@ export function Footer(props: FooterProps) {
   const isDemoSiteMode = Boolean(demoSiteEnabled)
   const currentYear = new Date().getFullYear()
 
+  if (props.compactBar) {
+    return (
+      <footer
+        className={cn('border-border/40 relative z-10 border-t', props.className)}
+      >
+        <div className='mx-auto max-w-6xl px-6 py-8 md:py-10'>
+          <div className='border-border/45 bg-background/30 rounded-[2rem] border px-5 py-4 backdrop-blur-sm sm:px-7 sm:py-5'>
+            <div className='flex flex-col gap-4 md:grid md:grid-cols-[minmax(0,1fr)_1px_auto] md:items-center md:gap-8'>
+              <p className='text-foreground/75 text-sm font-medium tracking-tight sm:text-base'>
+                {props.compactBarCopyright}
+              </p>
+              <div className='border-border/50 hidden h-7 w-px md:block' />
+              <div className='border-border/35 text-muted-foreground/55 pt-4 text-xs font-medium sm:text-sm md:border-t-0 md:pt-0 md:text-right'>
+                <ProjectAttribution currentYear={currentYear} inline />
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    )
+  }
+
   const fallbackColumns = useMemo<FooterColumnProps[]>(
     () => [
       {
@@ -263,9 +288,6 @@ export function Footer(props: FooterProps) {
                 {displayName}
               </span>
             </Link>
-            <p className='text-muted-foreground/60 mt-3 max-w-[220px] text-xs leading-relaxed'>
-              {t('Nyquiste global AI suite — top AI without the setup hassle')}
-            </p>
           </div>
 
           {/* Links columns */}
@@ -291,7 +313,12 @@ export function Footer(props: FooterProps) {
 
         {/* Copyright + optional legal links inline on the left, project
             attribution on the right; wraps on narrow screens. */}
-        <div className='border-border/30 mt-12 flex flex-col items-center justify-between gap-x-3 gap-y-2 border-t pt-6 sm:flex-row'>
+        <div
+          className={cn(
+            'mt-12 flex flex-col items-center justify-between gap-x-3 gap-y-2 pt-6 sm:flex-row',
+            !props.hideInnerDivider && 'border-border/30 border-t'
+          )}
+        >
           <div className='text-muted-foreground/40 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs sm:justify-start'>
             <span>
               &copy; {currentYear} {displayName}.{' '}

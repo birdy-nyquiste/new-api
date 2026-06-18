@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserAgreementRouteImport } from './routes/user-agreement'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as PlanConfigRouteImport } from './routes/plan-config'
 import { Route as CnUsCompareRouteImport } from './routes/cn-us-compare'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
@@ -78,6 +79,11 @@ const UserAgreementRoute = UserAgreementRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanConfigRoute = PlanConfigRouteImport.update({
+  id: '/plan-config',
+  path: '/plan-config',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CnUsCompareRoute = CnUsCompareRouteImport.update({
@@ -401,6 +407,7 @@ const AuthenticatedSystemSettingsAuthSectionRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cn-us-compare': typeof CnUsCompareRoute
+  '/plan-config': typeof PlanConfigRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/user-agreement': typeof UserAgreementRoute
   '/system-settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
@@ -461,6 +468,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cn-us-compare': typeof CnUsCompareRoute
+  '/plan-config': typeof PlanConfigRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/user-agreement': typeof UserAgreementRoute
   '/forgot-password': typeof authForgotPasswordRoute
@@ -523,6 +531,7 @@ export interface FileRoutesById {
   '/(auth)': typeof authRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/cn-us-compare': typeof CnUsCompareRoute
+  '/plan-config': typeof PlanConfigRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/user-agreement': typeof UserAgreementRoute
   '/_authenticated/system-settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
@@ -585,6 +594,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/cn-us-compare'
+    | '/plan-config'
     | '/privacy-policy'
     | '/user-agreement'
     | '/system-settings'
@@ -645,6 +655,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/cn-us-compare'
+    | '/plan-config'
     | '/privacy-policy'
     | '/user-agreement'
     | '/forgot-password'
@@ -706,6 +717,7 @@ export interface FileRouteTypes {
     | '/(auth)'
     | '/_authenticated'
     | '/cn-us-compare'
+    | '/plan-config'
     | '/privacy-policy'
     | '/user-agreement'
     | '/_authenticated/system-settings'
@@ -769,6 +781,7 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   CnUsCompareRoute: typeof CnUsCompareRoute
+  PlanConfigRoute: typeof PlanConfigRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   UserAgreementRoute: typeof UserAgreementRoute
   errors401Route: typeof errors401Route
@@ -800,6 +813,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan-config': {
+      id: '/plan-config'
+      path: '/plan-config'
+      fullPath: '/plan-config'
+      preLoaderRoute: typeof PlanConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cn-us-compare': {
@@ -1346,6 +1366,7 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   CnUsCompareRoute: CnUsCompareRoute,
+  PlanConfigRoute: PlanConfigRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   UserAgreementRoute: UserAgreementRoute,
   errors401Route: errors401Route,

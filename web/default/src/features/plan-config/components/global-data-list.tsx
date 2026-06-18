@@ -17,26 +17,30 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useTranslation } from 'react-i18next'
-import { AnimateInView } from '@/components/animate-in-view'
+import { GLOBAL_DATA_LINES } from '../data'
+import type { DataLineId } from '../types'
+import { AddonRow } from './addon-row'
 
-export function HomeFAQ() {
+interface GlobalDataListProps {
+  selected: DataLineId[]
+  onToggle: (id: DataLineId) => void
+}
+
+export function GlobalDataList({ selected, onToggle }: GlobalDataListProps) {
   const { t } = useTranslation()
 
   return (
-    <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
-      <div className='mx-auto max-w-4xl'>
-        <AnimateInView className='mb-10 text-center'>
-          <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
-            {t('Questions before you configure')}
-          </h2>
-        </AnimateInView>
-
-        <AnimateInView animation='fade-up'>
-          <div className='mx-auto max-w-2xl rounded-xl border border-dashed border-border/50 bg-muted/20 px-8 py-12 text-center'>
-            <p className='text-sm text-muted-foreground'>{t('Working in progress')}</p>
-          </div>
-        </AnimateInView>
-      </div>
-    </section>
+    <div className='space-y-2.5'>
+      {GLOBAL_DATA_LINES.map((line) => (
+        <AddonRow
+          key={line.id}
+          label={t(line.labelKey)}
+          price={line.price}
+          selected={selected.includes(line.id)}
+          onToggle={() => onToggle(line.id)}
+        />
+      ))}
+      <AddonRow label={t('Need more Global Data?')} contact />
+    </div>
   )
 }

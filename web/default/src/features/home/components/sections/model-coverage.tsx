@@ -16,7 +16,9 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
 import { ProviderCard } from '../provider-card'
 
@@ -25,88 +27,79 @@ export function ModelCoverage() {
 
   const providers = [
     {
-      name: 'OpenAI',
+      provider: 'OpenAI',
       plan: 'ChatGPT Plus / Pro',
       models: [
-        { name: 'GPT-5.5', category: t('Flagship') },
-        { name: 'GPT-5.5 Pro', category: t('Complex tasks') },
-        { name: 'GPT-5.4', category: t('Daily tasks') },
+        { name: 'GPT-5.5' },
+        { name: 'GPT-5.5 Pro' },
+        { name: 'GPT-5.4' },
       ],
     },
     {
-      name: 'Anthropic',
+      provider: 'Anthropic',
       plan: 'Claude Pro / Max',
       models: [
-        { name: 'Claude Fable 5', category: t('Flagship') },
-        { name: 'Claude Opus 4.8', category: t('Complex tasks') },
-        { name: 'Claude Sonnet 4.6', category: t('Daily tasks') },
+        { name: 'Claude Fable 5' },
+        { name: 'Claude Opus 4.8' },
+        { name: 'Claude Sonnet 4.6' },
       ],
     },
     {
-      name: 'Google',
-      plan: 'Google AI Pro / Ultra',
+      provider: 'Google',
+      plan: 'AI Pro / Ultra',
       models: [
-        { name: 'Gemini 3.5 Pro', category: t('Flagship') },
-        { name: 'Gemini 3.5 Flash', category: t('Complex tasks') },
-        { name: 'Gemini 3.1 Flash', category: t('Daily tasks') },
+        { name: 'Gemini 3.5 Pro' },
+        { name: 'Gemini 3.5 Flash' },
+        { name: 'Gemini 3.1 Flash' },
       ],
     },
   ]
-
-  const otherProviders = ['Perplexity', 'Grok / xAI', 'Midjourney']
 
   return (
     <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
       <div className='mx-auto max-w-5xl'>
         <AnimateInView className='mb-10 text-center' animation='fade-up'>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
-            {t('The global AI all-in-one suite,')}&nbsp;
+            {t('Account subscriptions,')}&nbsp;
             <span
               className='italic font-normal text-muted-foreground'
               style={{ fontFamily: 'var(--font-serif)' }}
             >
-              {t('configured around your needs.')}
+              {t('configured on demand')}
             </span>
           </h2>
-          <p className='mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground'>
-            {t(
-              'Start with ChatGPT, Claude, and Gemini. Add other overseas AI services when your workflow actually needs them.'
-            )}
-          </p>
         </AnimateInView>
 
         <AnimateInView animation='fade-up' delay={100}>
           <div className='overflow-hidden rounded-xl border border-border'>
             <div className='grid grid-cols-1 divide-y divide-border md:grid-cols-3 md:divide-x md:divide-y-0'>
               {providers.map((provider) => (
-                <ProviderCard key={provider.name} {...provider} />
+                <ProviderCard key={provider.provider} {...provider} />
               ))}
             </div>
           </div>
         </AnimateInView>
 
         <AnimateInView
-          className='mt-6 flex flex-wrap items-center justify-center gap-2'
+          className='mt-8 flex flex-col items-center gap-4'
           animation='fade-up'
           delay={200}
         >
-          <span className='text-xs text-muted-foreground'>
-            {t('Need more overseas AI services?')}
-          </span>
-          {otherProviders.map((provider) => (
-            <span
-              key={provider}
-              className='rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground'
-            >
-              {provider}
-            </span>
-          ))}
-          <a
-            href='mailto:r@nyquiste.com'
-            className='inline-flex min-h-[44px] items-center rounded-full bg-primary/10 px-3.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20'
+          <Button
+            className='min-h-[48px] rounded-lg px-5 text-sm'
+            render={<Link to='/plan-config' />}
           >
-            {t('Contact us')}
-          </a>
+            {t('Configure the full bundle')}
+          </Button>
+          <div className='flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground'>
+            <span>{t('Need more overseas AI services?')}</span>
+            <a
+              href='mailto:r@nyquiste.com'
+              className='inline-flex min-h-[40px] items-center rounded-full border border-border/70 bg-background px-4 text-sm font-semibold text-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 hover:text-primary'
+            >
+              {t('Contact us')}
+            </a>
+          </div>
         </AnimateInView>
       </div>
     </section>

@@ -24,15 +24,12 @@ import { Markdown } from '@/components/ui/markdown'
 import { PublicLayout } from '@/components/layout'
 import { Footer } from '@/components/layout/components/footer'
 import {
-  AudienceUseCases,
-  CustomConfiguration,
-  FinalCTA,
   Hero,
   HomeFAQ,
   ModelCoverage,
   ModelLabSpotlight,
   PainVsSolution,
-  SimConnectivity,
+  SupportServices,
 } from './components'
 import { useHomePageContent } from './hooks'
 
@@ -67,16 +64,18 @@ export function Home() {
           </Alert>
         </div>
       )}
-      <Hero isAuthenticated={isAuthenticated} />
+      <Hero />
       <PainVsSolution />
       <ModelCoverage />
-      <CustomConfiguration />
-      <SimConnectivity />
-      <AudienceUseCases />
+      <SupportServices />
       <ModelLabSpotlight isAuthenticated={isAuthenticated} />
       <HomeFAQ />
-      <FinalCTA isAuthenticated={isAuthenticated} />
-      <Footer />
+      <Footer
+        compactBar
+        compactBarCopyright={t(
+          '© 2023 - 2026 Nyquiste Corporation. All rights reserved.'
+        )}
+      />
     </>
   )
 

@@ -16,105 +16,80 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Monitor, Settings2, Wifi, Zap } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { ManifestRow } from '../manifest-row'
 
-interface HeroProps {
-  isAuthenticated?: boolean
-}
-
-export function Hero({ isAuthenticated }: HeroProps) {
+export function Hero() {
   const { t } = useTranslation()
+  const heroTitle = t('Use top global AI without the setup work')
+  const heroTitleParts = heroTitle.includes('，')
+    ? heroTitle.split('，').map((part, index, parts) =>
+        index < parts.length - 1 ? `${part}，` : part
+      )
+    : [heroTitle]
 
   return (
-    <section className='font-landing overflow-hidden px-6 py-16 md:py-24 lg:py-32'>
+    <section className='font-landing overflow-hidden px-6 py-18 md:py-26 lg:py-34'>
       <div className='mx-auto max-w-5xl'>
-        <div className='grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_400px] lg:gap-12'>
+        <div className='mx-auto flex max-w-3xl flex-col items-center text-center'>
+          <p
+            className='landing-animate-fade-up text-[clamp(1rem,2vw,1.35rem)] font-bold tracking-[0.08em] text-foreground/88'
+            style={{ animationDelay: '20ms' }}
+          >
+            {t('Nyquiste Global AI Suite')}
+          </p>
 
-          {/* Left column */}
-          <div className='flex flex-col items-start text-left'>
-
-            {!isAuthenticated && (
-              <div
-                className='landing-animate-fade-up mb-6 flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground'
-                style={{ animationDelay: '0ms' }}
-              >
-                <span className='h-1.5 w-1.5 rounded-full bg-primary' aria-hidden />
-                {t('Custom global AI setup for Chinese users')}
-              </div>
-            )}
-
-            <h1
-              className='landing-animate-fade-up text-[clamp(1.75rem,5vw,2.75rem)] font-extrabold leading-[1.08] tracking-tight text-foreground break-words'
-              style={{ animationDelay: '60ms' }}
-            >
-              <span className='mb-2 block'>{t('Nyquiste Global AI Suite')}</span>
-              <span className='block pt-2 text-muted-foreground'>
-                {t('Use top global AI without the setup work')}
+          <h1
+            className='landing-animate-fade-up mt-5 max-w-2xl text-[clamp(1.9rem,4.4vw,3.15rem)] font-bold leading-[1.08] tracking-tight text-foreground break-words'
+            style={{ animationDelay: '60ms' }}
+          >
+            {heroTitleParts.length > 1 ? (
+              <span className='inline-flex max-w-full flex-wrap items-center justify-center gap-x-[0.18em] gap-y-1'>
+                {heroTitleParts.map((part) => (
+                  <span key={part} className='whitespace-nowrap'>
+                    {part}
+                  </span>
+                ))}
               </span>
-            </h1>
+            ) : (
+              heroTitle
+            )}
+          </h1>
 
-            <p
-              className='landing-animate-fade-up mt-8 max-w-lg text-[15px] leading-7 text-muted-foreground'
-              style={{ animationDelay: '120ms' }}
-            >
-              {t(
-                'ChatGPT, Claude, and Gemini accounts and subscriptions can be configured together. We handle overseas accounts, subscription payment, verification, and connection setup so you can focus on learning, work, creation, and productivity.'
-              )}
-            </p>
-
-            <div
-              className='landing-animate-fade-up mt-8 flex w-full sm:w-auto md:mt-10 lg:mt-11'
-              style={{ animationDelay: '180ms' }}
-            >
-              <Button
-                className='min-h-[48px] flex-1 rounded-lg px-5 text-sm sm:flex-none'
-                render={isAuthenticated ? <Link to='/dashboard' /> : undefined}
-              >
-                {isAuthenticated ? t('Open Model Lab') : t('Start custom setup')}
-              </Button>
-            </div>
-
+          <div
+            className='landing-animate-fade-up mt-7 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[0.95rem] font-semibold tracking-[0.08em] text-foreground/72 md:mt-8'
+            style={{ animationDelay: '120ms' }}
+          >
+            <span>ChatGPT</span>
+            <span className='text-border'>/</span>
+            <span>Claude</span>
+            <span className='text-border'>/</span>
+            <span>Gemini</span>
           </div>
 
           <div
-            className='landing-animate-fade-up rounded-xl border border-border bg-muted/40 p-5'
+            className='landing-animate-fade-up mt-8 max-w-2xl space-y-2.5 text-[clamp(1.1rem,2.25vw,1.42rem)] font-semibold leading-[1.5] tracking-tight text-foreground/86 md:mt-9'
+            style={{ animationDelay: '160ms' }}
+          >
+            <p>
+              {t('Accounts and subscriptions, prepared in one go')}
+            </p>
+            <p>
+              {t('Supporting services, solved in one place')}
+            </p>
+          </div>
+
+          <div
+            className='landing-animate-fade-up mt-9 flex justify-center md:mt-10'
             style={{ animationDelay: '220ms' }}
           >
-            <p className='mb-3 text-[10px] font-bold uppercase tracking-[2px] text-muted-foreground/60'>
-              {t('Configured together')}
-            </p>
-            <ManifestRow
-              icon={<Monitor size={16} />}
-              title={t('Global AI accounts')}
-              description={t(
-                'ChatGPT, Claude, Gemini, and more providers configured around your needs.'
-              )}
-            />
-            <ManifestRow
-              icon={<Wifi size={16} />}
-              title={t('SIM / eSIM')}
-              description={t(
-                'Optional China Telecom Hong Kong SIM or eSIM traffic for more stable global AI access.'
-              )}
-            />
-            <ManifestRow
-              icon={<Settings2 size={16} />}
-              title={t('Setup support')}
-              description={t(
-                'Account setup, subscription, quota planning, renewal, and usage guidance handled in one place.'
-              )}
-            />
-            <ManifestRow
-              icon={<Zap size={16} />}
-              title={t('API Router')}
-              description={t(
-                'A secondary option for developers who want unified API access and model comparison.'
-              )}
-            />
+            <Button
+              className='min-h-[50px] rounded-lg px-6 text-sm shadow-sm'
+              render={<Link to='/plan-config' />}
+            >
+              {t('Configure the full bundle')}
+            </Button>
           </div>
         </div>
       </div>
