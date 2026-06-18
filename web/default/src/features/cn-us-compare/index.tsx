@@ -41,7 +41,9 @@ type BenchmarkRow = {
   sub: string
   usVals: CellData[]
   cnVals: CellData[]
+  children?: BenchmarkRow[]
 }
+type RenderBenchmarkRow = BenchmarkRow & { isChild?: boolean }
 
 const US_MODELS = ['Claude Opus 4.8', 'GPT-5.5', 'Gemini 3.1 Pro']
 const CN_MODELS = ['Qwen 3.7 Max', 'DeepSeek V4-Pro', 'GLM-5.1']
@@ -49,7 +51,7 @@ const CN_MODELS = ['Qwen 3.7 Max', 'DeepSeek V4-Pro', 'GLM-5.1']
 // ─── Benchmark data ────────────────────────────────────────────────────────────
 const DATA: Record<DimensionKey, Dimension> = {
   index: {
-    title: '综合智能 · AA 智能指数 v4.1',
+    title: '综合能力 · AA 智能指数 v4.1',
     src: '来源：Artificial Analysis（独立复测）',
     xlabel: 'AA 智能指数 → 越右越强',
     xmin: 38,
@@ -112,7 +114,7 @@ const DATA: Record<DimensionKey, Dimension> = {
 
 const BENCHMARK_ROWS: BenchmarkRow[] = [
   {
-    label: '综合智能',
+    label: '综合能力',
     sub: 'Artificial Analysis 智能指数 v4.1',
     usVals: [
       { v: '56', src: 'AA · 本组#1', win: true },
@@ -124,52 +126,54 @@ const BENCHMARK_ROWS: BenchmarkRow[] = [
       { v: '44', src: 'AA' },
       { v: '40', src: 'AA' },
     ],
-  },
-  {
-    label: '编程',
-    sub: 'SciCode · 真实科研编程 %',
-    usVals: [
-      { v: '53', src: 'AA' },
-      { v: '56', src: 'AA' },
-      { v: '59', src: 'AA · 本组#1', win: true },
-    ],
-    cnVals: [
-      { v: '49', src: 'AA' },
-      { v: '50', src: 'AA' },
-      { v: '44', src: 'AA' },
-    ],
-  },
-  {
-    label: '智能体 / 终端',
-    sub: 'Terminal-Bench v2.1 · 自主操作 %',
-    usVals: [
-      { v: '85', src: 'AA · 本组#1', win: true },
-      { v: '84', src: 'AA' },
-      { v: '74', src: 'AA' },
-    ],
-    cnVals: [
-      { v: '75', src: 'AA · 国产最高' },
-      { v: '64', src: 'AA' },
-      { v: '62', src: 'AA' },
-    ],
-  },
-  {
-    label: '科学 · 生物',
-    sub: 'GPQA Diamond · 研究生级生化物 %',
-    usVals: [
-      { v: '92', src: 'AA' },
-      { v: '94', src: 'AA · 并列#1', win: true },
-      { v: '94', src: 'AA · 并列#1', win: true },
-    ],
-    cnVals: [
-      { v: '92', src: 'AA · 国产最高' },
-      { v: '89', src: 'AA' },
-      { v: '87', src: 'AA' },
+    children: [
+      {
+        label: '编程',
+        sub: 'SciCode · 真实科研编程 %',
+        usVals: [
+          { v: '53', src: 'AA' },
+          { v: '56', src: 'AA' },
+          { v: '59', src: 'AA · 本组#1', win: true },
+        ],
+        cnVals: [
+          { v: '49', src: 'AA' },
+          { v: '50', src: 'AA' },
+          { v: '44', src: 'AA' },
+        ],
+      },
+      {
+        label: '智能体',
+        sub: 'Terminal-Bench v2.1 · 自主操作 %',
+        usVals: [
+          { v: '85', src: 'AA · 本组#1', win: true },
+          { v: '84', src: 'AA' },
+          { v: '74', src: 'AA' },
+        ],
+        cnVals: [
+          { v: '75', src: 'AA · 国产最高' },
+          { v: '64', src: 'AA' },
+          { v: '62', src: 'AA' },
+        ],
+      },
+      {
+        label: '科学 · 生物',
+        sub: 'GPQA Diamond · 研究生级生化物 %',
+        usVals: [
+          { v: '92', src: 'AA' },
+          { v: '94', src: 'AA · 并列#1', win: true },
+          { v: '94', src: 'AA · 并列#1', win: true },
+        ],
+        cnVals: [
+          { v: '92', src: 'AA · 国产最高' },
+          { v: '89', src: 'AA' },
+          { v: '87', src: 'AA' },
+        ],
+      },
     ],
   },
   {
     label: '价格',
-    sub: '输出 · 美元 / 百万 token · 越低越省',
+    sub: '输出 · 美元 / 百万 token',
     usVals: [
       { v: '$25', src: '官方' },
       { v: '$30', src: '官方' },
@@ -385,24 +389,45 @@ function ScatterChart({ activeKey }: { activeKey: DimensionKey }) {
 
 // ─── Table ─────────────────────────────────────────────────────────────────────
 function DataTable() {
+  const [showChildren, setShowChildren] = useState(true)
+  const rows: RenderBenchmarkRow[] = BENCHMARK_ROWS.flatMap((row) => {
+    const childRows = showChildren ? row.children ?? [] : []
+
+    return [
+      { ...row, isChild: false },
+      ...childRows.map((child) => ({ ...child, isChild: true })),
+    ]
+  })
+
   return (
     <div
       className='hidden overflow-hidden rounded-2xl border border-border/60 shadow-sm lg:block'
     >
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '13.5px' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', tableLayout: 'fixed', fontSize: '13.5px' }}>
+        <colgroup>
+          <col style={{ width: '23%' }} />
+          <col style={{ width: '15.36%' }} />
+          <col style={{ width: '8.89%' }} />
+          <col style={{ width: '14.05%' }} />
+          <col style={{ width: '13.44%' }} />
+          <col style={{ width: '16.06%' }} />
+          <col style={{ width: '9.2%' }} />
+        </colgroup>
         <caption style={{ captionSide: 'bottom', textAlign: 'left', fontSize: '12px', padding: '13px 16px', lineHeight: 1.7, color: 'var(--muted-foreground)' }}>
           六个型号四维度均取自 Artificial Analysis 独立复测（智能指数 v4.1 及其分项 SciCode、Terminal-Bench v2.1、GPQA Diamond），采集于 2026 年 6 月，口径统一。价格为各厂商官方输出价（美元/百万 token，人民币按 1 USD≈6.76 CNY 折算）：Qwen 取 qwen3-max，DeepSeek V4-Pro 为官网折扣价，GLM-5.1 为国际站美元报价。
         </caption>
         <thead>
           <tr>
-            <th style={{ textAlign: 'left', background: 'color-mix(in oklch, var(--muted) 30%, transparent)', padding: '13px 12px', borderBottom: '1px solid var(--border)', fontSize: '12.5px', fontWeight: 700 }} rowSpan={2}>
-              领域 / 基准
+            <th style={{ textAlign: 'left', background: 'color-mix(in oklch, var(--muted) 30%, transparent)', padding: '13px 12px', borderBottom: '1px solid var(--border)', fontSize: '12.5px', fontWeight: 700 }} rowSpan={2} />
+            <th colSpan={3} style={{ color: US, padding: '13px 12px 10px', textAlign: 'center', fontSize: '12.5px', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 20%, transparent)' }}>
+              <span style={{ display: 'inline-block', borderBottom: `2px solid ${US}`, paddingBottom: '7px' }}>
+                美国前沿
+              </span>
             </th>
-            <th colSpan={3} style={{ color: US, borderBottom: `2px solid ${US}`, padding: '13px 12px', textAlign: 'center', fontSize: '12.5px', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 20%, transparent)' }}>
-              美国前沿
-            </th>
-            <th colSpan={3} style={{ color: CN, borderBottom: `2px solid ${CN}`, padding: '13px 12px', textAlign: 'center', fontSize: '12.5px', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 20%, transparent)' }}>
-              国产主力
+            <th colSpan={3} style={{ color: CN, padding: '13px 12px 10px', textAlign: 'center', fontSize: '12.5px', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 20%, transparent)' }}>
+              <span style={{ display: 'inline-block', borderBottom: `2px solid ${CN}`, paddingBottom: '7px' }}>
+                国产主力
+              </span>
             </th>
           </tr>
           <tr>
@@ -415,8 +440,14 @@ function DataTable() {
           </tr>
         </thead>
         <tbody>
-          {BENCHMARK_ROWS.map((row) => (
-            <TableRow key={row.label} {...row} />
+          {rows.map((row) => (
+            <TableRow
+              key={`${row.label}-${row.sub}`}
+              childrenExpanded={showChildren}
+              hasChildren={Boolean(row.children?.length)}
+              onToggleChildren={row.children?.length ? () => setShowChildren((prev) => !prev) : undefined}
+              {...row}
+            />
           ))}
         </tbody>
       </table>
@@ -540,28 +571,58 @@ function TableRow({
   sub,
   usVals,
   cnVals,
+  isChild = false,
+  hasChildren = false,
+  childrenExpanded = false,
+  onToggleChildren,
 }: {
   label: string
   sub: string
   usVals: CellData[]
   cnVals: CellData[]
+  isChild?: boolean
+  hasChildren?: boolean
+  childrenExpanded?: boolean
+  onToggleChildren?: () => void
 }) {
   const cellBase: React.CSSProperties = { padding: '13px 12px', textAlign: 'center', borderBottom: '1px solid var(--border)' }
+  const isPrice = label === '价格'
+  const isHighlightedParent = label === '综合能力'
+  const highlightedRowBackground = 'color-mix(in oklch, var(--muted) 48%, transparent)'
+  const headerBackground = isPrice || isHighlightedParent
+    ? 'transparent'
+    : isChild
+      ? 'color-mix(in oklch, var(--muted) 8%, transparent)'
+      : 'color-mix(in oklch, var(--muted) 15%, transparent)'
+  const usBackground = 'transparent'
+  const cnBackground = 'transparent'
 
   return (
-    <tr>
-      <th style={{ textAlign: 'left', fontWeight: 700, background: 'color-mix(in oklch, var(--muted) 15%, transparent)', width: '180px', fontSize: '13px', padding: '13px 12px', borderBottom: '1px solid var(--border)' }}>
-        {label}
+    <tr style={{ background: isPrice || isHighlightedParent ? highlightedRowBackground : undefined }}>
+      <th style={{ position: 'relative', textAlign: 'left', fontWeight: isChild ? 600 : 700, background: headerBackground, width: '180px', fontSize: '13px', padding: isChild ? '13px 12px 13px 28px' : hasChildren ? '13px 12px 26px' : '13px 12px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span>{label}</span>
+        </div>
+        {hasChildren ? (
+          <button
+            aria-expanded={childrenExpanded}
+            onClick={onToggleChildren}
+            style={{ position: 'absolute', right: '12px', bottom: '-12px', zIndex: 1, cursor: 'pointer', borderRadius: '999px', border: '1px solid var(--border)', background: 'var(--background)', boxShadow: '0 1px 3px color-mix(in oklch, black 10%, transparent)', padding: '4px 9px', fontSize: '10.5px', fontWeight: 600, color: 'var(--muted-foreground)' }}
+            type='button'
+          >
+            细分领域 {childrenExpanded ? '−' : '+'}
+          </button>
+        ) : null}
         <small style={{ display: 'block', color: 'var(--muted-foreground)', fontWeight: 400, fontSize: '10.5px', marginTop: '2px' }}>{sub}</small>
       </th>
       {usVals.map((cell, i) => (
-        <td key={i} style={{ ...cellBase, background: `${US}10` }}>
+        <td key={i} style={{ ...cellBase, background: usBackground }}>
           <span style={{ fontFamily: 'ui-monospace,monospace', fontSize: '15px', fontWeight: 700, color: cell.win ? US : 'inherit' }}>{cell.v}</span>
           <span style={{ display: 'block', fontFamily: 'ui-monospace,monospace', fontSize: '9.5px', color: 'var(--muted-foreground)', marginTop: '1px' }}>{cell.src}</span>
         </td>
       ))}
       {cnVals.map((cell, i) => (
-        <td key={i} style={{ ...cellBase, background: `${CN}10` }}>
+        <td key={i} style={{ ...cellBase, background: cnBackground }}>
           <span style={{ fontFamily: 'ui-monospace,monospace', fontSize: '15px', fontWeight: 700, color: cell.cnwin ? CN : 'inherit' }}>{cell.v}</span>
           <span style={{ display: 'block', fontFamily: 'ui-monospace,monospace', fontSize: '9.5px', color: 'var(--muted-foreground)', marginTop: '1px' }}>{cell.src}</span>
         </td>
@@ -578,7 +639,7 @@ const FAQ_ITEMS = [
       <p>
         因为 AA <strong>独立复测、口径统一、覆盖全部对比型号</strong>，四个维度同源才可横比；若混用厂商自测或不同榜，各家脚手架不同会各说各话。
         <br /><br />
-        <strong>AA 智能指数 v4.1</strong> 由 9 个评测加权组成（GDPval-AA v2、τ³-Banking、Terminal-Bench v2.1、SciCode、AA-LCR、AA-Omniscience、HLE、GPQA Diamond、CritPt），普遍用 <code>pass@1</code> 计分，将智能体（34%）、编程（24%）、科学推理（24%）、通用（18%）四大类按权重合成。本页把代表性分项单独列出：编程 = <strong>SciCode</strong>、智能体 = <strong>Terminal-Bench v2.1</strong>、科学 = <strong>GPQA Diamond</strong>、综合智能 = 智能指数总分。详见{' '}
+        <strong>AA 智能指数 v4.1</strong> 由 9 个评测加权组成（GDPval-AA v2、τ³-Banking、Terminal-Bench v2.1、SciCode、AA-LCR、AA-Omniscience、HLE、GPQA Diamond、CritPt），普遍用 <code>pass@1</code> 计分，将智能体（34%）、编程（24%）、科学推理（24%）、通用（18%）四大类按权重合成。本页把代表性分项单独列出：编程 = <strong>SciCode</strong>、智能体 = <strong>Terminal-Bench v2.1</strong>、科学 = <strong>GPQA Diamond</strong>、综合能力 = 智能指数总分。详见{' '}
         <a href='https://artificialanalysis.ai/methodology/intelligence-benchmarking' target='_blank' rel='noreferrer' style={{ color: US }}>AA 方法论</a>。
       </p>
     ),
@@ -645,7 +706,7 @@ function FaqItem({ q, a, defaultOpen = false }: { q: string; a: React.ReactNode;
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 const TABS: { key: DimensionKey; label: string }[] = [
-  { key: 'index', label: '综合智能' },
+  { key: 'index', label: '综合能力' },
   { key: 'coding', label: '编程' },
   { key: 'agent', label: '智能体' },
   { key: 'science', label: '科学·生物' },

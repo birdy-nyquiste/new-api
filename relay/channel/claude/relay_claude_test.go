@@ -416,5 +416,73 @@ func TestRequestOpenAI2ClaudeMessage_SanitizeParameters(t *testing.T) {
 	require.Nil(t, claudeReq2.Temperature)
 	require.Nil(t, claudeReq2.TopP)
 	require.Nil(t, claudeReq2.TopK)
+
+	req3 := dto.GeneralOpenAIRequest{
+		Model:       "claude-opus-4-8",
+		Temperature: &temp,
+		TopP:        &topP,
+		TopK:        &topK,
+		Messages: []dto.Message{
+			{Role: "user", Content: "hello"},
+		},
+	}
+	claudeReq3, err := RequestOpenAI2ClaudeMessage(nil, req3)
+	require.NoError(t, err)
+	require.Nil(t, claudeReq3.Temperature)
+	require.Nil(t, claudeReq3.TopP)
+	require.Nil(t, claudeReq3.TopK)
 }
 
+func TestRequestOpenAI2ClaudeMessage_UsesAdaptiveThinkingForFutureOpus4Models(t *testing.T) {
+	temp := 0.7
+	topP := 1.0
+	topK := 5
+
+	req := dto.GeneralOpenAIRequest{
+		Model:       "claude-opus-4-8-thinking",
+		Temperature: &temp,
+		TopP:        &topP,
+		TopK:        &topK,
+		Messages: []dto.Message{
+			{Role: "user", Content: "hello"},
+		},
+	}
+
+	claudeReq, err := RequestOpenAI2ClaudeMessage(nil, req)
+	require.NoError(t, err)
+	require.Equal(t, "claude-opus-4-8", claudeReq.Model)
+	require.NotNil(t, claudeReq.Thinking)
+	require.Equal(t, "adaptive", claudeReq.Thinking.Type)
+	require.Equal(t, "summarized", claudeReq.Thinking.Display)
+	require.JSONEq(t, `{"effort":"high"}`, string(claudeReq.OutputConfig))
+	require.Nil(t, claudeReq.Temperature)
+	require.Nil(t, claudeReq.TopP)
+	require.Nil(t, claudeReq.TopK)
+}
+
+func TestRequestOpenAI2ClaudeMessage_EffortSuffixSupportsFutureOpus4Models(t *testing.T) {
+	temp := 0.7
+	topP := 1.0
+	topK := 5
+
+	req := dto.GeneralOpenAIRequest{
+		Model:       "claude-opus-4-8-high",
+		Temperature: &temp,
+		TopP:        &topP,
+		TopK:        &topK,
+		Messages: []dto.Message{
+			{Role: "user", Content: "hello"},
+		},
+	}
+
+	claudeReq, err := RequestOpenAI2ClaudeMessage(nil, req)
+	require.NoError(t, err)
+	require.Equal(t, "claude-opus-4-8", claudeReq.Model)
+	require.NotNil(t, claudeReq.Thinking)
+	require.Equal(t, "adaptive", claudeReq.Thinking.Type)
+	require.Equal(t, "summarized", claudeReq.Thinking.Display)
+	require.JSONEq(t, `{"effort":"high"}`, string(claudeReq.OutputConfig))
+	require.Nil(t, claudeReq.Temperature)
+	require.Nil(t, claudeReq.TopP)
+	require.Nil(t, claudeReq.TopK)
+}

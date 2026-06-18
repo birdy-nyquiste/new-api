@@ -1,6 +1,7 @@
 package reasoning
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/samber/lo"
@@ -48,4 +49,30 @@ func ParseDeepSeekV4ThinkingSuffix(modelName string) (baseModel string, thinking
 	default:
 		return modelName, "", "", false
 	}
+}
+
+func IsClaudeOpus46Model(modelName string) bool {
+	return strings.Contains(modelName, "claude-opus-4-6")
+}
+
+func IsClaudeOpus4AdaptiveModel(modelName string) bool {
+	const prefix = "claude-opus-4-"
+
+	index := strings.Index(modelName, prefix)
+	if index < 0 {
+		return false
+	}
+
+	rest := modelName[index+len(prefix):]
+	minor, _, _ := strings.Cut(rest, "-")
+	minorVersion, err := strconv.Atoi(minor)
+	if err != nil {
+		return false
+	}
+
+	return minorVersion >= 7 && minorVersion < 100
+}
+
+func IsClaudeOpus4EffortModel(modelName string) bool {
+	return IsClaudeOpus46Model(modelName) || IsClaudeOpus4AdaptiveModel(modelName)
 }

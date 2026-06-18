@@ -156,15 +156,15 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 	}
 
 	if baseModel, effortLevel, ok := reasoning.TrimEffortSuffix(textRequest.Model); ok && effortLevel != "" &&
-		(strings.HasPrefix(textRequest.Model, "claude-opus-4-6") || strings.HasPrefix(textRequest.Model, "claude-opus-4-7")) {
+		reasoning.IsClaudeOpus4EffortModel(baseModel) {
 		claudeRequest.Model = baseModel
 		claudeRequest.Thinking = &dto.Thinking{
 			Type: "adaptive",
 		}
 		claudeRequest.OutputConfig = json.RawMessage(fmt.Sprintf(`{"effort":"%s"}`, effortLevel))
-		if strings.HasPrefix(baseModel, "claude-opus-4-7") {
-			// Opus 4.7 rejects non-default temperature/top_p/top_k with 400
-			// and defaults display to "omitted"; restore the 4.6 visible summary.
+		if reasoning.IsClaudeOpus4AdaptiveModel(baseModel) {
+			// Opus 4.7+ rejects non-default sampling params with 400
+			// and defaults display to "omitted"; restore the visible summary.
 			claudeRequest.Thinking.Display = "summarized"
 			claudeRequest.Temperature = nil
 			claudeRequest.TopP = nil
@@ -177,8 +177,8 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 		strings.HasSuffix(textRequest.Model, "-thinking") {
 
 		trimmedModel := strings.TrimSuffix(textRequest.Model, "-thinking")
-		if strings.HasPrefix(trimmedModel, "claude-opus-4-7") {
-			// Opus 4.7 rejects thinking.type="enabled"; use adaptive at high effort.
+		if reasoning.IsClaudeOpus4AdaptiveModel(trimmedModel) {
+			// Opus 4.7+ rejects thinking.type="enabled"; use adaptive at high effort.
 			claudeRequest.Thinking = &dto.Thinking{Type: "adaptive", Display: "summarized"}
 			claudeRequest.OutputConfig = json.RawMessage(`{"effort":"high"}`)
 			claudeRequest.Temperature = nil
@@ -264,8 +264,8 @@ func RequestOpenAI2ClaudeMessage(c *gin.Context, textRequest dto.GeneralOpenAIRe
 		}
 	}
 
-	// claude-opus-4-7 rejects temperature, top_p, and top_k
-	if strings.HasPrefix(claudeRequest.Model, "claude-opus-4-7") {
+	// Claude Opus 4.7+ rejects temperature, top_p, and top_k.
+	if reasoning.IsClaudeOpus4AdaptiveModel(claudeRequest.Model) {
 		claudeRequest.Temperature = nil
 		claudeRequest.TopP = nil
 		claudeRequest.TopK = nil
