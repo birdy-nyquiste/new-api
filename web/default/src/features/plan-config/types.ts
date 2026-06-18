@@ -20,11 +20,17 @@ For commercial licensing, please contact support@quantumnous.com
 export type TierId = 'standard' | 'pro' | 'ultra'
 export type ProviderId = 'openai' | 'anthropic' | 'google'
 export type DataLineId = 'cmcc-hk' | 'ct-hk' | 'us-mobile'
+export type DataLineDeliveryType = 'sim' | 'esim'
+
+export interface DataLineSelection {
+  id: DataLineId
+  delivery: DataLineDeliveryType
+}
 
 /** Current user selection. Base bundle is always included and not represented here. */
 export interface Selection {
   upgrades: ProviderId[]
-  dataLines: DataLineId[]
+  dataLines: DataLineSelection[]
   appleId: boolean
 }
 

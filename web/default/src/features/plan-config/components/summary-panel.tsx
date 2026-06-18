@@ -30,20 +30,24 @@ export function SummaryPanel({ selection, total }: SummaryPanelProps) {
   const { t } = useTranslation()
 
   const upgradeLines = PROVIDERS.filter((p) => selection.upgrades.includes(p.id))
-  const dataLines = GLOBAL_DATA_LINES.filter((l) => selection.dataLines.includes(l.id))
+  const subscriptionPlanNames = PROVIDERS.map((provider) =>
+    selection.upgrades.includes(provider.id) ? provider.upgrade.productName : provider.included.productName
+  )
+  const dataLines = selection.dataLines
+    .map((selectedLine) => {
+      const line = GLOBAL_DATA_LINES.find((item) => item.id === selectedLine.id)
+      return line ? { ...line, delivery: selectedLine.delivery } : null
+    })
+    .filter((line) => line !== null)
 
   return (
     <div className='font-landing rounded-2xl border border-border/60 p-5 lg:sticky lg:top-24'>
-      <p className='mb-3 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase'>
-        {t('Your configuration')}
-      </p>
-
       <div className='space-y-2 text-sm'>
         <div className='flex items-center justify-between gap-3'>
-          <span className='text-foreground'>{t('Base bundle')}</span>
+          <span className='text-foreground'>{t('Subscription bundle')}</span>
           <span className='font-mono tabular-nums text-foreground'>¥{BASE_PRICE.toLocaleString()}</span>
         </div>
-        <p className='text-xs text-muted-foreground'>ChatGPT Plus · Claude Pro · Google AI Pro</p>
+        <p className='text-xs text-muted-foreground'>{subscriptionPlanNames.join(' · ')}</p>
 
         {upgradeLines.map((p) => (
           <div key={p.id} className='flex items-center justify-between gap-3 border-t border-border/30 pt-2'>
@@ -54,7 +58,9 @@ export function SummaryPanel({ selection, total }: SummaryPanelProps) {
 
         {dataLines.map((l) => (
           <div key={l.id} className='flex items-center justify-between gap-3 border-t border-border/30 pt-2'>
-            <span className='text-foreground'>{t('Global Data')} · {t(l.labelKey)}</span>
+            <span className='text-foreground'>
+              {t(l.labelKey)} · {t(l.delivery === 'sim' ? 'SIM Card' : 'eSIM')}
+            </span>
             <span className='font-mono tabular-nums text-foreground'>¥{l.price.toLocaleString()}</span>
           </div>
         ))}
