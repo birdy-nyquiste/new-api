@@ -16,30 +16,40 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
 import { Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { CONTACT_HREF } from '../data'
+import { formatPlanPrice } from '../pricing'
 
 interface AddonRowProps {
   label: React.ReactNode
-  /** Show "+¥price"; omit for contact rows. */
+  /** Show a plus-prefixed price; omit for contact rows. */
   price?: number
   selected?: boolean
-  /** Renders a non-interactive "Contact us →" placeholder row. */
+  /** Renders a mail link "Contact us →" row. */
   contact?: boolean
   onToggle?: () => void
 }
 
-export function AddonRow({ label, price, selected, contact, onToggle }: AddonRowProps) {
+export function AddonRow({
+  label,
+  price,
+  selected,
+  contact,
+  onToggle,
+}: AddonRowProps) {
   const { t } = useTranslation()
 
   if (contact) {
     return (
-      <div className='font-landing flex w-full cursor-not-allowed items-center justify-between gap-3 rounded-xl border border-dashed border-border/50 px-4 py-3 text-sm text-muted-foreground'>
+      <a
+        href={CONTACT_HREF}
+        className='font-landing border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/30 flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-3 text-sm transition-colors'
+      >
         <span className='font-medium'>{label}</span>
         <span className='text-xs'>{t('Contact us →')}</span>
-      </div>
+      </a>
     )
   }
 
@@ -51,15 +61,17 @@ export function AddonRow({ label, price, selected, contact, onToggle }: AddonRow
       className={cn(
         'font-landing flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors',
         selected
-          ? 'border-foreground bg-muted/20 ring-1 ring-foreground'
+          ? 'border-foreground bg-muted/20 ring-foreground ring-1'
           : 'border-border/60 hover:bg-muted/30'
       )}
     >
-      <span className='flex items-center gap-2.5 font-medium text-foreground'>
+      <span className='text-foreground flex items-center gap-2.5 font-medium'>
         <span
           className={cn(
             'flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors',
-            selected ? 'border-foreground bg-foreground text-background' : 'border-border'
+            selected
+              ? 'border-foreground bg-foreground text-background'
+              : 'border-border'
           )}
         >
           {selected && <Check className='size-3' />}
@@ -67,8 +79,8 @@ export function AddonRow({ label, price, selected, contact, onToggle }: AddonRow
         {label}
       </span>
       {price != null && (
-        <span className='font-mono text-sm font-semibold tabular-nums text-foreground'>
-          +¥{price.toLocaleString()}
+        <span className='text-foreground font-mono text-sm font-semibold tabular-nums'>
+          {formatPlanPrice(price, { withPlus: true })}
         </span>
       )}
     </button>

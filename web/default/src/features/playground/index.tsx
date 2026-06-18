@@ -179,6 +179,7 @@ export function Playground() {
   const [editingMessageKey, setEditingMessageKey] = useState<string | null>(
     null
   )
+  const [initialModeApplied, setInitialModeApplied] = useState(false)
 
   // Load models
   const { data: modelsData, isLoading: isLoadingModels } = useQuery({
@@ -251,18 +252,21 @@ export function Playground() {
   useLayoutEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const queryMode = params.get('mode')
-    startNewSession(queryMode === 'compare' ? 'compare' : 'chat')
+    startNewSession(queryMode === 'chat' ? 'chat' : 'compare')
+    setInitialModeApplied(true)
     // Run only on mount; subsequent mode changes are handled by the tabs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
+    if (!initialModeApplied) return
+
     const url = new URL(window.location.href)
     if (url.searchParams.get('mode') !== mode) {
       url.searchParams.set('mode', mode)
       window.history.replaceState(null, '', url)
     }
-  }, [mode])
+  }, [initialModeApplied, mode])
 
   // Update groups when data changes
   useEffect(() => {

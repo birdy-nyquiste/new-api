@@ -16,10 +16,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { PRESETS } from '../data'
+import { formatPlanPrice } from '../pricing'
 import type { TierId } from '../types'
 
 interface TierSelectorProps {
@@ -43,18 +43,18 @@ export function TierSelector({ activeTier, onSelect }: TierSelectorProps) {
             className={cn(
               'font-landing flex cursor-pointer flex-col items-center gap-1 rounded-2xl border px-4 py-5 text-center transition-colors',
               isActive
-                ? 'border-foreground bg-muted/20 ring-1 ring-foreground'
+                ? 'border-foreground bg-muted/20 ring-foreground ring-1'
                 : 'border-border/60 hover:bg-muted/30'
             )}
           >
-            <span className='text-xs font-medium text-muted-foreground'>
+            <span className='text-muted-foreground text-xs font-medium'>
               {t(preset.descKey)}
             </span>
-            <span className='text-lg font-bold tracking-tight text-foreground'>
+            <span className='text-foreground text-lg font-bold tracking-tight'>
               {preset.name}
             </span>
-            <span className='font-mono text-base font-semibold tabular-nums text-foreground'>
-              ¥{preset.price.toLocaleString()}
+            <span className='text-foreground font-mono text-base font-semibold tabular-nums'>
+              {formatPlanPrice(preset.price)}
             </span>
           </button>
         )

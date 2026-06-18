@@ -35,6 +35,10 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { type SidebarData } from '@/components/layout/types'
+import {
+  MODEL_LAB_COMPARE_PATH,
+  MODEL_LAB_ROUTE,
+} from '@/features/model-lab/constants'
 
 /**
  * Root navigation groups for the application sidebar.
@@ -53,7 +57,8 @@ export function useSidebarData(): SidebarData {
         items: [
           {
             title: t('Model Lab'),
-            url: '/playground',
+            url: MODEL_LAB_COMPARE_PATH,
+            configUrls: [MODEL_LAB_ROUTE],
             icon: FlaskConical,
           },
           {
