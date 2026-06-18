@@ -58,7 +58,7 @@ export function PlanConfig() {
   return (
     <PublicLayout showMainContainer={false}>
       <main className='font-landing min-w-0 overflow-x-hidden'>
-        <div className='mx-auto w-full max-w-6xl px-6 py-16 md:py-20'>
+        <div className='mx-auto w-full max-w-6xl px-6 pt-24 pb-16 md:pt-28 md:pb-20'>
           <AnimateInView className='mx-auto mb-10 max-w-2xl text-center'>
             <h1 className='text-[clamp(1.8rem,4vw,2.8rem)] font-extrabold tracking-tight text-foreground'>
               {t('Configure your AI bundle')}
