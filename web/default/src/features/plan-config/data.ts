@@ -30,22 +30,100 @@ export const PROVIDERS: ProviderConfig[] = [
     id: 'openai',
     name: 'OpenAI',
     icon: 'OpenAI.Color',
-    included: { productName: 'ChatGPT Plus', features: [] },
-    upgrade: { productName: 'ChatGPT Pro', price: 8888, features: [] },
+    included: {
+      productName: 'ChatGPT Plus',
+      features: [
+        { title: 'Advanced reasoning with GPT-5.5 Thinking' },
+        { title: 'More complex and accurate image creation' },
+        { title: 'Expanded deep research and agent mode' },
+        { title: 'Expanded memory and context' },
+        { title: 'Expanded Codex usage' },
+        { title: 'Early access to new features' },
+      ],
+    },
+    upgrade: {
+      productName: 'ChatGPT Pro',
+      price: 8888,
+      features: [
+        { title: '5x or 20x more usage' },
+        { title: 'Pro reasoning with GPT-5.5 Pro' },
+        { title: 'Maximum Codex tasks' },
+        { title: 'Unlimited and faster image creation' },
+        { title: 'Maximum deep research and agent mode' },
+        { title: 'Maximum memory and context' },
+        { title: 'Research preview of new features' },
+      ],
+    },
   },
   {
     id: 'anthropic',
     name: 'Anthropic',
     icon: 'Claude.Color',
-    included: { productName: 'Claude Pro', features: [] },
-    upgrade: { productName: 'Claude Max', price: 8888, features: [] },
+    included: {
+      productName: 'Claude Pro',
+      features: [
+        { title: 'Chat on web, iOS, Android, and desktop' },
+        { title: 'Generate code and visualize data' },
+        { title: 'Extended thinking for complex work' },
+        { title: 'Claude Code directly in your codebase' },
+        { title: 'Power through tasks with Cowork' },
+        { title: 'Higher usage limits' },
+        { title: 'Memory that carries across conversations' },
+      ],
+    },
+    upgrade: {
+      productName: 'Claude Max',
+      price: 8888,
+      features: [
+        { title: 'Up to 20x more usage than Pro' },
+        { title: 'Recommended for Claude Code & Cowork' },
+        { title: 'Early access to advanced Claude features' },
+        { title: 'Higher output limits for all tasks' },
+        { title: 'Priority access at high traffic times' },
+      ],
+    },
   },
   {
     id: 'google',
     name: 'Google',
     icon: 'Gemini.Color',
-    included: { productName: 'Google AI Pro', features: [] },
-    upgrade: { productName: 'Google AI Ultra', price: 8888, features: [] },
+    included: {
+      productName: 'Google AI Pro',
+      features: [
+        {
+          title: '4x higher usage limits',
+          detail: 'Get usage limits that are 4x higher than without a Google AI plan',
+        },
+        {
+          title: 'Access to our Pro model',
+          detail:
+            'Get the advanced reasoning of our Gemini 3 Pro model for complex math and coding problems',
+        },
+        {
+          title: 'Access Deep Research and more features',
+          detail: 'Get access to more advanced features like Deep Research',
+        },
+      ],
+    },
+    upgrade: {
+      productName: 'Google AI Ultra',
+      price: 8888,
+      features: [
+        {
+          title: '5x higher usage limits than Pro plan',
+          detail: 'Get usage limits that are 5x higher than the Google AI Pro plan',
+        },
+        {
+          title: 'Higher access to our Pro model',
+          detail:
+            'Get the advanced reasoning of our Gemini 3 Pro model for complex math and coding problems',
+        },
+        {
+          title: 'Access Deep Think and more features',
+          detail: 'Get access to our most advanced features like Deep Think',
+        },
+      ],
+    },
   },
 ]
 

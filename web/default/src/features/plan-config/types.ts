@@ -28,11 +28,17 @@ export interface Selection {
   appleId: boolean
 }
 
-/** features[] is intentionally empty for now — reserved for live-synced plan details. */
+/** A single plan feature. `title` is an i18n key; `detail` is an optional i18n key
+ *  for a secondary description line (used by Google's title+description format). */
+interface PlanFeature {
+  title: string
+  detail?: string
+}
+
 interface SubscriptionTier {
   /** Literal product name, e.g. "ChatGPT Plus". Not translated. */
   productName: string
-  features: string[]
+  features: PlanFeature[]
 }
 
 export interface ProviderConfig {
@@ -46,7 +52,7 @@ export interface ProviderConfig {
     /** Literal product name, e.g. "ChatGPT Pro". Rendered via t('Upgrade to {{plan}}'). */
     productName: string
     price: number
-    features: string[]
+    features: PlanFeature[]
   }
 }
 

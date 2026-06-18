@@ -51,11 +51,18 @@ export function ProviderCard({ provider, upgraded, onToggleUpgrade }: ProviderCa
           {t('What you get')}
         </p>
         {features.length > 0 ? (
-          <ul className='space-y-1 text-xs text-muted-foreground'>
+          <ul className='space-y-1.5 text-xs text-muted-foreground'>
             {features.map((f) => (
-              <li key={f} className='flex items-start gap-1.5'>
-                <span aria-hidden>·</span>
-                {f}
+              <li key={f.title} className='flex items-start gap-1.5'>
+                <span aria-hidden className='mt-0.5'>·</span>
+                <span>
+                  <span className='text-foreground'>{t(f.title)}</span>
+                  {f.detail && (
+                    <span className='mt-0.5 block text-[11px] text-muted-foreground/80'>
+                      {t(f.detail)}
+                    </span>
+                  )}
+                </span>
               </li>
             ))}
           </ul>
@@ -75,7 +82,7 @@ export function ProviderCard({ provider, upgraded, onToggleUpgrade }: ProviderCa
         onClick={onToggleUpgrade}
         aria-pressed={upgraded}
         className={cn(
-          'flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-xs transition-colors',
+          'mt-auto flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-xs transition-colors',
           upgraded
             ? 'border-foreground bg-muted/20 ring-1 ring-foreground'
             : 'border-dashed border-border/60 hover:bg-muted/30'
