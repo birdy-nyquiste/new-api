@@ -16,15 +16,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { z } from 'zod'
-import { createFileRoute } from '@tanstack/react-router'
-import { SignUp } from '@/features/auth/sign-up'
+import { MODEL_LAB_COMPARE_PATH } from '@/features/model-lab/constants'
 
-const searchSchema = z.object({
-  redirect: z.string().optional(),
-})
+export const DEFAULT_POST_SIGN_IN_REDIRECT = MODEL_LAB_COMPARE_PATH
 
-export const Route = createFileRoute('/(auth)/sign-up')({
-  validateSearch: searchSchema,
-  component: SignUp,
-})
+export function resolvePostSignInRedirectTarget(redirectTo?: string): string {
+  const target = redirectTo?.trim()
+  return target || DEFAULT_POST_SIGN_IN_REDIRECT
+}

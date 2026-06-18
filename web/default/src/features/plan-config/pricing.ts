@@ -16,8 +16,14 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
-import { APPLE_ID, BASE_PRICE, GLOBAL_DATA_LINES, PRESETS, PROVIDERS } from './data'
+import {
+  APPLE_ID,
+  BASE_PRICE,
+  GLOBAL_DATA_LINES,
+  PLAN_CONFIG_CURRENCY,
+  PRESETS,
+  PROVIDERS,
+} from './data'
 import type { Selection, TierId } from './types'
 
 export function computeTotal(selection: Selection): number {
@@ -34,6 +40,20 @@ export function computeTotal(selection: Selection): number {
   return total
 }
 
+export function formatPlanPrice(
+  price: number,
+  options: { withPlus?: boolean } = {}
+): string {
+  const formatted = new Intl.NumberFormat(PLAN_CONFIG_CURRENCY.locale, {
+    style: 'currency',
+    currency: PLAN_CONFIG_CURRENCY.code,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price)
+
+  return options.withPlus ? `+${formatted}` : formatted
+}
+
 function sameDataLines(a: readonly string[], b: readonly string[]): boolean {
   if (a.length !== b.length) return false
   const set = new Set(a)
@@ -45,7 +65,8 @@ export function matchPreset(selection: Selection): TierId | null {
   if (selection.upgrades.length > 0 || selection.appleId) return null
   const selectedDataLineIds = selection.dataLines.map((line) => line.id)
   const preset = PRESETS.find(
-    (p) => p.upgrades.length === 0 && sameDataLines(p.dataLines, selectedDataLineIds)
+    (p) =>
+      p.upgrades.length === 0 && sameDataLines(p.dataLines, selectedDataLineIds)
   )
   return preset ? preset.id : null
 }

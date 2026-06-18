@@ -53,14 +53,15 @@ const NEW_API_FOOTER_ATTRIBUTION_KEY = [
 function FooterLinkItem(props: { link: FooterLink }) {
   const { t } = useTranslation()
   const isExternal = props.link.href.startsWith('http')
+  const isMailLink = props.link.href.startsWith('mailto:')
   const label = t(props.link.text)
 
-  if (isExternal) {
+  if (isExternal || isMailLink) {
     return (
       <a
         href={props.link.href}
-        target='_blank'
-        rel='noopener noreferrer'
+        target={isExternal ? '_blank' : undefined}
+        rel={isExternal ? 'noopener noreferrer' : undefined}
         className='text-muted-foreground hover:text-foreground text-sm transition-colors duration-200'
       >
         {label}
@@ -168,7 +169,10 @@ export function Footer(props: FooterProps) {
   if (props.compactBar) {
     return (
       <footer
-        className={cn('border-border/40 relative z-10 border-t', props.className)}
+        className={cn(
+          'border-border/40 relative z-10 border-t',
+          props.className
+        )}
       >
         <div className='mx-auto max-w-6xl px-6 py-8 md:py-10'>
           <div className='border-border/45 bg-background/30 rounded-[2rem] border px-5 py-4 backdrop-blur-sm sm:px-7 sm:py-5'>
@@ -198,7 +202,7 @@ export function Footer(props: FooterProps) {
           },
           {
             text: t('footer.columns.about.links.contact'),
-            href: 'https://docs.newapi.pro/support/community-interaction/',
+            href: 'mailto:r@nyquiste.com',
           },
           {
             text: t('footer.columns.about.links.features'),

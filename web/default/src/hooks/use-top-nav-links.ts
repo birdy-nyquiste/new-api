@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth-store'
 import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
 import { useStatus } from '@/hooks/use-status'
+import { MODEL_LAB_COMPARE_PATH } from '@/features/model-lab/constants'
 
 export type TopNavLink = {
   title: string
@@ -76,7 +77,7 @@ export function useTopNavLinks(): TopNavLink[] {
   if (modules?.modelLab !== false) {
     links.push({
       title: t('Model Lab'),
-      href: '/playground',
+      href: MODEL_LAB_COMPARE_PATH,
       requiresAuth: !isAuthed,
     })
   }

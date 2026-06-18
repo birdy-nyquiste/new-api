@@ -20,6 +20,7 @@ import { useMemo } from 'react'
 import { useAuthStore } from '@/stores/auth-store'
 import { useStatus } from '@/hooks/use-status'
 import type { NavGroup, NavItem } from '@/components/layout/types'
+import { MODEL_LAB_ROUTE } from '@/features/model-lab/constants'
 import { parseProfileModulesAdmin } from '@/features/system-settings/maintenance/config'
 
 // A module value is either a plain boolean (simple page) or an object
@@ -117,7 +118,7 @@ const mergeWithDefaultSidebarModules = (
  * Mapping from URL to configuration keys
  */
 const URL_TO_CONFIG_MAP: Record<string, { section: string; module: string }> = {
-  '/playground': { section: 'chat', module: 'playground' },
+  [MODEL_LAB_ROUTE]: { section: 'chat', module: 'playground' },
   '/dashboard': { section: 'console', module: 'overview' },
   '/dashboard/overview': { section: 'console', module: 'overview' },
   '/dashboard/models': { section: 'console', module: 'dashboard' },

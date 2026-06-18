@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { APPLE_ID, BASE_PRICE, GLOBAL_DATA_LINES, PROVIDERS } from '../data'
+import { formatPlanPrice } from '../pricing'
 import type { Selection } from '../types'
 
 interface SummaryPanelProps {
@@ -29,9 +30,13 @@ interface SummaryPanelProps {
 export function SummaryPanel({ selection, total }: SummaryPanelProps) {
   const { t } = useTranslation()
 
-  const upgradeLines = PROVIDERS.filter((p) => selection.upgrades.includes(p.id))
+  const upgradeLines = PROVIDERS.filter((p) =>
+    selection.upgrades.includes(p.id)
+  )
   const subscriptionPlanNames = PROVIDERS.map((provider) =>
-    selection.upgrades.includes(provider.id) ? provider.upgrade.productName : provider.included.productName
+    selection.upgrades.includes(provider.id)
+      ? provider.upgrade.productName
+      : provider.included.productName
   )
   const dataLines = selection.dataLines
     .map((selectedLine) => {
@@ -41,49 +46,72 @@ export function SummaryPanel({ selection, total }: SummaryPanelProps) {
     .filter((line) => line !== null)
 
   return (
-    <div className='font-landing rounded-2xl border border-border/60 p-5 lg:sticky lg:top-24'>
+    <div className='font-landing border-border/60 rounded-2xl border p-5 lg:sticky lg:top-24'>
       <div className='space-y-2 text-sm'>
         <div className='flex items-center justify-between gap-3'>
           <span className='text-foreground'>{t('Subscription bundle')}</span>
-          <span className='font-mono tabular-nums text-foreground'>¥{BASE_PRICE.toLocaleString()}</span>
+          <span className='text-foreground font-mono tabular-nums'>
+            {formatPlanPrice(BASE_PRICE)}
+          </span>
         </div>
-        <p className='text-xs text-muted-foreground'>{subscriptionPlanNames.join(' · ')}</p>
+        <p className='text-muted-foreground text-xs'>
+          {subscriptionPlanNames.join(' · ')}
+        </p>
 
         {upgradeLines.map((p) => (
-          <div key={p.id} className='flex items-center justify-between gap-3 border-t border-border/30 pt-2'>
-            <span className='text-foreground'>{t('Upgrade to {{plan}}', { plan: p.upgrade.productName })}</span>
-            <span className='font-mono tabular-nums text-foreground'>¥{p.upgrade.price.toLocaleString()}</span>
+          <div
+            key={p.id}
+            className='border-border/30 flex items-center justify-between gap-3 border-t pt-2'
+          >
+            <span className='text-foreground'>
+              {t('Upgrade to {{plan}}', { plan: p.upgrade.productName })}
+            </span>
+            <span className='text-foreground font-mono tabular-nums'>
+              {formatPlanPrice(p.upgrade.price)}
+            </span>
           </div>
         ))}
 
         {dataLines.map((l) => (
-          <div key={l.id} className='flex items-center justify-between gap-3 border-t border-border/30 pt-2'>
+          <div
+            key={l.id}
+            className='border-border/30 flex items-center justify-between gap-3 border-t pt-2'
+          >
             <span className='text-foreground'>
               {t(l.labelKey)} · {t(l.delivery === 'sim' ? 'SIM Card' : 'eSIM')}
             </span>
-            <span className='font-mono tabular-nums text-foreground'>¥{l.price.toLocaleString()}</span>
+            <span className='text-foreground font-mono tabular-nums'>
+              {formatPlanPrice(l.price)}
+            </span>
           </div>
         ))}
 
         {selection.appleId && (
-          <div className='flex items-center justify-between gap-3 border-t border-border/30 pt-2'>
+          <div className='border-border/30 flex items-center justify-between gap-3 border-t pt-2'>
             <span className='text-foreground'>{t('US region Apple ID')}</span>
-            <span className='font-mono tabular-nums text-foreground'>¥{APPLE_ID.price.toLocaleString()}</span>
+            <span className='text-foreground font-mono tabular-nums'>
+              {formatPlanPrice(APPLE_ID.price)}
+            </span>
           </div>
         )}
       </div>
 
-      <div className='mt-4 flex items-center justify-between border-t-2 border-border/50 pt-3'>
-        <span className='text-base font-bold text-foreground'>{t('Total')}</span>
-        <span className='font-mono text-xl font-extrabold tabular-nums text-foreground'>
-          ¥{total.toLocaleString()}
+      <div className='border-border/50 mt-4 flex items-center justify-between border-t-2 pt-3'>
+        <span className='text-foreground text-base font-bold'>
+          {t('Total')}
+        </span>
+        <span className='text-foreground font-mono text-xl font-extrabold tabular-nums'>
+          {formatPlanPrice(total)}
         </span>
       </div>
 
-      <Button type='button' className='mt-4 min-h-[48px] w-full rounded-lg text-sm'>
+      <Button
+        type='button'
+        className='mt-4 min-h-[48px] w-full rounded-lg text-sm'
+      >
         {t('Proceed')}
       </Button>
-      <p className='mt-2 text-center text-[10px] text-muted-foreground'>
+      <p className='text-muted-foreground mt-2 text-center text-[10px]'>
         {t("This is a preview — checkout isn't available yet.")}
       </p>
     </div>

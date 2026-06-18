@@ -16,7 +16,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-
 import type {
   DataLineDeliveryType,
   DataLineConfig,
@@ -26,7 +25,15 @@ import type {
 
 export const DEFAULT_DATA_LINE_DELIVERY: DataLineDeliveryType = 'esim'
 
-export const BASE_PRICE = 6666
+export const PLAN_CONFIG_CURRENCY = {
+  code: 'USD',
+  symbol: '$',
+  locale: 'en-US',
+} as const
+
+export const BASE_PRICE = 999
+
+export const CONTACT_HREF = 'mailto:r@nyquiste.com'
 
 export const PROVIDERS: ProviderConfig[] = [
   {
@@ -46,7 +53,7 @@ export const PROVIDERS: ProviderConfig[] = [
     },
     upgrade: {
       productName: 'ChatGPT Pro',
-      price: 8888,
+      price: 1099,
       features: [
         { title: '5x or 20x more usage' },
         { title: 'Pro reasoning with GPT-5.5 Pro' },
@@ -76,7 +83,7 @@ export const PROVIDERS: ProviderConfig[] = [
     },
     upgrade: {
       productName: 'Claude Max',
-      price: 8888,
+      price: 1099,
       features: [
         { title: 'Up to 20x more usage than Pro' },
         { title: 'Recommended for Claude Code & Cowork' },
@@ -95,7 +102,8 @@ export const PROVIDERS: ProviderConfig[] = [
       features: [
         {
           title: '4x higher usage limits',
-          detail: 'Get usage limits that are 4x higher than without a Google AI plan',
+          detail:
+            'Get usage limits that are 4x higher than without a Google AI plan',
         },
         {
           title: 'Access to our Pro model',
@@ -110,11 +118,12 @@ export const PROVIDERS: ProviderConfig[] = [
     },
     upgrade: {
       productName: 'Google AI Ultra',
-      price: 8888,
+      price: 1099,
       features: [
         {
           title: '5x higher usage limits than Pro plan',
-          detail: 'Get usage limits that are 5x higher than the Google AI Pro plan',
+          detail:
+            'Get usage limits that are 5x higher than the Google AI Pro plan',
         },
         {
           title: 'Higher access to our Pro model',
@@ -131,21 +140,42 @@ export const PROVIDERS: ProviderConfig[] = [
 ]
 
 export const GLOBAL_DATA_LINES: DataLineConfig[] = [
-  { id: 'cmcc-hk', labelKey: 'China Mobile (HK)', price: 2222 },
-  { id: 'ct-hk', labelKey: 'China Telecom (HK)', price: 2222 },
-  { id: 'us-mobile', labelKey: 'US Mobile (US)', price: 3333 },
+  { id: 'cmcc-hk', labelKey: 'China Mobile (HK)', price: 300 },
+  { id: 'ct-hk', labelKey: 'China Telecom (HK)', price: 300 },
+  { id: 'us-mobile', labelKey: 'US Mobile (US)', price: 500 },
 ]
 
-export const APPLE_ID = { labelKey: 'US region Apple ID', price: 120 }
+export const APPLE_ID = { labelKey: 'US region Apple ID', price: 20 }
 
-/** Contact-only items: no price, disabled placeholder CTA. */
+/** Contact-only items: no price, mail link CTA. */
 export const CONTACT_ITEMS: { id: string; labelKey: string }[] = [
   { id: 'more-providers', labelKey: 'Need more AI providers?' },
   { id: 'overseas-phone', labelKey: 'Need an overseas phone?' },
 ]
 
 export const PRESETS: PresetConfig[] = [
-  { id: 'standard', name: 'Standard', descKey: 'Base bundle', price: 6666, upgrades: [], dataLines: [] },
-  { id: 'pro', name: 'Pro', descKey: '+ HK International Roaming Data', price: 8888, upgrades: [], dataLines: ['ct-hk'] },
-  { id: 'ultra', name: 'Ultra', descKey: '+ US International Roaming Data', price: 9999, upgrades: [], dataLines: ['us-mobile'] },
+  {
+    id: 'standard',
+    name: 'Standard',
+    descKey: 'Base bundle',
+    price: 999,
+    upgrades: [],
+    dataLines: [],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    descKey: '+ HK International Roaming Data',
+    price: 1299,
+    upgrades: [],
+    dataLines: ['ct-hk'],
+  },
+  {
+    id: 'ultra',
+    name: 'Ultra',
+    descKey: '+ US International Roaming Data',
+    price: 1499,
+    upgrades: [],
+    dataLines: ['us-mobile'],
+  },
 ]

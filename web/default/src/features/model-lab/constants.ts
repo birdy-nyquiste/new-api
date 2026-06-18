@@ -16,30 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { z } from 'zod'
-import { isSidebarModuleEnabled } from '@/lib/nav-modules'
-import { Main } from '@/components/layout'
-import { Playground } from '@/features/playground'
 
-const playgroundSearchSchema = z.object({
-  mode: z.enum(['chat', 'compare']).optional().catch(undefined),
-})
-
-export const Route = createFileRoute('/_authenticated/playground/')({
-  validateSearch: playgroundSearchSchema,
-  beforeLoad: () => {
-    if (!isSidebarModuleEnabled('chat', 'playground')) {
-      throw redirect({ to: '/dashboard' })
-    }
-  },
-  component: PlaygroundPage,
-})
-
-function PlaygroundPage() {
-  return (
-    <Main className='p-0'>
-      <Playground />
-    </Main>
-  )
-}
+export const MODEL_LAB_ROUTE = '/model-lab'
+export const MODEL_LAB_DEFAULT_MODE = 'compare'
+export const MODEL_LAB_COMPARE_PATH = '/model-lab?mode=compare'

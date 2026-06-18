@@ -21,6 +21,10 @@ import { Gift, GitCompare, MessageSquare } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { AnimateInView } from '@/components/animate-in-view'
+import {
+  MODEL_LAB_COMPARE_PATH,
+  MODEL_LAB_ROUTE,
+} from '@/features/model-lab/constants'
 
 interface ModelLabSpotlightProps {
   isAuthenticated?: boolean
@@ -40,19 +44,21 @@ export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
     },
     {
       icon: GitCompare,
-      title: t('Compare outputs from 3 models side by side — AI rates response quality'),
+      title: t(
+        'Compare outputs from 3 models side by side — AI rates response quality'
+      ),
     },
   ]
 
   return (
-    <section className='font-landing border-t border-border/50 px-6 py-16 md:py-20 lg:py-24'>
+    <section className='font-landing border-border/50 border-t px-6 py-16 md:py-20 lg:py-24'>
       <div className='mx-auto max-w-5xl'>
         <AnimateInView className='mb-10 flex flex-col items-center gap-6 text-center'>
           <div className='max-w-2xl'>
-            <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
+            <h2 className='text-foreground text-[clamp(1.5rem,3.5vw,2.2rem)] leading-tight font-extrabold tracking-tight'>
               {t('Model Lab,')}&nbsp;
               <span
-                className='italic font-normal text-muted-foreground'
+                className='text-muted-foreground font-normal italic'
                 style={{ fontFamily: 'var(--font-serif)' }}
               >
                 {t('compare Chinese and US models')}
@@ -62,13 +68,24 @@ export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
           <div className='flex flex-wrap justify-center gap-3'>
             <Button
               className='min-h-[44px] rounded-lg px-5 text-sm'
-              render={<Link to={isAuthenticated ? '/playground' : '/sign-up'} />}
+              render={
+                isAuthenticated ? (
+                  <Link to={MODEL_LAB_ROUTE} search={{ mode: 'compare' }} />
+                ) : (
+                  <Link
+                    to='/sign-up'
+                    search={{ redirect: MODEL_LAB_COMPARE_PATH }}
+                  />
+                )
+              }
             >
-              {isAuthenticated ? t('Open Model Lab action') : t('Try Model Lab')}
+              {isAuthenticated
+                ? t('Open Model Lab action')
+                : t('Try Model Lab')}
             </Button>
             <Button
               variant='outline'
-              className='min-h-[44px] rounded-lg border-border/50 px-5 text-sm'
+              className='border-border/50 min-h-[44px] rounded-lg px-5 text-sm'
               render={<Link to='/cn-us-compare' />}
             >
               {t('View CN vs US model benchmark')}
@@ -76,7 +93,7 @@ export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
           </div>
         </AnimateInView>
 
-        <div className='grid gap-px overflow-hidden rounded-xl border border-border/40 bg-border/40 md:grid-cols-3'>
+        <div className='border-border/40 bg-border/40 grid gap-px overflow-hidden rounded-xl border md:grid-cols-3'>
           {features.map((item, index) => {
             const Icon = item.icon
             return (
@@ -84,12 +101,12 @@ export function ModelLabSpotlight({ isAuthenticated }: ModelLabSpotlightProps) {
                 key={item.title}
                 delay={index * 70}
                 animation='scale-in'
-                className='min-w-0 bg-background p-6 text-center transition-colors duration-300 hover:bg-muted/20'
+                className='bg-background hover:bg-muted/20 min-w-0 p-6 text-center transition-colors duration-300'
               >
-                <div className='mb-5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground mx-auto'>
+                <div className='border-border/60 bg-muted/30 text-muted-foreground mx-auto mb-5 flex size-9 shrink-0 items-center justify-center rounded-lg border'>
                   <Icon className='size-4' />
                 </div>
-                <p className='whitespace-pre-line text-sm font-semibold text-foreground break-words'>
+                <p className='text-foreground text-sm font-semibold break-words whitespace-pre-line'>
                   {item.title}
                 </p>
               </AnimateInView>

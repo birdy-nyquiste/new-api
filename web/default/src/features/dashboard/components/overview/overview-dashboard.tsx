@@ -54,6 +54,7 @@ import {
 } from '@/components/page-transition'
 import { fetchTokenKey, getApiKeys } from '@/features/keys/api'
 import type { ApiKey } from '@/features/keys/types'
+import { MODEL_LAB_ROUTE } from '@/features/model-lab/constants'
 import {
   useApiInfo,
   useDashboardContentVisibility,
@@ -82,7 +83,7 @@ const SETUP_GUIDE_CODE_PATTERN = [
 type DashboardActionPath =
   | '/keys'
   | '/wallet'
-  | '/playground'
+  | typeof MODEL_LAB_ROUTE
   | '/channels'
   | '/usage-logs'
   | '/pricing'
@@ -91,6 +92,7 @@ interface StartStep {
   title: string
   description: string
   to: DashboardActionPath
+  search?: { mode: 'compare' }
   icon: LucideIcon
   completed: boolean
 }
@@ -245,6 +247,7 @@ function StartStepItem(props: {
 
       <Link
         to={props.step.to}
+        search={props.step.search}
         className='bg-background/70 hover:bg-muted/50 focus-visible:ring-ring flex min-w-0 flex-1 items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left shadow-xs transition-colors outline-none focus-visible:ring-2'
       >
         <span className='flex min-w-0 items-start gap-2.5'>
@@ -534,7 +537,8 @@ export function OverviewDashboard() {
       {
         title: t('Send a request'),
         description: t('Verify routing with Model Lab or your client'),
-        to: '/playground',
+        to: MODEL_LAB_ROUTE,
+        search: { mode: 'compare' },
         icon: TerminalSquare,
         completed: requestCount > 0,
       },

@@ -16,15 +16,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { z } from 'zod'
-import { createFileRoute } from '@tanstack/react-router'
-import { SignUp } from '@/features/auth/sign-up'
+import { PublicLayout } from '@/components/layout'
+import { Playground } from '@/features/playground'
 
-const searchSchema = z.object({
-  redirect: z.string().optional(),
-})
-
-export const Route = createFileRoute('/(auth)/sign-up')({
-  validateSearch: searchSchema,
-  component: SignUp,
-})
+export function ModelLabPage() {
+  return (
+    <PublicLayout showMainContainer={false}>
+      <main className='font-landing h-svh overflow-hidden pt-16'>
+        <div className='h-[calc(100svh-4rem)] min-h-0 overflow-hidden'>
+          <Playground />
+        </div>
+      </main>
+    </PublicLayout>
+  )
+}

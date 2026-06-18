@@ -57,6 +57,7 @@ export interface ProviderConfig {
   upgrade: {
     /** Literal product name, e.g. "ChatGPT Pro". Rendered via t('Upgrade to {{plan}}'). */
     productName: string
+    /** Whole-dollar amount in the plan-config currency. */
     price: number
     features: PlanFeature[]
   }
@@ -66,6 +67,7 @@ export interface DataLineConfig {
   id: DataLineId
   /** i18n key, e.g. "China Telecom (HK)". */
   labelKey: string
+  /** Whole-dollar amount in the plan-config currency. */
   price: number
 }
 
@@ -75,7 +77,7 @@ export interface PresetConfig {
   name: string
   /** i18n key for the short descriptor under the name. */
   descKey: string
-  /** Display price shown on the preset card. */
+  /** Whole-dollar bundle price shown on the preset card. */
   price: number
   upgrades: ProviderId[]
   dataLines: DataLineId[]
