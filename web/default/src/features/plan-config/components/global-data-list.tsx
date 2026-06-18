@@ -68,7 +68,7 @@ export function GlobalDataList({ selected, onToggle, onDeliveryChange }: GlobalD
           </div>
         )
       })}
-      <AddonRow label={t('Need more Global Data?')} contact />
+      <AddonRow label={t('Need more international roaming data?')} contact />
     </div>
   )
 }

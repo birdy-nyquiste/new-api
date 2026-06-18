@@ -146,6 +146,6 @@ export const CONTACT_ITEMS: { id: string; labelKey: string }[] = [
 
 export const PRESETS: PresetConfig[] = [
   { id: 'standard', name: 'Standard', descKey: 'Base bundle', price: 6666, upgrades: [], dataLines: [] },
-  { id: 'pro', name: 'Pro', descKey: '+ HK Global Data', price: 8888, upgrades: [], dataLines: ['ct-hk'] },
-  { id: 'ultra', name: 'Ultra', descKey: '+ US Global Data', price: 9999, upgrades: [], dataLines: ['us-mobile'] },
+  { id: 'pro', name: 'Pro', descKey: '+ HK International Roaming Data', price: 8888, upgrades: [], dataLines: ['ct-hk'] },
+  { id: 'ultra', name: 'Ultra', descKey: '+ US International Roaming Data', price: 9999, upgrades: [], dataLines: ['us-mobile'] },
 ]

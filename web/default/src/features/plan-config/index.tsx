@@ -111,7 +111,7 @@ export function PlanConfig() {
 
               <AnimateInView animation='fade-up' delay={160}>
                 <p className='mb-1 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase'>
-                  {t('Global Data')}
+                  {t('International Roaming Data')}
                 </p>
                 <p className='mb-4 text-sm text-muted-foreground'>
                   {t('Default 50 GB · SIM / eSIM available')}

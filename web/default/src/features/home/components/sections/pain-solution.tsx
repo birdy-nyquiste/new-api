@@ -32,7 +32,7 @@ export function PainVsSolution() {
     {
       title: t('Stable and compliant network access'),
       body: t(
-        'Global traffic access through Hong Kong or US carriers, with support for SIM / eSIM.'
+        'International roaming data through Hong Kong or US carriers, with support for SIM / eSIM.'
       ),
     },
     {

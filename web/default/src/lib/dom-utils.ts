@@ -28,6 +28,18 @@ export function applyFaviconToDom(url: string) {
     link.href = url
     existing.forEach((l) => l.remove())
     document.head.appendChild(link)
+
+    const touchIcon = document.querySelector<HTMLLinkElement>(
+      'link[rel="apple-touch-icon"]'
+    )
+    if (touchIcon) {
+      touchIcon.href = url
+    } else {
+      const nextTouchIcon = document.createElement('link')
+      nextTouchIcon.rel = 'apple-touch-icon'
+      nextTouchIcon.href = url
+      document.head.appendChild(nextTouchIcon)
+    }
   } catch {
     // Ignore malformed URLs
   }

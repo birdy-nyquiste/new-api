@@ -28,7 +28,7 @@ export function SupportServices() {
   const services = [
     {
       icon: Globe2,
-      title: t('Global data'),
+      title: t('International roaming data'),
     },
     {
       icon: KeyRound,

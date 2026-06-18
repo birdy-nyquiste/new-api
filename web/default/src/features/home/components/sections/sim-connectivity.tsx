@@ -42,7 +42,7 @@ export function SimConnectivity() {
                     {t('Optional connection plan')}
                   </p>
                   <p className='mt-2 text-lg font-bold text-foreground'>
-                    {t('Global AI traffic card')}
+                    {t('International roaming data card')}
                   </p>
                 </div>
                 <div className='flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted/30 text-muted-foreground'>
@@ -67,10 +67,10 @@ export function SimConnectivity() {
 
         <AnimateInView className='order-1 lg:order-2'>
           <p className='mb-3 text-xs font-medium tracking-widest text-muted-foreground uppercase'>
-            {t('Global network')}
+            {t('International roaming network')}
           </p>
           <h2 className='text-[clamp(1.5rem,3.5vw,2.2rem)] font-extrabold leading-tight tracking-tight text-foreground'>
-            {t('Stable connection when global AI needs it')}
+            {t('Stable connection through international roaming data')}
           </h2>
           <p className='mt-4 text-sm leading-7 text-muted-foreground'>
             {t(
