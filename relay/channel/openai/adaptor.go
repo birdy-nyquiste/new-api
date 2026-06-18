@@ -350,8 +350,12 @@ func (a *Adaptor) ConvertOpenAIRequest(c *gin.Context, info *relaycommon.RelayIn
 	// (e.g., OpenRouter) that proxy to Claude models.
 	if strings.HasPrefix(info.UpstreamModelName, "claude") ||
 		strings.HasPrefix(info.UpstreamModelName, "anthropic/claude") {
-		// claude-opus-4-7 rejects temperature, top_p, and top_k entirely
-		if strings.Contains(info.UpstreamModelName, "claude-opus-4-7") {
+		request.FrequencyPenalty = nil
+		request.PresencePenalty = nil
+		request.Seed = nil
+
+		// Claude Opus 4.7+ rejects temperature, top_p, and top_k entirely.
+		if reasoning.IsClaudeOpus4AdaptiveModel(info.UpstreamModelName) {
 			request.Temperature = nil
 			request.TopP = nil
 			request.TopK = nil
